@@ -1,0 +1,209 @@
+/**
+ * Accent color utility classes for the application
+ * These classes will be used with the custom accent color system
+ */
+
+:root {
+  --accent-50: var(--accent-color-50, #eff6ff);
+  --accent-100: var(--accent-color-100, #dbeafe);
+  --accent-200: var(--accent-color-200, #bfdbfe);
+  --accent-300: var(--accent-color-300, #93c5fd);
+  --accent-400: var(--accent-color-400, #60a5fa);
+  --accent-500: var(--accent-color-500, #3b82f6);
+  --accent-600: var(--accent-color-600, #2563eb);
+  --accent-700: var(--accent-color-700, #1d4ed8);
+  --accent-800: var(--accent-color-800, #1e40af);
+  --accent-900: var(--accent-color-900, #1e3a8a);
+  --accent-950: var(--accent-color-950, #172554);
+}
+
+/* Background colors */
+.bg-accent {
+  background-color: var(--accent-500);
+}
+
+.bg-accent-50 {
+  background-color: var(--accent-50);
+}
+
+.bg-accent-100 {
+  background-color: var(--accent-100);
+}
+
+.bg-accent-200 {
+  background-color: var(--accent-200);
+}
+
+.bg-accent-300 {
+  background-color: var(--accent-300);
+}
+
+.bg-accent-400 {
+  background-color: var(--accent-400);
+}
+
+.bg-accent-500 {
+  background-color: var(--accent-500);
+}
+
+.bg-accent-600 {
+  background-color: var(--accent-600);
+}
+
+.bg-accent-700 {
+  background-color: var(--accent-700);
+}
+
+.bg-accent-800 {
+  background-color: var(--accent-800);
+}
+
+.bg-accent-900 {
+  background-color: var(--accent-900);
+}
+
+.bg-accent-950 {
+  background-color: var(--accent-950);
+}
+
+/* Text colors */
+.text-accent {
+  color: var(--accent-500);
+}
+
+.text-accent-50 {
+  color: var(--accent-50);
+}
+
+.text-accent-100 {
+  color: var(--accent-100);
+}
+
+.text-accent-200 {
+  color: var(--accent-200);
+}
+
+.text-accent-300 {
+  color: var(--accent-300);
+}
+
+.text-accent-400 {
+  color: var(--accent-400);
+}
+
+.text-accent-500 {
+  color: var(--accent-500);
+}
+
+.text-accent-600 {
+  color: var(--accent-600);
+}
+
+.text-accent-700 {
+  color: var(--accent-700);
+}
+
+.text-accent-800 {
+  color: var(--accent-800);
+}
+
+.text-accent-900 {
+  color: var(--accent-900);
+}
+
+.text-accent-950 {
+  color: var(--accent-950);
+}
+
+/* Border colors */
+.border-accent {
+  border-color: var(--accent-500);
+}
+
+.border-accent-50 {
+  border-color: var(--accent-50);
+}
+
+.border-accent-100 {
+  border-color: var(--accent-100);
+}
+
+.border-accent-200 {
+  border-color: var(--accent-200);
+}
+
+.border-accent-300 {
+  border-color: var(--accent-300);
+}
+
+.border-accent-400 {
+  border-color: var(--accent-400);
+}
+
+.border-accent-500 {
+  border-color: var(--accent-500);
+}
+
+.border-accent-600 {
+  border-color: var(--accent-600);
+}
+
+.border-accent-700 {
+  border-color: var(--accent-700);
+}
+
+.border-accent-800 {
+  border-color: var(--accent-800);
+}
+
+.border-accent-900 {
+  border-color: var(--accent-900);
+}
+
+.border-accent-950 {
+  border-color: var(--accent-950);
+}
+
+/* Hover states */
+.hover\:bg-accent:hover {
+  background-color: var(--accent-500);
+}
+
+.hover\:text-accent:hover {
+  color: var(--accent-500);
+}
+
+.hover\:border-accent:hover {
+  border-color: var(--accent-500);
+}
+
+/* Focus states */
+.focus\:border-accent:focus {
+  border-color: var(--accent-500);
+}
+
+.focus\:ring-accent:focus {
+  --tw-ring-color: var(--accent-500);
+}
+
+/* Group hover states */
+.group-hover\:text-accent {
+  color: var(--accent-500);
+}
+
+/* Dark mode variants */
+.dark .dark\:text-accent {
+  color: var(--accent-400);
+}
+
+.dark .dark\:bg-accent {
+  background-color: var(--accent-600);
+}
+
+.dark .dark\:border-accent {
+  border-color: var(--accent-600);
+}
+
+.dark .dark\:group-hover\:text-accent {
+  color: var(--accent-400);
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Kimba",
+  "description": "The ultimate AI hairstyle visualization platform for modern hair salons. Boost client consultations, showcase endless possibilities, and increase satisfaction with virtual try-ons.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

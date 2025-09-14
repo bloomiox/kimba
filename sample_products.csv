@@ -1,0 +1,6 @@
+name,description,price,cost_price,in_stock,min_stock,category,brand,sku,barcode,supplier,image_url
+Shampoo Professional,Professional grade shampoo for all hair types,29.99,15.50,50,10,Hair Care,ProHair,SH001,123456789012,Beauty Supply Co,https://example.com/shampoo.jpg
+Hair Conditioner,Deep conditioning treatment,24.99,12.00,30,5,Hair Care,ProHair,CD001,123456789013,Beauty Supply Co,https://example.com/conditioner.jpg
+Hair Dryer,Professional ionic hair dryer,149.99,75.00,15,3,Tools,TechStyle,HD001,123456789014,Equipment Plus,https://example.com/dryer.jpg
+Hair Scissors,Professional cutting scissors,89.99,45.00,8,2,Tools,CutPro,SC001,123456789015,Equipment Plus,https://example.com/scissors.jpg
+Hair Color - Blonde,Premium hair color blonde shade,19.99,8.50,25,5,Color,ColorMax,HC001,123456789016,Color Supply,https://example.com/color.jpg
