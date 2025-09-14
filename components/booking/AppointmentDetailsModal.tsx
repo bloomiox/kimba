@@ -445,11 +445,14 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           
           <button
             onClick={handleSaveAppointmentChanges}
-            className={`flex-1 px-4 py-3 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white rounded-lg transition-colors font-medium ${
-              hasUnsavedChanges ? 'animate-pulse' : ''
+            disabled={!hasUnsavedChanges}
+            className={`flex-1 px-4 py-3 rounded-lg transition-all font-medium ${
+              hasUnsavedChanges 
+                ? `${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white shadow-sm hover:shadow-md` 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
             }`}
           >
-            {hasUnsavedChanges ? 'Save Changes' : 'Save Appointment'}
+            {hasUnsavedChanges ? 'Save Changes' : 'No Changes'}
           </button>
         </div>
       </div>
@@ -551,7 +554,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                   </button>
                   <button
                     onClick={handleSaveSelectedItems}
-                    className={`px-6 py-2 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md`}
+                    className={`px-6 py-2 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={selectedServices.length === 0 && selectedProducts.length === 0}
                   >
                     Save ({selectedServices.length + selectedProducts.length} items)
                   </button>
@@ -573,8 +577,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                       onClick={() => handleAddService(service)}
                       className={`p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${
                         isSelected 
-                          ? `border-blue-500 bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 shadow-sm`
-                          : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-900 dark:text-gray-100`
+                          ? `${mapToAccentColor('border-accent-500 bg-accent-100 dark:bg-accent-900/50 text-accent-900 dark:text-accent-100')} shadow-sm`
+                          : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 ${mapToAccentColor('hover:border-accent-400 dark:hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20 text-gray-900 dark:text-gray-100')}`
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
@@ -582,7 +586,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                           {service.name}
                         </h4>
                         {isSelected && (
-                          <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          <div className={`w-6 h-6 ${mapToAccentColor('bg-accent-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
                             ✓
                           </div>
                         )}
@@ -621,8 +625,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                         onClick={() => handleAddProduct(product)}
                         className={`p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${
                           isSelected 
-                            ? `border-green-500 bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100 shadow-sm`
-                            : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-green-400 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 text-gray-900 dark:text-gray-100`
+                            ? `${mapToAccentColor('border-accent-500 bg-accent-100 dark:bg-accent-900/50 text-accent-900 dark:text-accent-100')} shadow-sm`
+                            : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 ${mapToAccentColor('hover:border-accent-400 dark:hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20 text-gray-900 dark:text-gray-100')}`
                         }`}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -630,7 +634,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                             {product.name}
                           </h4>
                           {isSelected && (
-                            <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            <div className={`w-6 h-6 ${mapToAccentColor('bg-accent-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
                               ✓
                             </div>
                           )}

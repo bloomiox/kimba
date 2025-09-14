@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
+import { mapToAccentColor } from '../../utils/colorUtils';
 import { CloseIcon, UserIcon } from '../common/Icons';
 import type { Client } from '../../types';
 
@@ -67,33 +68,33 @@ const ClientModal: React.FC<ClientModalProps> = ({ isOpen, onClose, client }) =>
                   {photo ? <img src={photo} alt="Preview" className="w-full h-full object-cover" /> : <UserIcon className="w-10 h-10 text-gray-400" />}
               </div>
               <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 rounded-md font-semibold">{t('settings.branding.upload')}</button>
-              {photo && <button type="button" onClick={() => setPhoto(null)} className="text-sm text-red-500 hover:underline">{t('settings.branding.remove')}</button>}
+              <button type="button" onClick={() => fileInputRef.current?.click()} className={`px-3 py-1.5 text-sm ${mapToAccentColor('bg-accent-500 hover:bg-accent-600')} text-white rounded-md font-semibold transition-colors`}>{t('settings.branding.upload')}</button>
+              {photo && <button type="button" onClick={() => setPhoto(null)} className="text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors hover:underline">{t('settings.branding.remove')}</button>}
             </div>
           </div>
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('clients.modal.fullName')}</label>
-            <input type="text" name="name" id="name" defaultValue={client?.name} required className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg" />
+            <input type="text" name="name" id="name" defaultValue={client?.name} required className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all" />
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('clients.modal.email')}</label>
-            <input type="email" name="email" id="email" defaultValue={client?.email} required className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg" />
+            <input type="email" name="email" id="email" defaultValue={client?.email} required className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all" />
           </div>
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('clients.modal.phone')}</label>
-            <input type="tel" name="phone" id="phone" defaultValue={client?.phone} className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg" />
+            <input type="tel" name="phone" id="phone" defaultValue={client?.phone} className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all" />
           </div>
           <div>
             <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('clients.modal.address')}</label>
-            <input type="text" name="address" id="address" defaultValue={client?.address} className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg" />
+            <input type="text" name="address" id="address" defaultValue={client?.address} className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all" />
           </div>
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('clients.modal.notes')}</label>
-            <textarea name="notes" id="notes" defaultValue={client?.notes} rows={3} className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg resize-none"></textarea>
+            <textarea name="notes" id="notes" defaultValue={client?.notes} rows={3} className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all"></textarea>
           </div>
           <div className="pt-2 flex justify-end gap-3">
             <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg font-semibold text-gray-800 dark:text-gray-200">{t('common.cancel')}</button>
-            <button type="submit" className="px-6 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white">{t('clients.modal.save')}</button>
+            <button type="submit" className={`px-6 py-2 ${mapToAccentColor('bg-accent-500 hover:bg-accent-600')} rounded-lg font-semibold text-white transition-colors`}>{t('clients.modal.save')}</button>
           </div>
         </form>
       </div>

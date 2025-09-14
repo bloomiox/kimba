@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
+import { mapToAccentColor } from '../../utils/colorUtils';
 import { ChevronLeftIcon, ChevronRightIcon, FilterIcon } from '../common/Icons';
 import type { Appointment, AppointmentStatus } from '../../types';
 import TimeGrid from './TimeGrid';
@@ -91,8 +92,8 @@ const CalendarPage: React.FC = () => {
       <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-30 p-4">
         <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('calendar.filterResources')}</h4>
         <div className="flex justify-between mb-2">
-          <button onClick={handleSelectAll} className="text-xs text-accent font-semibold">{t('calendar.selectAll')}</button>
-          <button onClick={handleSelectNone} className="text-xs text-accent font-semibold">{t('calendar.selectNone')}</button>
+          <button onClick={handleSelectAll} className={`text-xs ${mapToAccentColor('text-accent-600 dark:text-accent-400')} font-semibold hover:underline`}>{t('calendar.selectAll')}</button>
+          <button onClick={handleSelectNone} className={`text-xs ${mapToAccentColor('text-accent-600 dark:text-accent-400')} font-semibold hover:underline`}>{t('calendar.selectNone')}</button>
         </div>
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {hairstylists.map(stylist => (
@@ -101,7 +102,7 @@ const CalendarPage: React.FC = () => {
                 type="checkbox"
                 checked={visibleHairstylistIds.includes(stylist.id)}
                 onChange={() => handleToggleHairstylist(stylist.id)}
-                className="w-4 h-4 rounded text-accent focus:ring-accent"
+                className={`w-4 h-4 rounded ${mapToAccentColor('text-accent-500 focus:ring-accent-500 border-gray-300 dark:border-gray-600')} transition-colors`}
               />
               <div>
                 <span className="font-medium text-gray-900 dark:text-gray-100">{stylist.name}</span>
@@ -140,20 +141,20 @@ const CalendarPage: React.FC = () => {
       <header className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="relative filter-panel-container">
-            <button onClick={() => setIsFilterPanelOpen(prev => !prev)} className="flex items-center gap-2 p-2 rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <button onClick={() => setIsFilterPanelOpen(prev => !prev)} className={`flex items-center gap-2 p-2 rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${mapToAccentColor('hover:bg-accent-50 dark:hover:bg-accent-900/20 hover:border-accent-400 dark:hover:border-accent-500')} transition-all`}>
               <FilterIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </button>
             {isFilterPanelOpen && renderFilterPanel()}
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">{getHeaderTitle()}</h2>
         </div>
-        <div className="flex items-center bg-gray-200 dark:bg-gray-900 p-1 rounded-lg">
-          {(['month', 'week', 'day'] as CalendarView[]).map(v => <button key={v} onClick={() => setView(v)} className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${view === v ? 'bg-white dark:bg-gray-700 text-accent shadow' : 'text-gray-600 dark:text-gray-300'}`}>{t(`calendar.view.${v}`)}</button>)}
+        <div className="flex items-center bg-gray-200 dark:bg-gray-900 p-1 rounded-lg shadow-sm">
+          {(['month', 'week', 'day'] as CalendarView[]).map(v => <button key={v} onClick={() => setView(v)} className={`px-3 py-1 text-sm font-semibold rounded-md transition-all ${view === v ? `bg-white dark:bg-gray-700 ${mapToAccentColor('text-accent-600 dark:text-accent-400')} shadow-sm` : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100'}`}>{t(`calendar.view.${v}`)}</button>)}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => handleNavigate('prev')} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><ChevronLeftIcon className="w-5 h-5" /></button>
-          <button onClick={() => handleNavigate('today')} className="px-4 py-1.5 text-sm font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">{t('common.today')}</button>
-          <button onClick={() => handleNavigate('next')} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><ChevronRightIcon className="w-5 h-5" /></button>
+          <button onClick={() => handleNavigate('prev')} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+          <button onClick={() => handleNavigate('today')} className={`px-4 py-1.5 text-sm font-semibold rounded-lg ${mapToAccentColor('hover:bg-accent-50 dark:hover:bg-accent-900/20 hover:text-accent-600 dark:hover:text-accent-400')} transition-all`}>{t('common.today')}</button>
+          <button onClick={() => handleNavigate('next')} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
         </div>
       </header>
       <div className="flex-grow overflow-auto">

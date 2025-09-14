@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import React, { useState, useMemo } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { mapToAccentColor } from '../../utils/colorUtils';
 import { 
@@ -274,7 +273,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     <button 
                       type="button" 
                       onClick={() => setShowNewClientForm(true)} 
-                      className="w-full text-left px-4 py-3 flex items-center gap-3 text-blue-600 dark:text-blue-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-600 border-t border-gray-200 dark:border-gray-600"
+                      className={`w-full text-left px-4 py-3 flex items-center gap-3 ${mapToAccentColor('text-accent-600 dark:text-accent-400')} font-semibold hover:bg-gray-100 dark:hover:bg-gray-600 border-t border-gray-200 dark:border-gray-600 transition-colors`}
                     >
                       <PlusIcon className="w-4 h-4" /> 
                       {t('clients.modal.addTitle')}
@@ -285,28 +284,28 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             </div>
 
             {showNewClientForm && (
-              <div className="p-4 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-3">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100">New Client Details</h4>
-                <input 
-                  type="text" 
-                  name="newClientName" 
-                  placeholder={t('clients.modal.fullName')} 
-                  required 
-                  className="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <input 
-                  type="email" 
-                  name="newClientEmail" 
-                  placeholder={t('clients.modal.email')} 
-                  required 
-                  className="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <input 
-                  type="tel" 
-                  name="newClientPhone" 
-                  placeholder={t('clients.modal.phone')} 
-                  className="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+              <div className={`p-4 border ${mapToAccentColor('border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-900/20')} rounded-lg space-y-3`}>
+                <h4 className={`font-semibold ${mapToAccentColor('text-accent-900 dark:text-accent-100')}`}>New Client Details</h4>
+                  <input 
+                    type="text" 
+                    name="newClientName" 
+                    placeholder={t('clients.modal.fullName')} 
+                    required 
+                    className={`w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
+                  />
+                  <input 
+                    type="email" 
+                    name="newClientEmail" 
+                    placeholder={t('clients.modal.email')} 
+                    required 
+                    className={`w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
+                  />
+                  <input 
+                    type="tel" 
+                    name="newClientPhone" 
+                    placeholder={t('clients.modal.phone')} 
+                    className={`w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
+                  />
                 <div className="flex gap-2">
                   <button 
                     type="button" 
@@ -337,7 +336,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             <select 
               value={selectedHairstylistId} 
               onChange={e => setSelectedHairstylistId(e.target.value)}
-              className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
             >
               {hairstylists.map(stylist => (
                 <option key={stylist.id} value={stylist.id}>{stylist.name}</option>
@@ -354,7 +353,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 type="date" 
                 value={appointmentDate} 
                 onChange={e => setAppointmentDate(e.target.value)}
-                className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                className={`w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
               />
             </div>
             <div className="flex-1">
@@ -365,7 +364,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 type="time" 
                 value={appointmentTime} 
                 onChange={e => setAppointmentTime(e.target.value)}
-                className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                className={`w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
               />
             </div>
           </div>
@@ -378,7 +377,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
               value={notes} 
               onChange={e => setNotes(e.target.value)}
               rows={3} 
-              className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg resize-none ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
               placeholder="Optional notes..."
             />
           </div>
@@ -394,7 +393,7 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           
           <div className="space-y-3">
             {selectedServices.map((service) => (
-              <div key={service.id} className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-r-lg">
+              <div key={service.id} className={`border-l-4 ${mapToAccentColor('border-accent-500')} pl-4 py-2 ${mapToAccentColor('bg-accent-50 dark:bg-accent-900/20')} rounded-r-lg transition-colors`}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 dark:text-white">
@@ -421,10 +420,10 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             ))}
             
             {/* Add Service Button */}
-            <button 
-              onClick={() => setCurrentView('selectService')}
-              className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-            >
+              <button 
+                onClick={() => setCurrentView('selectService')}
+                className={`w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20')} transition-colors text-gray-600 dark:text-gray-400 ${mapToAccentColor('hover:text-accent-600 dark:hover:text-accent-400')}`}
+              >
               <PlusIcon className="w-4 h-4" />
               <span>{selectedServices.length === 0 ? 'Select Service' : t('booking.addService')}</span>
             </button>
@@ -556,10 +555,10 @@ const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                   key={service.id}
                   onClick={() => handleAddService(service)}
                   disabled={!!isSelected}
-                  className={`p-4 border rounded-lg transition-colors text-left ${
+                  className={`p-4 border rounded-lg transition-all duration-200 text-left hover:shadow-md ${
                     isSelected 
-                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20 cursor-not-allowed' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                      ? `${mapToAccentColor('border-accent-500 bg-accent-100 dark:bg-accent-900/50 text-accent-900 dark:text-accent-100')} cursor-not-allowed shadow-sm` 
+                      : `border-gray-200 dark:border-gray-700 ${mapToAccentColor('hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20')}`
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">

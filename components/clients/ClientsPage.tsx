@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
+import { mapToAccentColor } from '../../utils/colorUtils';
 import { UserIcon, PlusIcon, ChevronRightIcon } from '../common/Icons';
 import type { Client } from '../../types';
 import ClientDetailPage from './ClientDetailPage';
@@ -54,11 +55,11 @@ const ClientsPage: React.FC = () => {
             placeholder={t('clients.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
+            className={`w-full sm:w-64 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all`}
           />
           <button
             onClick={() => handleOpenModal(null)}
-            className="flex items-center gap-2 px-4 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
+            className={`flex items-center gap-2 px-4 py-2 ${mapToAccentColor('bg-accent-500 hover:bg-accent-600')} rounded-lg font-semibold text-white transition-colors shadow-sm hover:shadow-md`}
           >
             <PlusIcon className="w-5 h-5" />
             <span className="hidden sm:inline">{t('clients.newClient')}</span>
@@ -73,7 +74,7 @@ const ClientsPage: React.FC = () => {
               <button
                 key={client.id}
                 onClick={() => setSelectedClient(client)}
-                className="w-full flex items-center justify-between p-4 bg-gray-100/50 dark:bg-gray-900/40 hover:bg-gray-100 dark:hover:bg-gray-900/80 rounded-lg transition-colors text-left"
+                className={`w-full flex items-center justify-between p-4 bg-gray-100/50 dark:bg-gray-900/40 ${mapToAccentColor('hover:bg-accent-50 dark:hover:bg-accent-900/20')} rounded-lg transition-all text-left group hover:shadow-sm`}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -88,7 +89,7 @@ const ClientsPage: React.FC = () => {
                     <p className="text-sm text-gray-500 dark:text-gray-400">{client.email}</p>
                   </div>
                 </div>
-                <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-500"/>
+                <ChevronRightIcon className={`w-5 h-5 text-gray-400 dark:text-gray-500 ${mapToAccentColor('group-hover:text-accent-500')} transition-colors`}/>
               </button>
             ))}
           </div>

@@ -31,9 +31,9 @@ interface OnboardingData {
 }
 
 const DESIGN_STYLES = [
-  { id: 'modern', name: 'Modern', description: 'Clean lines and contemporary feel', color: 'bg-accent' },
+  { id: 'modern', name: 'Modern', description: 'Clean lines and contemporary feel', color: mapToAccentColor('bg-accent-500') },
   { id: 'classic', name: 'Classic', description: 'Timeless and elegant design', color: 'bg-purple-500' },
-  { id: 'minimalist', name: 'Minimalist', description: 'Simple and focused approach', color: 'bg-gray-500' },
+  { id: 'minimalist', name: 'Minimalist', description: 'Simple and focused approach', color: 'bg-slate-500' },
   { id: 'vibrant', name: 'Vibrant', description: 'Bold colors and energetic vibe', color: 'bg-pink-500' }
 ] as const;
 
@@ -255,7 +255,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <div className={`w-8 h-8 ${style.color} rounded-full mx-auto mb-2`} />
+                <div className={`w-8 h-8 ${style.id === 'modern' ? style.color : style.color} rounded-full mx-auto mb-2`} />
                 <h3 className="font-semibold text-gray-900 dark:text-white">{style.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{style.description}</p>
               </button>
@@ -561,14 +561,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           <button
             onClick={handleComplete}
             disabled={isCompleting}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 ${mapToAccentColor('bg-accent-500')} text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 ${mapToAccentColor('bg-accent-500 hover:bg-accent-600')} text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCompleting ? 'animate-pulse' : ''}`}
           >
             <CheckIcon className="w-5 h-5" />
-            {isCompleting ? 'Setting up...' : 'Complete Setup'}
+            {isCompleting ? 'Setting up your salon...' : 'Complete Setup'}
           </button>
           <button
             onClick={handleComplete}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             Skip for Now
           </button>
