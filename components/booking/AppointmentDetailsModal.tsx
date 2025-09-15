@@ -82,6 +82,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   const handleStatusChange = (newStatus: AppointmentStatus | 'cancelled') => {
     setCurrentStatus(newStatus);
     onStatusChange(newStatus);
+    setHasUnsavedChanges(true);
   };
 
   const getStatusColor = (status: AppointmentStatus | 'cancelled') => {
@@ -131,22 +132,20 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   };
 
   const handleSaveSelectedItems = () => {
-    // Add selected services to appointment
-    setAppointmentServices(prev => [...prev, ...selectedServices]);
+    const newServices = [...appointmentServices, ...selectedServices];
     
-    // Convert selected products to service-like objects and add them
     const productsAsServices: Service[] = selectedProducts.map(product => ({
       id: product.id,
       name: product.name,
       description: product.description,
-      duration: 0, // Products don't have duration
+      duration: 0,
       price: product.price,
       parentId: null
     }));
     
-    setAppointmentServices(prev => [...prev, ...productsAsServices]);
+    const finalServices = [...newServices, ...productsAsServices];
+    setAppointmentServices(finalServices);
     
-    // Clear selections and go back to appointment view
     setSelectedServices([]);
     setSelectedProducts([]);
     setHasUnsavedChanges(true);

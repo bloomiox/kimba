@@ -107,6 +107,7 @@ const BookingForm: React.FC = () => {
     });
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [clientDetails, setClientDetails] = useState({ name: '', email: '', phone: '' });
+    const [isClientListVisible, setIsClientListVisible] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
     
     const topLevelGroups = useMemo(() => serviceGroups.filter(g => g.parentId === null), [serviceGroups]);
@@ -511,35 +512,38 @@ const BookingForm: React.FC = () => {
                                                 {t('booking.step5.fullName')}
                                             </label>
                                             <div className="relative">
-                                                <input 
-                                                    type="text" 
-                                                    value={clientDetails.name} 
+                                                <input
+                                                    type="text"
+                                                    value={clientDetails.name}
                                                     onChange={e => {
                                                         setClientDetails(p => ({...p, name: e.target.value}));
+                                                        setIsClientListVisible(true);
                                                         // Clear other fields when typing a new name
                                                         if (e.target.value !== clientDetails.name) {
                                                             setClientDetails(p => ({...p, email: '', phone: ''}));
                                                         }
                                                     }}
+                                                    onBlur={() => setTimeout(() => setIsClientListVisible(false), 100)}
                                                     placeholder="Enter your full name"
                                                     className={`w-full p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${mapToAccentColor('focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20')} transition-colors`}
                                                     required
                                                 />
-                                                {clientDetails.name && (
+                                                {isClientListVisible && clientDetails.name && (
                                                     <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                                         {clients
                                                             .filter(c => c.name.toLowerCase().includes(clientDetails.name.toLowerCase()))
                                                             .slice(0, 5)
                                                             .map(c => (
-                                                                <button 
-                                                                    key={c.id} 
+                                                                <button
+                                                                    key={c.id}
                                                                     type="button"
-                                                                    onClick={() => {
+                                                                    onMouseDown={() => {
                                                                         setClientDetails({
                                                                             name: c.name,
                                                                             email: c.email,
                                                                             phone: c.phone || ''
                                                                         });
+                                                                        setIsClientListVisible(false);
                                                                     }}
                                                                     className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 border-b last:border-b-0 dark:border-gray-600 flex items-center gap-3"
                                                                 >
