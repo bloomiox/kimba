@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
+import { supabase } from '../../services/supabaseClient';
 import { 
   ChevronRightIcon, UserIcon, ClockIcon, ClipboardListIcon, EditIcon, TrashIcon, 
   StarIcon, DollarSignIcon, BarChartIcon, CheckIcon, PlusIcon, CloseIcon 
 } from '../common/Icons';
-import type { Hairstylist, Service, HairstylistSkill, HairstylistAvailability, HairstylistCommission } from '../../types';
+import type { Hairstylist, Service, HairstylistSkill, HairstylistAvailability, HairstylistCommission, HairstylistBreak, HairstylistTimeOff } from '../../types';
 
 interface HairstylistDetailPageProps {
   hairstylist: Hairstylist;
@@ -34,6 +35,18 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
   const [activeTab, setActiveTab] = useState<'services' | 'schedule' | 'skills' | 'commissions' | 'performance'>('services');
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<HairstylistSkill | null>(null);
+  const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
+  const [editingBreak, setEditingBreak] = useState<{ dayIndex: number; break: HairstylistBreak } | null>(null);
+  const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState(false);
+  const [editingTimeOff, setEditingTimeOff] = useState<HairstylistTimeOff | null>(null);
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [localAvailability, setLocalAvailability] = useState<HairstylistAvailability[]>(hairstylist.availability || []);
+
+  // Sync local availability when hairstylist prop changes
+  useEffect(() => {
+    setLocalAvailability(hairstylist.availability || []);
+  }, [hairstylist.availability]);
 
   const assignedServices = services.filter(service => 
     hairstylist.serviceIds?.includes(service.id)
@@ -54,11 +67,116 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
   };
 
   const handleAvailabilityChange = (dayIndex: number, field: keyof HairstylistAvailability, value: any) => {
-    const newAvailability = [...(hairstylist.availability || [])];
-    if (newAvailability[dayIndex]) {
-      newAvailability[dayIndex] = { ...newAvailability[dayIndex], [field]: value };
-      updateHairstylistAvailability(hairstylist.id, newAvailability);
+    const newAvailability = [...localAvailability];
+    
+    // Initialize availability for this day if it doesn't exist
+    if (!newAvailability[dayIndex]) {
+      newAvailability[dayIndex] = {
+        dayOfWeek: dayIndex,
+        startTime: '09:00',
+        endTime: '17:00',
+        isAvailable: false,
+        breaks: []
+      };
     }
+    
+    newAvailability[dayIndex] = { ...newAvailability[dayIndex], [field]: value };
+    
+    // Update local state without saving to context yet
+    setLocalAvailability(newAvailability);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveScheduleChanges = async () => {
+    try {
+      // Delete existing availability records for this hairstylist
+      await supabase
+        .from('hairstylist_availability')
+        .delete()
+        .eq('hairstylist_id', hairstylist.id);
+      
+      // Insert new availability records
+      const availabilityToInsert = localAvailability.map(avail => ({
+        hairstylist_id: hairstylist.id,
+        day_of_week: avail.dayOfWeek,
+        start_time: avail.startTime,
+        end_time: avail.endTime,
+        is_available: avail.isAvailable
+      }));
+      
+      if (availabilityToInsert.length > 0) {
+        const { error } = await supabase
+          .from('hairstylist_availability')
+          .insert(availabilityToInsert);
+        
+        if (error) throw error;
+      }
+      
+      // Update local context state
+      updateHairstylistAvailability(hairstylist.id, localAvailability);
+      
+      setHasUnsavedChanges(false);
+      setIsEditingSchedule(false);
+      alert('Schedule changes saved successfully to database!');
+    } catch (error) {
+      console.error('Error saving schedule:', error);
+      alert('Error saving schedule changes. Please try again.');
+    }
+  };
+
+  const handleAddBreak = (dayIndex: number, breakData: Omit<HairstylistBreak, 'id'>) => {
+    const newBreak = { ...breakData, id: `break_${Date.now()}` };
+    const newAvailability = [...localAvailability];
+    if (newAvailability[dayIndex]) {
+      newAvailability[dayIndex] = {
+        ...newAvailability[dayIndex],
+        breaks: [...(newAvailability[dayIndex].breaks || []), newBreak]
+      };
+      setLocalAvailability(newAvailability);
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  const handleEditBreak = (dayIndex: number, breakItem: HairstylistBreak) => {
+    const newAvailability = [...localAvailability];
+    if (newAvailability[dayIndex]) {
+      newAvailability[dayIndex] = {
+        ...newAvailability[dayIndex],
+        breaks: (newAvailability[dayIndex].breaks || []).map(b => b.id === breakItem.id ? breakItem : b)
+      };
+      setLocalAvailability(newAvailability);
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  const handleDeleteBreak = (dayIndex: number, breakId: string) => {
+    const newAvailability = [...localAvailability];
+    if (newAvailability[dayIndex]) {
+      newAvailability[dayIndex] = {
+        ...newAvailability[dayIndex],
+        breaks: (newAvailability[dayIndex].breaks || []).filter(b => b.id !== breakId)
+      };
+      setLocalAvailability(newAvailability);
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  const handleAddTimeOff = (timeOffData: Omit<HairstylistTimeOff, 'id'>) => {
+    // TODO: Implement time off persistence when updateHairstylist is available
+    console.log('Time off data to save:', timeOffData);
+    alert('Time off functionality requires database integration. Coming soon!');
+  };
+
+  const handleEditTimeOff = (timeOff: HairstylistTimeOff) => {
+    // TODO: Implement time off persistence when updateHairstylist is available
+    console.log('Time off data to edit:', timeOff);
+    alert('Time off functionality requires database integration. Coming soon!');
+  };
+
+  const handleDeleteTimeOff = (timeOffId: string) => {
+    // TODO: Implement time off persistence when updateHairstylist is available
+    console.log('Time off to delete:', timeOffId);
+    alert('Time off functionality requires database integration. Coming soon!');
   };
 
   const handleCommissionChange = (serviceId: string, type: 'percentage' | 'fixed', value: number) => {
@@ -236,43 +354,216 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
 
         {/* Schedule Tab */}
         {activeTab === 'schedule' && (
-          <div className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50">
-            <h3 className="text-xl font-semibold mb-4">{t('team.weeklySchedule')}</h3>
-            <div className="space-y-4">
-              {dayNames.map((dayName, index) => {
-                const availability = hairstylist.availability?.find(a => a.dayOfWeek === index);
-                return (
-                  <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
-                    <div className="w-24 font-medium">{t(`team.days.${dayName.toLowerCase()}`)}</div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={availability?.isAvailable || false}
-                        onChange={(e) => handleAvailabilityChange(index, 'isAvailable', e.target.checked)}
-                        className="rounded"
-                      />
-                      <span className="text-sm">{t('team.available')}</span>
-                    </label>
-                    {availability?.isAvailable && (
-                      <>
-                        <input
-                          type="time"
-                          value={availability.startTime}
-                          onChange={(e) => handleAvailabilityChange(index, 'startTime', e.target.value)}
-                          className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded"
-                        />
-                        <span className="text-gray-500">to</span>
-                        <input
-                          type="time"
-                          value={availability.endTime}
-                          onChange={(e) => handleAvailabilityChange(index, 'endTime', e.target.value)}
-                          className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded"
-                        />
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+          <div className="space-y-6">
+            {/* Weekly Schedule */}
+            <div className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">{t('team.weeklySchedule')}</h3>
+                <div className="flex items-center gap-2">
+                  {isEditingSchedule ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          setIsEditingSchedule(false);
+                          setHasUnsavedChanges(false);
+                          setLocalAvailability(hairstylist.availability || []);
+                        }}
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg font-semibold text-gray-800 dark:text-gray-200"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveScheduleChanges}
+                        disabled={!hasUnsavedChanges}
+                        className={`px-4 py-2 rounded-lg font-semibold text-white transition-colors ${
+                          hasUnsavedChanges 
+                            ? 'bg-accent hover:opacity-90' 
+                            : 'bg-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        Save Changes
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setIsEditingSchedule(true);
+                        setLocalAvailability(hairstylist.availability || []);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
+                    >
+                      <EditIcon className="w-4 h-4" />
+                      Edit Schedule
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-4">
+                {dayNames.map((dayName, index) => {
+                  const availability = localAvailability?.find(a => a.dayOfWeek === index);
+                  return (
+                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4">
+                          <div className="w-24 font-medium">{t(`team.days.${dayName.toLowerCase()}`)}</div>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={availability?.isAvailable || false}
+                              onChange={(e) => handleAvailabilityChange(index, 'isAvailable', e.target.checked)}
+                              disabled={!isEditingSchedule}
+                              className="rounded"
+                            />
+                            <span className="text-sm">{t('team.available')}</span>
+                          </label>
+                        </div>
+                        {availability?.isAvailable && isEditingSchedule && (
+                          <button
+                            onClick={() => {
+                              setEditingBreak({ dayIndex: index, break: { id: '', startTime: '12:00', endTime: '13:00', name: 'Lunch Break', isRecurring: true } });
+                              setIsBreakModalOpen(true);
+                            }}
+                            className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                          >
+                            Add Break
+                          </button>
+                        )}
+                      </div>
+                      
+                      {availability?.isAvailable && (
+                        <>
+                          {/* Working Hours */}
+                          <div className="flex items-center gap-4 mb-3">
+                            <span className="text-sm font-medium">Working Hours:</span>
+                            <input
+                              type="time"
+                              value={availability.startTime}
+                              onChange={(e) => handleAvailabilityChange(index, 'startTime', e.target.value)}
+                              disabled={!isEditingSchedule}
+                              className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                            <span className="text-gray-500">to</span>
+                            <input
+                              type="time"
+                              value={availability.endTime}
+                              onChange={(e) => handleAvailabilityChange(index, 'endTime', e.target.value)}
+                              disabled={!isEditingSchedule}
+                              className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                          
+                          {/* Breaks */}
+                          {availability.breaks && availability.breaks.length > 0 && (
+                            <div className="mt-3">
+                              <h5 className="text-sm font-medium mb-2">Breaks:</h5>
+                              <div className="space-y-2">
+                                {availability.breaks.map((breakItem) => (
+                                  <div key={breakItem.id} className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-sm font-medium">{breakItem.name}</span>
+                                      <span className="text-xs text-gray-500">{breakItem.startTime} - {breakItem.endTime}</span>
+                                      {breakItem.isRecurring && (
+                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Daily</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {isEditingSchedule && (
+                                        <>
+                                          <button
+                                            onClick={() => {
+                                              setEditingBreak({ dayIndex: index, break: breakItem });
+                                              setIsBreakModalOpen(true);
+                                            }}
+                                            className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                                          >
+                                            <EditIcon className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteBreak(index, breakItem.id)}
+                                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                          >
+                                            <TrashIcon className="w-4 h-4" />
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Time Off Management */}
+            <div className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">{t('team.timeOff')}</h3>
+                <button
+                  onClick={() => {
+                    setEditingTimeOff(null);
+                    setIsTimeOffModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Add Time Off
+                </button>
+              </div>
+              
+              {hairstylist.timeOff && hairstylist.timeOff.length > 0 ? (
+                <div className="space-y-3">
+                  {hairstylist.timeOff.map((timeOff) => (
+                    <div key={timeOff.id} className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h4 className="font-medium">{timeOff.reason}</h4>
+                          {timeOff.isFullDay ? (
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Full Day</span>
+                          ) : (
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Partial Day</span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {timeOff.startDate === timeOff.endDate 
+                            ? new Date(timeOff.startDate).toLocaleDateString()
+                            : `${new Date(timeOff.startDate).toLocaleDateString()} - ${new Date(timeOff.endDate).toLocaleDateString()}`
+                          }
+                          {!timeOff.isFullDay && timeOff.startTime && timeOff.endTime && (
+                            <span className="ml-2">({timeOff.startTime} - {timeOff.endTime})</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingTimeOff(timeOff);
+                            setIsTimeOffModalOpen(true);
+                          }}
+                          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                        >
+                          <EditIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTimeOff(timeOff.id)}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                  {t('team.noTimeOff')}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -540,6 +831,283 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                   className="px-6 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
                 >
                   {editingSkill ? t('common.save') : t('team.addSkill')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Break Modal */}
+      {isBreakModalOpen && editingBreak && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
+            <button 
+              onClick={() => {
+                setIsBreakModalOpen(false);
+                setEditingBreak(null);
+              }} 
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+            >
+              <CloseIcon className="w-6 h-6" />
+            </button>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              {editingBreak.break.id ? 'Edit Break' : 'Add Break'}
+            </h2>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const name = formData.get('name') as string;
+              const startTime = formData.get('startTime') as string;
+              const endTime = formData.get('endTime') as string;
+              const isRecurring = formData.get('isRecurring') === 'on';
+              
+              if (editingBreak.break.id) {
+                handleEditBreak(editingBreak.dayIndex, {
+                  ...editingBreak.break,
+                  name,
+                  startTime,
+                  endTime,
+                  isRecurring
+                });
+              } else {
+                handleAddBreak(editingBreak.dayIndex, {
+                  name,
+                  startTime,
+                  endTime,
+                  isRecurring
+                });
+              }
+              setIsBreakModalOpen(false);
+              setEditingBreak(null);
+            }} className="space-y-4">
+              <div>
+                <label htmlFor="breakName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Break Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="breakName"
+                  required
+                  defaultValue={editingBreak.break.name}
+                  placeholder="e.g., Lunch Break, Coffee Break"
+                  className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    id="startTime"
+                    required
+                    defaultValue={editingBreak.break.startTime}
+                    className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    id="endTime"
+                    required
+                    defaultValue={editingBreak.break.endTime}
+                    className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="isRecurring"
+                    defaultChecked={editingBreak.break.isRecurring}
+                    className="rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Recurring daily break
+                  </span>
+                </label>
+              </div>
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBreakModalOpen(false);
+                    setEditingBreak(null);
+                  }}
+                  className="px-6 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg font-semibold text-gray-800 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
+                >
+                  {editingBreak.break.id ? 'Save Changes' : 'Add Break'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Time Off Modal */}
+      {isTimeOffModalOpen && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
+            <button 
+              onClick={() => {
+                setIsTimeOffModalOpen(false);
+                setEditingTimeOff(null);
+              }} 
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+            >
+              <CloseIcon className="w-6 h-6" />
+            </button>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              {editingTimeOff ? 'Edit Time Off' : 'Add Time Off'}
+            </h2>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const reason = formData.get('reason') as string;
+              const startDate = formData.get('startDate') as string;
+              const endDate = formData.get('endDate') as string;
+              const isFullDay = formData.get('isFullDay') === 'on';
+              const startTime = formData.get('startTime') as string;
+              const endTime = formData.get('endTime') as string;
+              
+              const timeOffData = {
+                reason,
+                startDate,
+                endDate,
+                isFullDay,
+                startTime: !isFullDay ? startTime : undefined,
+                endTime: !isFullDay ? endTime : undefined
+              };
+              
+              if (editingTimeOff) {
+                handleEditTimeOff({ ...editingTimeOff, ...timeOffData });
+              } else {
+                handleAddTimeOff(timeOffData);
+              }
+              setIsTimeOffModalOpen(false);
+              setEditingTimeOff(null);
+            }} className="space-y-4">
+              <div>
+                <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Reason
+                </label>
+                <input
+                  type="text"
+                  name="reason"
+                  id="reason"
+                  required
+                  defaultValue={editingTimeOff?.reason || ''}
+                  placeholder="e.g., Vacation, Sick Leave, Personal"
+                  className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    id="startDate"
+                    required
+                    defaultValue={editingTimeOff?.startDate || ''}
+                    className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    id="endDate"
+                    required
+                    defaultValue={editingTimeOff?.endDate || ''}
+                    className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="isFullDay"
+                    defaultChecked={editingTimeOff?.isFullDay !== false}
+                    className="rounded"
+                    onChange={(e) => {
+                      const timeInputs = document.querySelectorAll('[name="startTime"], [name="endTime"]') as NodeListOf<HTMLInputElement>;
+                      timeInputs.forEach(input => {
+                        input.disabled = e.target.checked;
+                        if (e.target.checked) input.value = '';
+                      });
+                    }}
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Full day time off
+                  </span>
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Start Time (if partial day)
+                  </label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    id="startTime"
+                    defaultValue={editingTimeOff?.startTime || ''}
+                    disabled={editingTimeOff?.isFullDay !== false}
+                    className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    End Time (if partial day)
+                  </label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    id="endTime"
+                    defaultValue={editingTimeOff?.endTime || ''}
+                    disabled={editingTimeOff?.isFullDay !== false}
+                    className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50"
+                  />
+                </div>
+              </div>
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTimeOffModalOpen(false);
+                    setEditingTimeOff(null);
+                  }}
+                  className="px-6 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg font-semibold text-gray-800 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
+                >
+                  {editingTimeOff ? 'Save Changes' : 'Add Time Off'}
                 </button>
               </div>
             </form>

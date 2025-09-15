@@ -33,7 +33,8 @@ const Dashboard: React.FC<{ onQuickAction: (view: View) => void; savedLookbooks:
         return {
             label: d.toLocaleDateString(langCode, {weekday: 'short'}),
             dateString: formatDateForStorage(d),
-            value: 0
+            value: 0,
+            salesCount: 0
         };
     });
 
@@ -53,6 +54,7 @@ const Dashboard: React.FC<{ onQuickAction: (view: View) => void; savedLookbooks:
         const dayData = last7DaysData.find(d => d.dateString === saleDateString);
         if (dayData) {
             dayData.value += sale.total;
+            dayData.salesCount += 1;
         }
     }
     

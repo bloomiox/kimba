@@ -19,12 +19,39 @@ const SLOT_INTERVAL = 30; // in minutes
 const getAvailableSlots = (
   date: Date,
   service: Service,
+  hairstylist: Hairstylist,
   hairstylistAppointments: Appointment[],
   allServices: Service[]
 ): { time: string }[] => {
-  if (!service) return [];
+  if (!service || !hairstylist) return [];
   const availableSlots: { time: string }[] = [];
   const serviceDuration = service.duration;
+  const dayOfWeek = date.getDay();
+
+  // Find the hairstylist's availability for this day
+  const dayAvailability = hairstylist.availability.find(a => a.dayOfWeek === dayOfWeek);
+  if (!dayAvailability || !dayAvailability.isAvailable) {
+    return []; // Hairstylist is not available on this day
+  }
+
+  // Check for time off
+  const dateString = date.toISOString().split('T')[0];
+  const hasTimeOff = hairstylist.timeOff?.some(timeOff => {
+    if (timeOff.isFullDay) {
+      return dateString >= timeOff.startDate && dateString <= timeOff.endDate;
+    } else {
+      // For partial day time off, we'll handle this in the slot generation loop
+      return false;
+    }
+  });
+
+  if (hasTimeOff) {
+    return []; // Hairstylist has full day time off
+  }
+
+  // Parse hairstylist's working hours for this day
+  const [startHour, startMinute] = dayAvailability.startTime.split(':').map(Number);
+  const [endHour, endMinute] = dayAvailability.endTime.split(':').map(Number);
 
   const servicesById = allServices.reduce((acc, s) => ({...acc, [s.id]: s}), {} as Record<string, Service>);
 
@@ -35,32 +62,89 @@ const getAvailableSlots = (
     return { start: appStartTime, end: appEndTime };
   });
 
-  for (let hour = WORKING_HOURS.start; hour < WORKING_HOURS.end; hour++) {
-    for (let minute = 0; minute < 60; minute += SLOT_INTERVAL) {
-      const slotStartTime = new Date(date);
-      slotStartTime.setHours(hour, minute, 0, 0);
+  // Create break intervals for this day
+  const breakIntervals = (dayAvailability.breaks || []).map(breakItem => {
+    const [breakStartHour, breakStartMinute] = breakItem.startTime.split(':').map(Number);
+    const [breakEndHour, breakEndMinute] = breakItem.endTime.split(':').map(Number);
+    
+    const breakStart = new Date(date);
+    breakStart.setHours(breakStartHour, breakStartMinute, 0, 0);
+    
+    const breakEnd = new Date(date);
+    breakEnd.setHours(breakEndHour, breakEndMinute, 0, 0);
+    
+    return { start: breakStart, end: breakEnd };
+  });
 
-      // Prevent selecting slots in the past
-      if (slotStartTime < new Date()) continue;
+  // Add partial day time off intervals
+  const partialTimeOffIntervals = (hairstylist.timeOff || [])
+    .filter(timeOff => !timeOff.isFullDay && dateString >= timeOff.startDate && dateString <= timeOff.endDate)
+    .map(timeOff => {
+      const [offStartHour, offStartMinute] = (timeOff.startTime || '00:00').split(':').map(Number);
+      const [offEndHour, offEndMinute] = (timeOff.endTime || '23:59').split(':').map(Number);
+      
+      const offStart = new Date(date);
+      offStart.setHours(offStartHour, offStartMinute, 0, 0);
+      
+      const offEnd = new Date(date);
+      offEnd.setHours(offEndHour, offEndMinute, 0, 0);
+      
+      return { start: offStart, end: offEnd };
+    });
 
-      const slotEndTime = new Date(slotStartTime.getTime() + serviceDuration * 60000);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(WORKING_HOURS.end, 0, 0, 0);
-      if (slotEndTime > endOfDay) continue;
+  // Calculate working time in 30-minute slots
+  const workStart = new Date(date);
+  workStart.setHours(startHour, startMinute, 0, 0);
+  
+  const workEnd = new Date(date);
+  workEnd.setHours(endHour, endMinute, 0, 0);
 
-      let isAvailable = true;
-      for (const interval of appointmentIntervals) {
-        if (slotStartTime < interval.end && slotEndTime > interval.start) {
+  // Generate slots based on hairstylist's working hours (not global WORKING_HOURS)
+  for (let slotTime = new Date(workStart); slotTime < workEnd; slotTime.setMinutes(slotTime.getMinutes() + SLOT_INTERVAL)) {
+    // Prevent selecting slots in the past
+    if (slotTime < new Date()) continue;
+
+    const slotEndTime = new Date(slotTime.getTime() + serviceDuration * 60000);
+    
+    // Check if slot extends beyond working hours
+    if (slotEndTime > workEnd) continue;
+
+    let isAvailable = true;
+
+    // Check against existing appointments
+    for (const interval of appointmentIntervals) {
+      if (slotTime < interval.end && slotEndTime > interval.start) {
+        isAvailable = false;
+        break;
+      }
+    }
+
+    // Check against breaks
+    if (isAvailable) {
+      for (const breakInterval of breakIntervals) {
+        if (slotTime < breakInterval.end && slotEndTime > breakInterval.start) {
           isAvailable = false;
           break;
         }
       }
-      
-      if (isAvailable) {
-        availableSlots.push({ time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` });
+    }
+
+    // Check against partial time off
+    if (isAvailable) {
+      for (const timeOffInterval of partialTimeOffIntervals) {
+        if (slotTime < timeOffInterval.end && slotEndTime > timeOffInterval.start) {
+          isAvailable = false;
+          break;
+        }
       }
     }
+    
+    if (isAvailable) {
+      const timeString = `${String(slotTime.getHours()).padStart(2, '0')}:${String(slotTime.getMinutes()).padStart(2, '0')}`;
+      availableSlots.push({ time: timeString });
+    }
   }
+  
   return availableSlots;
 };
 
@@ -134,7 +218,7 @@ const BookingForm: React.FC = () => {
     
     const availableSlots = useMemo(() => {
         if (!selectedService || !selectedHairstylist) return [];
-        return getAvailableSlots(selectedDate, selectedService, hairstylistAppointments, services);
+        return getAvailableSlots(selectedDate, selectedService, selectedHairstylist, hairstylistAppointments, services);
     }, [selectedService, selectedHairstylist, selectedDate, hairstylistAppointments, services]);
     
     const handleNextStep = () => setStep(s => s + 1);

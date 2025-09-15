@@ -68,11 +68,30 @@ export interface HairstylistSkill {
   category: 'cutting' | 'coloring' | 'styling' | 'treatment' | 'other';
 }
 
+export interface HairstylistBreak {
+  id: string;
+  startTime: string; // HH:mm format
+  endTime: string; // HH:mm format
+  name: string; // e.g., "Lunch Break", "Coffee Break"
+  isRecurring: boolean; // If this break happens every day
+}
+
+export interface HairstylistTimeOff {
+  id: string;
+  startDate: string; // YYYY-MM-DD format
+  endDate: string; // YYYY-MM-DD format
+  startTime?: string; // HH:mm format (optional for partial day off)
+  endTime?: string; // HH:mm format (optional for partial day off)
+  reason: string; // e.g., "Vacation", "Sick Leave", "Personal"
+  isFullDay: boolean;
+}
+
 export interface HairstylistAvailability {
   dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
   startTime: string; // HH:mm format
   endTime: string; // HH:mm format
   isAvailable: boolean;
+  breaks: HairstylistBreak[]; // Daily breaks/lunch
 }
 
 export interface HairstylistCommission {
@@ -106,6 +125,7 @@ export interface Hairstylist {
   serviceIds: string[]; // Services this hairstylist can perform
   skills: HairstylistSkill[];
   availability: HairstylistAvailability[];
+  timeOff: HairstylistTimeOff[]; // Vacation, sick days, etc.
   commissions: HairstylistCommission[];
   performance: HairstylistPerformance[];
   isActive: boolean;
