@@ -831,7 +831,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
     const b = parseInt(hexColor.slice(5, 7), 16);
     
     // Generate shades (lighter and darker variants)
-    return {
+    const shades = {
       50: adjustColor(r, g, b, 0.9),  // Lightest
       100: adjustColor(r, g, b, 0.8),
       200: adjustColor(r, g, b, 0.6),
@@ -844,6 +844,24 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
       900: darkenColor(r, g, b, 0.4),
       950: darkenColor(r, g, b, 0.5),  // Darkest
     };
+    
+    // Also create RGB versions for shadows and other utilities
+    const shadesWithRgb = {};
+    Object.entries(shades).forEach(([shade, hexValue]) => {
+      const rgb = hexToRgb(hexValue);
+      shadesWithRgb[shade] = hexValue;
+      shadesWithRgb[`${shade}-rgb`] = `${rgb.r} ${rgb.g} ${rgb.b}`;
+    });
+    
+    return shadesWithRgb;
+  };
+  
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b };
   };
   
   // Helper function to lighten a color
@@ -888,9 +906,16 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
     // Generate and set all color shades
     if (accentColorValue) {
       const shades = generateColorShades(accentColorValue);
-      Object.entries(shades).forEach(([shade, color]) => {
-        document.documentElement.style.setProperty(`--accent-color-${shade}`, color);
-        console.log(`Setting --accent-color-${shade} to ${color}`);
+      Object.entries(shades).forEach(([shade, value]) => {
+        if (shade.includes('-rgb')) {
+          // Set RGB values for shadow utilities
+          document.documentElement.style.setProperty(`--accent-color-${shade}-custom`, value);
+        } else {
+          // Set both the old format and the Tailwind expected format
+          document.documentElement.style.setProperty(`--accent-color-${shade}`, value);
+          document.documentElement.style.setProperty(`--accent-${shade}`, value); // This is what Tailwind expects
+        }
+        console.log(`Setting --accent-${shade} to ${value}`);
       });
     }
     

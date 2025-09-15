@@ -46,6 +46,7 @@ const AppointmentDetailsModalWrapper: React.FC<AppointmentDetailsModalProps> = (
                 // For now, we'll just update the local state to reflect the changes
                 // In a real implementation, you would call updateAppointmentDetails with the new services
             }}
+            updateAppointmentDetails={updateAppointmentDetails}
         />
     );
 };

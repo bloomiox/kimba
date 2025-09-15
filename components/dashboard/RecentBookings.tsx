@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { ClockIcon, UserIcon, CalendarIcon } from '../common/Icons';
 import type { Appointment, Client, Service } from '../../types';
 import { getTodayString, getTomorrowString, isToday } from '../../utils/dateUtils';
+import AppointmentDetailsModal from '../booking/AppointmentDetailsModal';
 
 const RecentBookings: React.FC = () => {
-    const { appointments, clients, services } = useSettings();
+    const { appointments, clients, services, hairstylists, getClientById, updateAppointmentStatus, updateAppointmentDetails } = useSettings();
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
     const recentBookings = useMemo(() => {
         const today = getTodayString();
@@ -77,7 +79,8 @@ const RecentBookings: React.FC = () => {
                     recentBookings.map((booking) => (
                         <div
                             key={booking.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/70 transition-colors"
+                            onClick={() => setSelectedAppointment(booking)}
+                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/70 transition-colors cursor-pointer"
                         >
                             <div className="flex items-center space-x-3">
                                 <div className="flex-shrink-0">
@@ -123,6 +126,43 @@ const RecentBookings: React.FC = () => {
                     </p>
                 </div>
             )}
+
+            {/* Appointment Details Modal */}
+            {selectedAppointment && (() => {
+                const client = getClientById(selectedAppointment.clientId);
+                const service = services.find(s => s.id === selectedAppointment.serviceId);
+                const hairstylist = hairstylists.find(h => h.id === selectedAppointment.hairstylistId);
+                
+                if (!client || !service || !hairstylist) return null;
+                
+                return (
+                    <AppointmentDetailsModal
+                        appointment={selectedAppointment}
+                        client={client}
+                        services={[service]}
+                        hairstylist={hairstylist}
+                        isOpen={true}
+                        onClose={() => setSelectedAppointment(null)}
+                        onClientClick={(clientId) => {
+                            console.log('Client details shown in modal for:', clientId);
+                        }}
+                        onPayNow={() => {
+                            console.log('Payment initiated for appointment:', selectedAppointment.id);
+                        }}
+                        onCheckout={() => {
+                            console.log('Navigate to POS checkout for appointment:', selectedAppointment.id);
+                        }}
+                        onStatusChange={(status) => {
+                            updateAppointmentStatus(selectedAppointment.id, status);
+                            setSelectedAppointment(null);
+                        }}
+                        onAppointmentUpdate={(updatedServices, updatedTotal) => {
+                            console.log('Updating appointment with services:', updatedServices, 'Total:', updatedTotal);
+                        }}
+                        updateAppointmentDetails={updateAppointmentDetails}
+                    />
+                );
+            })()}
         </div>
     );
 };

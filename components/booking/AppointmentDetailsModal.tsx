@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { 
   XMarkIcon, 
@@ -29,6 +29,7 @@ interface AppointmentDetailsModalProps {
   onCheckout: () => void;
   onStatusChange: (status: AppointmentStatus | 'cancelled') => void;
   onAppointmentUpdate?: (updatedServices: Service[], updatedTotal: number) => void;
+  updateAppointmentDetails?: (appointmentId: string, updates: Partial<Omit<Appointment, 'id'>>) => void;
 }
 
 const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
@@ -42,22 +43,51 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   onPayNow,
   onCheckout,
   onStatusChange,
-  onAppointmentUpdate
+  onAppointmentUpdate,
+  updateAppointmentDetails
 }) => {
   const { t, currency, services: allServices, products } = useSettings();
+  
+  // Helper function to parse additional services from notes
+  const parseServicesFromNotes = (notes: string | undefined, allServices: Service[]): Service[] => {
+    if (!notes || !notes.includes('Additional Services:')) {
+      return [];
+    }
+    
+    const match = notes.match(/Additional Services:\s*([^|\n]+)/);
+    if (!match) return [];
+    
+    const serviceNames = match[1].split(',').map(name => name.trim());
+    return serviceNames
+      .map(name => allServices.find(s => s.name === name))
+      .filter((service): service is Service => service !== undefined);
+  };
+  
+  // Initialize appointment services with main service + additional services from notes
+  const initializeAppointmentServices = (): Service[] => {
+    const mainService = services[0]; // The service passed in props
+    const additionalServices = parseServicesFromNotes(appointment.notes, allServices);
+    return [mainService, ...additionalServices];
+  };
   const [currentView, setCurrentView] = useState<ModalView>('appointment');
   const [currentStatus, setCurrentStatus] = useState<AppointmentStatus | 'cancelled'>(
     appointment.status === 'unconfirmed' ? 'unconfirmed' : 
     appointment.status === 'confirmed' ? 'confirmed' : 
     appointment.status === 'late' ? 'late' : 'confirmed'
   );
-  const [appointmentServices, setAppointmentServices] = useState<Service[]>(services);
+  const [appointmentServices, setAppointmentServices] = useState<Service[]>(() => initializeAppointmentServices());
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [beforeAfterPhotos, setBeforeAfterPhotos] = useState<{before?: string, after?: string}>({});
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Reinitialize services when appointment changes
+  useEffect(() => {
+    setAppointmentServices(initializeAppointmentServices());
+    setHasUnsavedChanges(false);
+  }, [appointment.id, appointment.notes]);
 
   if (!isOpen) return null;
 
@@ -161,19 +191,63 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     setHasUnsavedChanges(true);
   };
 
-  const handleSaveAppointmentChanges = () => {
+  const handleSaveAppointmentChanges = async () => {
     // Update the parent component with the new services and total
     if (onAppointmentUpdate) {
       const finalTotal = appointmentServices.reduce((sum, service) => sum + service.price, 0);
       onAppointmentUpdate(appointmentServices, finalTotal);
     }
     
-    // In real implementation, this would call an API to update the appointment
-    console.log('Saving appointment changes:', {
-      appointmentId: appointment.id,
-      services: appointmentServices,
-      totalPrice: appointmentServices.reduce((sum, service) => sum + service.price, 0)
-    });
+    // Persist changes to database using updateAppointmentDetails
+    if (updateAppointmentDetails) {
+      try {
+        const updates: Partial<Omit<Appointment, 'id'>> = {};
+        
+        // Update the main service (first service in the list)
+        if (appointmentServices.length > 0) {
+          updates.serviceId = appointmentServices[0].id;
+        }
+        
+        // Store additional services in notes as a temporary solution
+        // Format: "Original notes | Additional Services: Service1, Service2"
+        if (appointmentServices.length > 1) {
+          const additionalServices = appointmentServices.slice(1).map(s => s.name).join(', ');
+          const originalNotes = appointment.notes || '';
+          const serviceNote = `Additional Services: ${additionalServices}`;
+          
+          if (originalNotes.includes('Additional Services:')) {
+            // Replace existing additional services note
+            updates.notes = originalNotes.replace(/Additional Services:.*?(?=\n|$)/, serviceNote);
+          } else {
+            // Append additional services note
+            updates.notes = originalNotes ? `${originalNotes} | ${serviceNote}` : serviceNote;
+          }
+        } else if (appointment.notes && appointment.notes.includes('Additional Services:')) {
+          // Remove additional services note if only one service remains
+          updates.notes = appointment.notes.replace(/\s*\|\s*Additional Services:.*?(?=\n|$)/, '').trim();
+        }
+        
+        await updateAppointmentDetails(appointment.id, updates);
+        
+        console.log('Appointment changes saved to database:', {
+          appointmentId: appointment.id,
+          updates,
+          services: appointmentServices,
+          totalPrice: appointmentServices.reduce((sum, service) => sum + service.price, 0)
+        });
+      } catch (error) {
+        console.error('Error saving appointment changes:', error);
+        // Show error message
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        errorMessage.textContent = 'Failed to save appointment changes. Please try again.';
+        document.body.appendChild(errorMessage);
+        setTimeout(() => {
+          document.body.removeChild(errorMessage);
+        }, 3000);
+        return;
+      }
+    }
     
     setHasUnsavedChanges(false);
     // Show success message
@@ -445,10 +519,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           <button
             onClick={handleSaveAppointmentChanges}
             disabled={!hasUnsavedChanges}
-            className={`flex-1 px-4 py-3 rounded-lg transition-all font-medium ${
+            className={`flex-1 px-4 py-3 rounded-lg transition-all font-medium shadow-sm ${
               hasUnsavedChanges 
-                ? `${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white shadow-sm hover:shadow-md` 
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                ? 'bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 border-2 border-transparent' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border-2 border-gray-300 dark:border-gray-600'
             }`}
           >
             {hasUnsavedChanges ? 'Save Changes' : 'No Changes'}
@@ -547,13 +621,17 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                       setSelectedServices([]);
                       setSelectedProducts([]);
                     }}
-                    className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all font-medium"
+                    className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all font-medium shadow-sm hover:shadow-md focus:ring-4 focus:ring-gray-300/30"
                   >
                     Clear All
                   </button>
                   <button
                     onClick={handleSaveSelectedItems}
-                    className={`px-6 py-2 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`px-6 py-2 text-white rounded-lg font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${
+                      (selectedServices.length === 0 && selectedProducts.length === 0)
+                        ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
+                        : 'bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30'
+                    }`}
                     disabled={selectedServices.length === 0 && selectedProducts.length === 0}
                   >
                     Save ({selectedServices.length + selectedProducts.length} items)
@@ -772,7 +850,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 // Show success message
                 alert('Photos saved to client profile!');
               }}
-              className={`px-6 py-3 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white rounded-lg font-medium transition-colors`}
+              className="px-6 py-3 bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 transition-all"
             >
               Save Photos to Profile
             </button>

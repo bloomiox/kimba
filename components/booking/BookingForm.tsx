@@ -230,7 +230,7 @@ const BookingForm: React.FC = () => {
                     
                     <button 
                         onClick={() => window.location.reload()} 
-                        className={`w-full px-6 py-3 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white rounded-lg font-semibold transition-colors`}
+                        className="w-full px-6 py-3 bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 transition-all"
                     >
                         {t('common.done')}
                     </button>
@@ -650,7 +650,11 @@ const BookingForm: React.FC = () => {
                                     <button 
                                         onClick={handleSubmit} 
                                         disabled={!clientDetails.name || !clientDetails.email || !clientDetails.phone} 
-                                        className={`w-full mt-8 px-6 py-4 ${mapToAccentColor('bg-accent-600 hover:bg-accent-700')} text-white disabled:bg-gray-400 disabled:cursor-not-allowed rounded-xl font-semibold text-lg transition-colors transform hover:scale-105 disabled:hover:scale-100`}
+                                        className={`w-full mt-8 px-6 py-4 font-semibold text-lg transition-all transform hover:scale-105 disabled:hover:scale-100 rounded-xl ${
+                                            !clientDetails.name || !clientDetails.email || !clientDetails.phone
+                                                ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed shadow-md'
+                                                : 'bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30'
+                                        }`}
                                     >
                                         {t('booking.step5.confirm')}
                                     </button>

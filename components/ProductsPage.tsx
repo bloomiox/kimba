@@ -317,7 +317,9 @@ const ProductsPage: React.FC = () => {
                                 className="h-4 w-4 rounded border-gray-300 text-accent-600 focus:ring-accent-500"
                                 checked={selectedProducts.length > 0 && selectedProducts.length === filteredAndSortedProducts.length}
                                 onChange={handleSelectAll}
-                                indeterminate={selectedProducts.length > 0 && selectedProducts.length < filteredAndSortedProducts.length}
+                                ref={(input) => {
+                                    if (input) input.indeterminate = selectedProducts.length > 0 && selectedProducts.length < filteredAndSortedProducts.length;
+                                }}
                             />
                             <label className="text-sm text-gray-600 dark:text-gray-400">
                                 {selectedProducts.length > 0 ? `${selectedProducts.length} selected` : 'Select all'}
@@ -387,6 +389,7 @@ const ProductsPage: React.FC = () => {
                                                 {product.sku && <span>SKU: {product.sku}</span>}
                                                 {product.category && <span>Category: {product.category}</span>}
                                                 {product.brand && <span>Brand: {product.brand}</span>}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -404,11 +407,11 @@ const ProductsPage: React.FC = () => {
                                             <button onClick={() => handleDeleteProduct(product.id)} className="p-2 text-gray-400 hover:text-red-600"><TrashIcon className="w-4 h-4" /></button>
                                         </div>
                                     </div>
-                                </div>
-                            </Card>
-                        )
-                    ))}
-                </div>
+                                </Card>
+                            )
+                        ))}
+                    </div>
+                </>
             )}
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingProduct ? 'Edit Product' : 'Add Product'} className="max-w-2xl">
@@ -492,7 +495,13 @@ const ProductsPage: React.FC = () => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select CSV File</label>
-                        <Input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVImport} />
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv"
+                            onChange={handleCSVImport}
+                            className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition"
+                        />
                     </div>
                     <div className="pt-2 flex justify-end">
                         <Button variant="secondary" onClick={() => setIsImportModalOpen(false)}>Cancel</Button>

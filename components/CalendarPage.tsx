@@ -325,6 +325,7 @@ const CalendarPage: React.FC = () => {
               // For now, we'll just update the local state to reflect the changes
               setViewingAppointment(prev => prev ? { ...prev, serviceId: updatedServices[0]?.id || prev.serviceId } : null);
             }}
+            updateAppointmentDetails={updateAppointmentDetails}
           />
         );
       })()}
