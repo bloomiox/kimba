@@ -133,6 +133,14 @@ export interface Hairstylist {
 
 export type AppointmentStatus = 'unconfirmed' | 'confirmed' | 'late' | 'cancelled';
 
+export interface ClientPhotoPair {
+  id: string;
+  beforePhotoUrl?: string;
+  afterPhotoUrl?: string;
+  createdAt: string; // ISO date string
+  appointmentId?: string; // Optional link to appointment
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -145,6 +153,7 @@ export interface Client {
   isDemo?: boolean;
   consentToShare?: boolean;
   socialMediaConsent?: ClientSocialConsent;
+  photoPairs?: ClientPhotoPair[]; // Array of before/after photo pairs
 }
 
 export interface Appointment {
