@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { 
   XMarkIcon, 
@@ -14,6 +14,7 @@ import {
 import AppointmentPaymentModal from './AppointmentPaymentModal';
 import type { Appointment, Client, Service, Hairstylist, AppointmentStatus, Product } from '../../types';
 import { mapToAccentColor } from '../../utils/colorUtils';
+import { uploadImage, deleteImage } from '../../services/imageStorageService';
 
 type ModalView = 'appointment' | 'client' | 'addService' | 'payment' | 'photoCapture';
 
@@ -106,12 +107,33 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   const [beforeAfterPhotos, setBeforeAfterPhotos] = useState<{before?: string, after?: string}>({});
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [cameraActive, setCameraActive] = useState<{before: boolean, after: boolean}>({before: false, after: false});
+  const [cameraStream, setCameraStream] = useState<{before: MediaStream | null, after: MediaStream | null}>({before: null, after: null});
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  const beforeVideoRef = useRef<HTMLVideoElement>(null);
+  const afterVideoRef = useRef<HTMLVideoElement>(null);
+  const beforeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const afterCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Reinitialize services when appointment changes
   useEffect(() => {
     setAppointmentServices(initializeAppointmentServices());
     setHasUnsavedChanges(false);
   }, [appointment.id, appointment.notes]);
+
+  // Cleanup camera streams when component unmounts or view changes
+  useEffect(() => {
+    return () => {
+      // Stop any active camera streams
+      if (cameraStream.before) {
+        cameraStream.before.getTracks().forEach(track => track.stop());
+      }
+      if (cameraStream.after) {
+        cameraStream.after.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   if (!isOpen) return null;
 
@@ -296,21 +318,41 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   };
 
   const handlePhotoCapture = async (type: 'before' | 'after', file: File) => {
-    // In a real implementation, you would upload the file to your storage service
-    // For now, we'll convert to base64 for demonstration
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
+    try {
+      // Upload the file to Supabase storage
+      const result = await uploadImage(file, 'appointment-photos');
+      
+      if (result.error) {
+        console.error(`Error uploading ${type} photo:`, result.error);
+        // Show error message to user
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        errorMessage.textContent = `Failed to upload ${type} photo: ${result.error}`;
+        document.body.appendChild(errorMessage);
+        setTimeout(() => {
+          document.body.removeChild(errorMessage);
+        }, 3000);
+        return;
+      }
+      
+      // Store the URL in state
       setBeforeAfterPhotos(prev => ({
         ...prev,
-        [type]: base64String
+        [type]: result.url
       }));
       
-      // Update client profile with photos
-      // This would typically call an API to update the client record
-      console.log(`${type} photo captured for client ${client.id}`);
-    };
-    reader.readAsDataURL(file);
+      console.log(`${type} photo uploaded successfully:`, result.url);
+    } catch (error) {
+      console.error(`Unexpected error uploading ${type} photo:`, error);
+      // Show error message to user
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      errorMessage.textContent = `Unexpected error uploading ${type} photo`;
+      document.body.appendChild(errorMessage);
+      setTimeout(() => {
+        document.body.removeChild(errorMessage);
+      }, 3000);
+    }
   };
 
   const handleSavePhotos = async () => {
@@ -320,14 +362,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         const updates: Partial<Omit<Appointment, 'id'>> = {};
         
         if (beforeAfterPhotos.before) {
-          // In a real implementation, you would upload to Supabase storage
-          // For now, we'll save the base64 data directly
           updates.beforePhotoUrl = beforeAfterPhotos.before;
         }
         
         if (beforeAfterPhotos.after) {
-          // In a real implementation, you would upload to Supabase storage
-          // For now, we'll save the base64 data directly
           updates.afterPhotoUrl = beforeAfterPhotos.after;
         }
         
@@ -347,7 +385,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         document.body.removeChild(successMessage);
       }, 3000);
       
-      setCurrentView('appointment');
+      setCurrentViewWithCleanup('appointment');
     } catch (error) {
       console.error('Error saving photos:', error);
       // Show error message
@@ -361,16 +399,135 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     }
   };
 
-  const handleRemovePhoto = (type: 'before' | 'after') => {
-    setBeforeAfterPhotos(prev => {
-      const updated = { ...prev };
-      delete updated[type];
-      return updated;
-    });
+  const handleRemovePhoto = async (type: 'before' | 'after') => {
+    try {
+      // If there's an existing photo URL, try to delete it from storage
+      const currentUrl = beforeAfterPhotos[type];
+      if (currentUrl) {
+        const result = await deleteImage(currentUrl);
+        if (result.error) {
+          console.warn(`Failed to delete ${type} photo from storage:`, result.error);
+        }
+      }
+      
+      // Remove from state
+      setBeforeAfterPhotos(prev => {
+        const updated = { ...prev };
+        delete updated[type];
+        return updated;
+      });
+    } catch (error) {
+      console.error(`Error removing ${type} photo:`, error);
+      // Still remove from state even if deletion fails
+      setBeforeAfterPhotos(prev => {
+        const updated = { ...prev };
+        delete updated[type];
+        return updated;
+      });
+    }
+  };
+
+  // Camera functionality functions
+  const startCamera = async (type: 'before' | 'after') => {
+    try {
+      setCameraError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 }, 
+          facingMode: 'user' 
+        } 
+      });
+      
+      setCameraStream(prev => ({ ...prev, [type]: stream }));
+      setCameraActive(prev => ({ ...prev, [type]: true }));
+      
+      // Attach stream to video element
+      const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
+      if (videoRef) {
+        videoRef.srcObject = stream;
+      }
+    } catch (err) {
+      console.error(`Error accessing ${type} camera:`, err);
+      setCameraError(`Could not access ${type} camera. Please check permissions and try again.`);
+      setCameraActive(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const stopCamera = (type: 'before' | 'after') => {
+    const stream = cameraStream[type];
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setCameraStream(prev => ({ ...prev, [type]: null }));
+    }
+    setCameraActive(prev => ({ ...prev, [type]: false }));
+    
+    // Clear video element
+    const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
+    if (videoRef) {
+      videoRef.srcObject = null;
+    }
+  };
+
+  const capturePhoto = (type: 'before' | 'after') => {
+    try {
+      const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
+      const canvasRef = type === 'before' ? beforeCanvasRef.current : afterCanvasRef.current;
+      
+      if (videoRef && canvasRef) {
+        const video = videoRef;
+        const canvas = canvasRef;
+        
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const context = canvas.getContext('2d');
+        if (context) {
+          // Flip the image horizontally (mirror effect)
+          context.translate(canvas.width, 0);
+          context.scale(-1, 1);
+          
+          // Draw the video frame to the canvas
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // Convert to blob and create file
+          canvas.toBlob(async (blob) => {
+            if (blob) {
+              const fileName = `${type}-photo-${Date.now()}.jpg`;
+              const file = new File([blob], fileName, { type: 'image/jpeg' });
+              
+              // Upload the captured photo
+              await handlePhotoCapture(type, file);
+              
+              // Stop the camera after capture
+              stopCamera(type);
+            }
+          }, 'image/jpeg', 0.95);
+        }
+      }
+    } catch (error) {
+      console.error(`Error capturing ${type} photo:`, error);
+      setCameraError(`Failed to capture ${type} photo. Please try again.`);
+    }
   };
 
   const handleClientDetailsClick = () => {
-    setCurrentView('client');
+    setCurrentViewWithCleanup('client');
+  };
+
+  // Override setCurrentView to handle camera cleanup
+  const setCurrentViewWithCleanup = (view: ModalView) => {
+    // If we're leaving the photoCapture view, stop any active cameras
+    if (currentView === 'photoCapture' && view !== 'photoCapture') {
+      if (cameraActive.before) {
+        stopCamera('before');
+      }
+      if (cameraActive.after) {
+        stopCamera('after');
+      }
+    }
+    setCurrentView(view);
   };
 
   const renderHeader = () => {
@@ -384,18 +541,18 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
-        
+      
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {showBackButton && (
               <button
-                onClick={() => setCurrentView('appointment')}
+                onClick={() => setCurrentViewWithCleanup('appointment')}
                 className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 <ChevronLeftIcon className="w-5 h-5" />
               </button>
             )}
-            
+          
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <CalendarIcon className="w-5 h-5" />
@@ -548,7 +705,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             
             {/* Add Service Button */}
             <button 
-              onClick={() => setCurrentView('addService')}
+              onClick={() => setCurrentViewWithCleanup('addService')}
               className={`w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20')} transition-colors text-gray-600 dark:text-gray-400 ${mapToAccentColor('hover:text-accent-600 dark:hover:text-accent-400')}`}
             >
               <PlusIcon className="w-4 h-4" />
@@ -577,7 +734,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         {/* Action Buttons */}
         <div className="flex gap-3">
           <button 
-            onClick={() => setCurrentView('photoCapture')}
+            onClick={() => setCurrentViewWithCleanup('photoCapture')}
             className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             title="Take Before/After Photos"
           >
@@ -831,12 +988,47 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           Before & After Photos
         </h3>
         
+        {cameraError && (
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">
+            {cameraError}
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Before Photo */}
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900 dark:text-white">Before</h4>
             <div className="relative">
-              {beforeAfterPhotos.before ? (
+              {cameraActive.before ? (
+                <div className="flex flex-col items-center">
+                  <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-3">
+                    <video 
+                      ref={beforeVideoRef}
+                      autoPlay 
+                      playsInline 
+                      className="w-full h-full object-cover -scale-x-100"
+                    ></video>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-32 h-32 border-2 border-white/50 rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => capturePhoto('before')}
+                      className="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-medium"
+                    >
+                      Capture
+                    </button>
+                    <button
+                      onClick={() => stopCamera('before')}
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <canvas ref={beforeCanvasRef} className="hidden"></canvas>
+                </div>
+              ) : beforeAfterPhotos.before ? (
                 <div className="relative">
                   <img 
                     src={beforeAfterPhotos.before} 
@@ -851,27 +1043,39 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <svg className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <div className="space-y-3">
+                  <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span> before photo
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePhotoCapture('before', file);
+                      }}
+                    />
+                  </label>
+                  <button
+                    onClick={() => startCamera('before')}
+                    className="w-full flex items-center justify-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="font-semibold">Click to upload</span> before photo
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
-                  </div>
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handlePhotoCapture('before', file);
-                    }}
-                  />
-                </label>
+                    <span>Take Photo with Camera</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -880,7 +1084,36 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900 dark:text-white">After</h4>
             <div className="relative">
-              {beforeAfterPhotos.after ? (
+              {cameraActive.after ? (
+                <div className="flex flex-col items-center">
+                  <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-3">
+                    <video 
+                      ref={afterVideoRef}
+                      autoPlay 
+                      playsInline 
+                      className="w-full h-full object-cover -scale-x-100"
+                    ></video>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-32 h-32 border-2 border-white/50 rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => capturePhoto('after')}
+                      className="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-medium"
+                    >
+                      Capture
+                    </button>
+                    <button
+                      onClick={() => stopCamera('after')}
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <canvas ref={afterCanvasRef} className="hidden"></canvas>
+                </div>
+              ) : beforeAfterPhotos.after ? (
                 <div className="relative">
                   <img 
                     src={beforeAfterPhotos.after} 
@@ -895,27 +1128,39 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <svg className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <div className="space-y-3">
+                  <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span> after photo
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePhotoCapture('after', file);
+                      }}
+                    />
+                  </label>
+                  <button
+                    onClick={() => startCamera('after')}
+                    className="w-full flex items-center justify-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="font-semibold">Click to upload</span> after photo
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
-                  </div>
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handlePhotoCapture('after', file);
-                    }}
-                  />
-                </label>
+                    <span>Take Photo with Camera</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>

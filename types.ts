@@ -158,8 +158,8 @@ export interface Appointment {
   status: AppointmentStatus;
   isDemo?: boolean;
   durationOverride?: number; // Duration in minutes, overrides service duration
-  beforePhotoUrl?: string; // URL to before photo
-  afterPhotoUrl?: string; // URL to after photo
+  beforePhotoUrl?: string; // URL to before photo (stored in Supabase Storage)
+  afterPhotoUrl?: string; // URL to after photo (stored in Supabase Storage)
 }
 
 export interface AngleView {

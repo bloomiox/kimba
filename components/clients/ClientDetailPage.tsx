@@ -35,6 +35,12 @@ const ClientDetailPage: React.FC<ClientDetailPageProps> = ({ client, onBack, onE
     }
   };
 
+  // Function to handle image loading errors
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2NjYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2NjYiPlBob3RvIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+  };
+
   return (
     <div className="animate-fade-in h-full flex flex-col">
       <div className="flex-shrink-0 mb-6 flex justify-between items-center">
@@ -121,6 +127,7 @@ const ClientDetailPage: React.FC<ClientDetailPageProps> = ({ client, onBack, onE
                                       src={app.beforePhotoUrl} 
                                       alt="Before" 
                                       className="w-full h-full object-cover"
+                                      onError={handleImageError}
                                     />
                                   </div>
                                 </div>
@@ -134,11 +141,13 @@ const ClientDetailPage: React.FC<ClientDetailPageProps> = ({ client, onBack, onE
                                       src={app.afterPhotoUrl} 
                                       alt="After" 
                                       className="w-full h-full object-cover"
+                                      onError={handleImageError}
                                     />
                                   </div>
                                 </div>
                               )}
                             </div>
+
                           </div>
                         );
                       })}
