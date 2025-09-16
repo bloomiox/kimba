@@ -61,19 +61,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isCollapsed, 
 
     const DEFAULT_MENU_ITEMS: MenuItem[] = [
       { id: 'dashboard', label: t('sidebar.dashboard'), icon: DashboardIcon, isVisible: true, order: 0 },
-      { id: 'booking', label: t('sidebar.booking'), icon: ClipboardListIcon, isVisible: true, order: 1 },
-      { id: 'studio', label: t('sidebar.designStudio'), icon: DesignStudioIcon, isVisible: true, order: 2 },
-      { id: 'clients', label: t('sidebar.clients'), icon: UsersIcon, isVisible: true, order: 3 },
-      { id: 'calendar', label: t('sidebar.calendar'), icon: CalendarIcon, isVisible: true, order: 4 },
-      { id: 'services', label: t('sidebar.services'), icon: ClipboardListIcon, isVisible: true, order: 5 },
-      { id: 'products', label: t('sidebar.products'), icon: ShoppingBagIcon, isVisible: true, order: 6 },
-      { id: 'team', label: t('sidebar.team'), icon: UsersIcon, isVisible: true, order: 7 },
-      { id: 'pos', label: t('sidebar.pos'), icon: CreditCardIcon, isVisible: true, order: 8 },
-      { id: 'analytics', label: t('sidebar.analytics'), icon: TrendingUpIcon, isVisible: true, order: 9 },
-      { id: 'report', label: t('sidebar.report'), icon: BarChartIcon, isVisible: true, order: 10 },
-      { id: 'marketing', label: t('sidebar.marketing'), icon: MegaphoneIcon, isVisible: true, order: 11 },
-      { id: 'social', label: t('sidebar.social'), icon: ShareIcon, isVisible: true, order: 12 },
-      { id: 'settings', label: t('sidebar.settings'), icon: SettingsIcon, isVisible: true, order: 13 },
+      { id: 'studio', label: t('sidebar.designStudio'), icon: DesignStudioIcon, isVisible: true, order: 1 },
+      { id: 'clients', label: t('sidebar.clients'), icon: UsersIcon, isVisible: true, order: 2 },
+      { id: 'calendar', label: t('sidebar.calendar'), icon: CalendarIcon, isVisible: true, order: 3 },
+      { id: 'services', label: t('sidebar.services'), icon: ClipboardListIcon, isVisible: true, order: 4 },
+      { id: 'products', label: t('sidebar.products'), icon: ShoppingBagIcon, isVisible: true, order: 5 },
+      { id: 'team', label: t('sidebar.team'), icon: UsersIcon, isVisible: true, order: 6 },
+      { id: 'pos', label: t('sidebar.pos'), icon: CreditCardIcon, isVisible: true, order: 7 },
+      { id: 'analytics', label: t('sidebar.analytics'), icon: TrendingUpIcon, isVisible: true, order: 8 },
+      { id: 'marketing', label: t('sidebar.marketing'), icon: MegaphoneIcon, isVisible: true, order: 9 },
+      { id: 'settings', label: t('sidebar.settings'), icon: SettingsIcon, isVisible: true, order: 10 },
     ];
 
     // Get current menu items, merging with defaults if needed
@@ -630,7 +627,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, isCollapsed, 
                     // Regular clickable version for normal mode
                     <button
                         data-menu-item={item.id}
-                        onClick={() => onNavigate(item.id as View)}
+                        onClick={() => {
+                            // Redirect 'report' to 'analytics' since report is now integrated into analytics
+                            const targetView = item.id === 'report' ? 'analytics' : item.id;
+                            onNavigate(targetView as View);
+                        }}
                         className={`group relative flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                             isActive
                                 ? 'bg-accent text-white shadow-lg'

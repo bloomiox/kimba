@@ -11,7 +11,6 @@ import SettingsPage from './settings/SettingsPage';
 import AnalyticsPage from './analytics/AnalyticsPage';
 import ClientModal from './clients/ClientModal';
 import POSPage from './pos/POSPage';
-import ReportPage from './report/ReportPage';
 import MarketingPage from './marketing/MarketingPage';
 import SocialMediaPage from './social/SocialMediaPage';
 import TeamPage from './TeamPage';
@@ -19,7 +18,7 @@ import ServicesPage from './ServicesPage';
 import ProductsPage from './ProductsPage';
 import { supabase } from '../services/supabaseClient';
 
-export type View = 'dashboard' | 'studio' | 'calendar' | 'settings' | 'booking' | 'clients' | 'analytics' | 'pos' | 'report' | 'marketing' | 'social' | 'team' | 'services' | 'products';
+export type View = 'dashboard' | 'studio' | 'calendar' | 'settings' | 'booking' | 'clients' | 'analytics' | 'pos' | 'marketing' | 'social' | 'team' | 'services' | 'products';
 
 const MainApp: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('dashboard');
@@ -93,8 +92,6 @@ const MainApp: React.FC = () => {
             return <SettingsPage />;
         case 'analytics':
             return <AnalyticsPage />;
-        case 'report':
-            return <ReportPage />;
         case 'marketing':
             return <MarketingPage />;
         case 'social':

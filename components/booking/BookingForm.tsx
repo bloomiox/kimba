@@ -176,7 +176,11 @@ const getServicesInGroup = (
 
 
 
-const BookingForm: React.FC = () => {
+interface BookingFormProps {
+  onClose?: () => void;
+}
+
+const BookingForm: React.FC<BookingFormProps> = ({ onClose }) => {
     // FIX: The 'findOrCreateClient' method was missing from the SettingsContextType. 
     // It has been added to the context to resolve this error.
     const { salonName, services, serviceGroups, hairstylists, appointments, clients, addAppointment, findOrCreateClient, t } = useSettings();
@@ -313,7 +317,7 @@ const BookingForm: React.FC = () => {
                     </div>
                     
                     <button 
-                        onClick={() => window.location.reload()} 
+                        onClick={onClose || (() => window.location.reload())} 
                         className="w-full px-6 py-3 bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 transition-all"
                     >
                         {t('common.done')}
@@ -329,7 +333,7 @@ const BookingForm: React.FC = () => {
                 {/* Header */}
                 <div className={`bg-gradient-to-r ${mapToAccentColor('from-accent-500 to-accent-600')} text-white p-6 relative`}>
                     <button 
-                        onClick={() => window.history.back()}
+                        onClick={onClose || (() => window.history.back())}
                         className="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                     >
                         <XMarkIcon className="w-5 h-5" />

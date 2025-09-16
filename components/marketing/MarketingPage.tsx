@@ -3,8 +3,9 @@ import { useSettings } from '../../contexts/SettingsContext';
 import CampaignsTab from './CampaignsTab';
 import SegmentsTab from './SegmentsTab';
 import CouponsTab from './CouponsTab';
+import SocialMediaTab from './SocialMediaTab';
 
-type MarketingTab = 'campaigns' | 'segments' | 'coupons';
+type MarketingTab = 'campaigns' | 'segments' | 'coupons' | 'social';
 
 const MarketingPage: React.FC = () => {
   const { t } = useSettings();
@@ -34,6 +35,9 @@ const MarketingPage: React.FC = () => {
           <button onClick={() => setActiveTab('coupons')} className={tabClasses('coupons')}>
             {t('marketing.tabs.coupons')}
           </button>
+          <button onClick={() => setActiveTab('social')} className={tabClasses('social')}>
+            {t('marketing.tabs.social')}
+          </button>
         </nav>
       </div>
 
@@ -41,6 +45,7 @@ const MarketingPage: React.FC = () => {
         {activeTab === 'campaigns' && <CampaignsTab />}
         {activeTab === 'segments' && <SegmentsTab />}
         {activeTab === 'coupons' && <CouponsTab />}
+        {activeTab === 'social' && <SocialMediaTab />}
       </div>
     </div>
   );

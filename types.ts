@@ -144,6 +144,7 @@ export interface Client {
   createdAt: string; // ISO date string
   isDemo?: boolean;
   consentToShare?: boolean;
+  socialMediaConsent?: ClientSocialConsent;
 }
 
 export interface Appointment {
@@ -273,10 +274,86 @@ export interface Campaign {
   recipientCount: number;
 }
 
+// Social Media Integration Types
+export interface SocialMediaConnection {
+  id: string;
+  platform: 'instagram' | 'facebook' | 'tiktok';
+  accessToken: string;
+  refreshToken?: string;
+  userId: string;
+  username: string;
+  expiresAt: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SocialPlatform {
+  platform: 'instagram' | 'facebook' | 'tiktok';
+  postId?: string;
+  url?: string;
+  status: 'pending' | 'published' | 'failed';
+}
+
+export interface EngagementMetrics {
+  likes: number;
+  comments: number;
+  shares: number;
+  views?: number;
+  lastUpdated: Date;
+}
+
+export interface SocialPost {
+  id: string;
+  lookbookId: string;
+  clientId: string;
+  platforms: SocialPlatform[];
+  caption: string;
+  hashtags: string[];
+  status: 'draft' | 'scheduled' | 'published' | 'failed';
+  scheduledAt?: Date;
+  publishedAt?: Date;
+  externalIds: Record<string, string>;
+  engagementMetrics?: EngagementMetrics;
+  createdAt: Date;
+}
+
+export interface ClientSocialConsent {
+  hasConsented: boolean;
+  consentDate?: Date;
+  allowedPlatforms: string[];
+  consentType: 'general' | 'per_post';
+}
+
+// OAuth and API Management Types
+export interface OAuthCredentials {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+export interface SocialMediaSettings {
+  instagram: OAuthCredentials;
+  facebook: OAuthCredentials;
+  tiktok: OAuthCredentials;
+  webhookSecret?: string;
+}
+
+export interface PostAnalytics {
+  postId: string;
+  platform: string;
+  impressions: number;
+  reach: number;
+  engagement: number;
+  clicks: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface SocialMediaConnections {
-    instagram: string | null;
-    facebook: string | null;
-    tiktok: string | null;
+    instagram: SocialMediaConnection | null;
+    facebook: SocialMediaConnection | null;
+    tiktok: SocialMediaConnection | null;
 }
 
 export interface MenuItem {
@@ -301,6 +378,72 @@ export interface StickyNote {
   color: 'yellow' | 'blue' | 'green' | 'pink' | 'purple';
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+}
+
+// Dashboard Widget Types
+export interface DashboardWidget {
+  id: string;
+  type: WidgetType;
+  title: string;
+  position: WidgetPosition;
+  size: WidgetSize;
+  config?: WidgetConfig;
+  isVisible: boolean;
+}
+
+export type WidgetType = 
+  | 'today-revenue'
+  | 'monthly-revenue'
+  | 'today-appointments'
+  | 'ai-generations'
+  | 'total-clients'
+  | 'weekly-revenue'
+  | 'average-sale'
+  | 'average-price-trend'
+  | 'active-hairstylists'
+  | 'pending-appointments'
+  | 'revenue-chart'
+  | 'recent-bookings'
+  | 'sticky-notes'
+  | 'quick-actions'
+  | 'recent-lookbooks';
+
+export interface WidgetPosition {
+  x: number;
+  y: number;
+  order: number;
+}
+
+export interface WidgetSize {
+  width: number; // Grid columns (1-12)
+  height: number; // Grid rows (1-6)
+}
+
+export interface WidgetConfig {
+  colorClass?: string;
+  showSubtitle?: boolean;
+  chartType?: 'line' | 'bar' | 'area';
+  timeRange?: 'week' | 'month' | 'year';
+  maxItems?: number;
+  [key: string]: any;
+}
+
+export interface WidgetLibraryItem {
+  type: WidgetType;
+  name: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  category: 'revenue' | 'appointments' | 'clients' | 'analytics' | 'tools';
+  defaultSize: WidgetSize;
+  configurable: boolean;
+  isPremium?: boolean;
+}
+
+export interface DashboardConfiguration {
+  widgets: DashboardWidget[];
+  gridCols: number;
+  gridRows: number;
+  version: number;
 }
 
 export interface UserSettings {
@@ -335,6 +478,8 @@ export interface UserSettings {
   menuCustomization?: MenuCustomization;
   // Sticky notes
   stickyNotes: StickyNote[];
+  // Dashboard customization
+  dashboardConfiguration?: DashboardConfiguration;
   // Onboarding tracking
   hasCompletedOnboarding?: boolean;
 }

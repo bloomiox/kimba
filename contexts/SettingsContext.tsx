@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import '../styles/accentColors.css';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabaseClient';
-import type { Lookbook, Appointment, Service, Hairstylist, Client, UserSettings, SmsSettings, Currency, ServiceGroup, CustomHairstyle, Product, Sale, Coupon, Segment, Campaign, SocialMediaConnections, AppointmentStatus, HairstylistType, HairstylistSkill, HairstylistAvailability, HairstylistCommission, HairstylistPerformance, StickyNote } from '../types';
+import type { Lookbook, Appointment, Service, Hairstylist, Client, SmsSettings, Currency, ServiceGroup, CustomHairstyle, Product, Sale, Coupon, Segment, Campaign, SocialMediaConnections, AppointmentStatus, HairstylistType, HairstylistSkill, HairstylistAvailability, HairstylistCommission, HairstylistPerformance, StickyNote, DashboardConfiguration, SocialMediaConnection } from '../types';
 import { loadTranslations, t as translateFunction, Language } from '../i18n/translator';
 
 type Theme = 'light' | 'dark';
@@ -69,6 +68,7 @@ interface UserSettings {
     imageCount: number;
     menuCustomization?: any;
     stickyNotes: StickyNote[];
+    dashboardConfiguration?: DashboardConfiguration;
     hasCompletedOnboarding: boolean;
 }
 
@@ -156,7 +156,7 @@ interface SettingsContextType extends UserSettings {
 
   sendCampaign: (campaign: Omit<Campaign, 'id' | 'sentAt' | 'status' | 'recipientCount'>) => void;
   
-  connectSocialMedia: (platform: keyof SocialMediaConnections, handle: string) => void;
+  connectSocialMedia: (platform: keyof SocialMediaConnections, connection: SocialMediaConnection) => void;
   disconnectSocialMedia: (platform: keyof SocialMediaConnections) => void;
 
   // For legacy component compatibility
@@ -177,23 +177,6 @@ interface SettingsContextType extends UserSettings {
   // Onboarding
   hasCompletedOnboarding: boolean;
   completeOnboarding: () => void;
-
-  addSegment: (segment: Omit<Segment, 'id'>) => void;
-  updateSegment: (segment: Segment) => void;
-  deleteSegment: (segmentId: string) => void;
-  getSegmentClients: (segment: Segment) => Client[];
-
-  sendCampaign: (campaign: Omit<Campaign, 'id' | 'sentAt' | 'status' | 'recipientCount'>) => void;
-  
-  connectSocialMedia: (platform: keyof SocialMediaConnections, handle: string) => void;
-  disconnectSocialMedia: (platform: keyof SocialMediaConnections) => void;
-
-  // For legacy component compatibility
-  users: any;
-  setCurrentUser: (user: string | null) => void;
-  addUser: (salonName: string) => void;
-
-  t: (key: string, replacements?: Record<string, string | number>) => string;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
