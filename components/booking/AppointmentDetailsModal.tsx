@@ -108,7 +108,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [cameraActive, setCameraActive] = useState<{before: boolean, after: boolean}>({before: false, after: false});
-  const [cameraStream, setCameraStream] = useState<{before: MediaStream | null, after: MediaStream | null}>({before: null, after: null});
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   const beforeVideoRef = useRef<HTMLVideoElement>(null);
@@ -122,18 +121,83 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     setHasUnsavedChanges(false);
   }, [appointment.id, appointment.notes]);
 
-  // Cleanup camera streams when component unmounts or view changes
+  // Effect to manage before camera stream
   useEffect(() => {
-    return () => {
-      // Stop any active camera streams
-      if (cameraStream.before) {
-        cameraStream.before.getTracks().forEach(track => track.stop());
-      }
-      if (cameraStream.after) {
-        cameraStream.after.getTracks().forEach(track => track.stop());
+    if (!cameraActive.before) {
+      return;
+    }
+
+    let stream: MediaStream | null = null;
+    const enableStream = async () => {
+      try {
+        setCameraError(null);
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 }, 
+            facingMode: 'user' 
+          } 
+        });
+        if (beforeVideoRef.current) {
+          beforeVideoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error('Error accessing before camera:', err);
+        setCameraError('Could not access before camera. Please check permissions and try again.');
+        setCameraActive(prev => ({ ...prev, before: false }));
       }
     };
-  }, [cameraStream]);
+
+    enableStream();
+
+    // Cleanup function
+    return () => {
+      if (beforeVideoRef.current && beforeVideoRef.current.srcObject) {
+        const mediaStream = beforeVideoRef.current.srcObject as MediaStream;
+        mediaStream.getTracks().forEach(track => track.stop());
+        beforeVideoRef.current.srcObject = null;
+      }
+    };
+  }, [cameraActive.before]);
+
+  // Effect to manage after camera stream
+  useEffect(() => {
+    if (!cameraActive.after) {
+      return;
+    }
+
+    let stream: MediaStream | null = null;
+    const enableStream = async () => {
+      try {
+        setCameraError(null);
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 }, 
+            facingMode: 'user' 
+          } 
+        });
+        if (afterVideoRef.current) {
+          afterVideoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error('Error accessing after camera:', err);
+        setCameraError('Could not access after camera. Please check permissions and try again.');
+        setCameraActive(prev => ({ ...prev, after: false }));
+      }
+    };
+
+    enableStream();
+
+    // Cleanup function
+    return () => {
+      if (afterVideoRef.current && afterVideoRef.current.srcObject) {
+        const mediaStream = afterVideoRef.current.srcObject as MediaStream;
+        mediaStream.getTracks().forEach(track => track.stop());
+        afterVideoRef.current.srcObject = null;
+      }
+    };
+  }, [cameraActive.after]);
 
   if (!isOpen) return null;
 
@@ -430,36 +494,18 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   // Camera functionality functions
   const startCamera = async (type: 'before' | 'after') => {
     try {
+      console.log(`Starting ${type} camera...`);
       setCameraError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 1280 }, 
-          height: { ideal: 720 }, 
-          facingMode: 'user' 
-        } 
-      });
-      
-      setCameraStream(prev => ({ ...prev, [type]: stream }));
       setCameraActive(prev => ({ ...prev, [type]: true }));
-      
-      // Attach stream to video element
-      const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
-      if (videoRef) {
-        videoRef.srcObject = stream;
-      }
     } catch (err) {
-      console.error(`Error accessing ${type} camera:`, err);
+      console.error(`Error starting ${type} camera:`, err);
       setCameraError(`Could not access ${type} camera. Please check permissions and try again.`);
       setCameraActive(prev => ({ ...prev, [type]: false }));
     }
   };
 
   const stopCamera = (type: 'before' | 'after') => {
-    const stream = cameraStream[type];
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setCameraStream(prev => ({ ...prev, [type]: null }));
-    }
+    console.log(`Stopping ${type} camera...`);
     setCameraActive(prev => ({ ...prev, [type]: false }));
     
     // Clear video element
@@ -471,12 +517,22 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
   const capturePhoto = (type: 'before' | 'after') => {
     try {
+      console.log(`Capturing ${type} photo...`);
       const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
       const canvasRef = type === 'before' ? beforeCanvasRef.current : afterCanvasRef.current;
       
       if (videoRef && canvasRef) {
         const video = videoRef;
         const canvas = canvasRef;
+        
+        console.log(`${type} video dimensions:`, video.videoWidth, video.videoHeight);
+        
+        // Check if video is ready
+        if (video.videoWidth === 0 || video.videoHeight === 0) {
+          console.error(`Video not ready for ${type} capture`);
+          setCameraError(`Camera not ready. Please wait a moment and try again.`);
+          return;
+        }
         
         // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
@@ -497,14 +553,24 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               const fileName = `${type}-photo-${Date.now()}.jpg`;
               const file = new File([blob], fileName, { type: 'image/jpeg' });
               
+              console.log(`Uploading ${type} photo...`);
               // Upload the captured photo
               await handlePhotoCapture(type, file);
               
               // Stop the camera after capture
               stopCamera(type);
+            } else {
+              console.error(`Failed to create blob for ${type} photo`);
+              setCameraError(`Failed to capture ${type} photo. Please try again.`);
             }
           }, 'image/jpeg', 0.95);
+        } else {
+          console.error(`Failed to get canvas context for ${type} photo`);
+          setCameraError(`Failed to capture ${type} photo. Please try again.`);
         }
+      } else {
+        console.error(`Missing video or canvas element for ${type} photo`);
+        setCameraError(`Camera not properly initialized. Please try again.`);
       }
     } catch (error) {
       console.error(`Error capturing ${type} photo:`, error);
@@ -1004,9 +1070,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                   <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-3">
                     <video 
                       ref={beforeVideoRef}
-                      autoPlay 
-                      playsInline 
-                      className="w-full h-full object-cover -scale-x-100"
+                      autoPlay
+                      playsInline
+                      muted
+                      className="absolute inset-0 w-full h-full object-cover -scale-x-100"
                     ></video>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-32 h-32 border-2 border-white/50 rounded-full"></div>
@@ -1066,7 +1133,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     />
                   </label>
                   <button
-                    onClick={() => startCamera('before')}
+                    onClick={() => {
+                      // Just set the camera active state, useEffect will handle starting the camera
+                      setCameraActive(prev => ({ ...prev, before: true }));
+                    }}
                     className="w-full flex items-center justify-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1089,9 +1159,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                   <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-3">
                     <video 
                       ref={afterVideoRef}
-                      autoPlay 
-                      playsInline 
-                      className="w-full h-full object-cover -scale-x-100"
+                      autoPlay
+                      playsInline
+                      muted
+                      className="absolute inset-0 w-full h-full object-cover -scale-x-100"
                     ></video>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-32 h-32 border-2 border-white/50 rounded-full"></div>
@@ -1151,7 +1222,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     />
                   </label>
                   <button
-                    onClick={() => startCamera('after')}
+                    onClick={() => {
+                      // Just set the camera active state, useEffect will handle starting the camera
+                      setCameraActive(prev => ({ ...prev, after: true }));
+                    }}
                     className="w-full flex items-center justify-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
