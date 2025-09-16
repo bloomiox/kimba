@@ -162,7 +162,12 @@ const RecentBookings: React.FC = () => {
                         onAppointmentUpdate={(updatedServices, updatedTotal) => {
                             console.log('Updating appointment with services:', updatedServices, 'Total:', updatedTotal);
                         }}
-                        updateAppointmentDetails={updateAppointmentDetails}
+                        updateAppointmentDetails={(appointmentId, updates) => {
+                            // Call the context function to update the appointment
+                            updateAppointmentDetails(appointmentId, updates);
+                            // Update the local state as well
+                            setSelectedAppointment(prev => prev ? { ...prev, ...updates } : null);
+                        }}
                     />,
                     document.body
                 );

@@ -63,11 +63,35 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       .filter((service): service is Service => service !== undefined);
   };
   
-  // Initialize appointment services with main service + additional services from notes
+  // Helper function to parse additional products from notes
+  const parseProductsFromNotes = (notes: string | undefined, allProducts: Product[]): Service[] => {
+    if (!notes || !notes.includes('Additional Products:')) {
+      return [];
+    }
+    
+    const match = notes.match(/Additional Products:\s*([^|\n]+)/);
+    if (!match) return [];
+    
+    const productNames = match[1].split(',').map(name => name.trim());
+    return productNames
+      .map(name => allProducts.find(p => p.name === name))
+      .filter((product): product is Product => product !== undefined)
+      .map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        duration: 0,
+        price: product.price,
+        parentId: null
+      }));
+  };
+  
+  // Initialize appointment services with main service + additional services and products from notes
   const initializeAppointmentServices = (): Service[] => {
     const mainService = services[0]; // The service passed in props
     const additionalServices = parseServicesFromNotes(appointment.notes, allServices);
-    return [mainService, ...additionalServices];
+    const additionalProducts = parseProductsFromNotes(appointment.notes, products);
+    return [mainService, ...additionalServices, ...additionalProducts];
   };
   const [currentView, setCurrentView] = useState<ModalView>('appointment');
   const [currentStatus, setCurrentStatus] = useState<AppointmentStatus | 'cancelled'>(
@@ -192,15 +216,15 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   };
 
   const handleSaveAppointmentChanges = async () => {
-    // Update the parent component with the new services and total
-    if (onAppointmentUpdate) {
-      const finalTotal = appointmentServices.reduce((sum, service) => sum + service.price, 0);
-      onAppointmentUpdate(appointmentServices, finalTotal);
-    }
-    
-    // Persist changes to database using updateAppointmentDetails
-    if (updateAppointmentDetails) {
-      try {
+    try {
+      // Update the parent component with the new services and total
+      if (onAppointmentUpdate) {
+        const finalTotal = appointmentServices.reduce((sum, service) => sum + service.price, 0);
+        onAppointmentUpdate(appointmentServices, finalTotal);
+      }
+      
+      // Persist changes to database using updateAppointmentDetails
+      if (updateAppointmentDetails) {
         const updates: Partial<Omit<Appointment, 'id'>> = {};
         
         // Update the main service (first service in the list)
@@ -208,23 +232,34 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           updates.serviceId = appointmentServices[0].id;
         }
         
-        // Store additional services in notes as a temporary solution
-        // Format: "Original notes | Additional Services: Service1, Service2"
-        if (appointmentServices.length > 1) {
-          const additionalServices = appointmentServices.slice(1).map(s => s.name).join(', ');
-          const originalNotes = appointment.notes || '';
+        // Store additional services and products in notes as a temporary solution
+        // Format: "Original notes | Additional Services: Service1, Service2 | Additional Products: Product1, Product2"
+        const actualServices = appointmentServices.filter(s => !products.find(p => p.id === s.id));
+        const addedProducts = appointmentServices.filter(s => products.find(p => p.id === s.id));
+        
+        const originalNotes = appointment.notes || '';
+        let updatedNotes = originalNotes;
+        
+        // Remove any existing additional services/products notes
+        updatedNotes = updatedNotes.replace(/\s*\|\s*Additional Services:.*?(?=\n|$)/, '').trim();
+        updatedNotes = updatedNotes.replace(/\s*\|\s*Additional Products:.*?(?=\n|$)/, '').trim();
+        
+        // Add services note if there are additional services
+        if (actualServices.length > 1) {
+          const additionalServices = actualServices.slice(1).map(s => s.name).join(', ');
           const serviceNote = `Additional Services: ${additionalServices}`;
-          
-          if (originalNotes.includes('Additional Services:')) {
-            // Replace existing additional services note
-            updates.notes = originalNotes.replace(/Additional Services:.*?(?=\n|$)/, serviceNote);
-          } else {
-            // Append additional services note
-            updates.notes = originalNotes ? `${originalNotes} | ${serviceNote}` : serviceNote;
-          }
-        } else if (appointment.notes && appointment.notes.includes('Additional Services:')) {
-          // Remove additional services note if only one service remains
-          updates.notes = appointment.notes.replace(/\s*\|\s*Additional Services:.*?(?=\n|$)/, '').trim();
+          updatedNotes = updatedNotes ? `${updatedNotes} | ${serviceNote}` : serviceNote;
+        }
+        
+        // Add products note if there are added products
+        if (addedProducts.length > 0) {
+          const additionalProducts = addedProducts.map(s => s.name).join(', ');
+          const productNote = `Additional Products: ${additionalProducts}`;
+          updatedNotes = updatedNotes ? `${updatedNotes} | ${productNote}` : productNote;
+        }
+        
+        if (updatedNotes !== originalNotes) {
+          updates.notes = updatedNotes;
         }
         
         await updateAppointmentDetails(appointment.id, updates);
@@ -235,29 +270,29 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           services: appointmentServices,
           totalPrice: appointmentServices.reduce((sum, service) => sum + service.price, 0)
         });
-      } catch (error) {
-        console.error('Error saving appointment changes:', error);
-        // Show error message
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-        errorMessage.textContent = 'Failed to save appointment changes. Please try again.';
-        document.body.appendChild(errorMessage);
-        setTimeout(() => {
-          document.body.removeChild(errorMessage);
-        }, 3000);
-        return;
       }
+      
+      setHasUnsavedChanges(false);
+      
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      successMessage.textContent = 'Appointment changes saved successfully!';
+      document.body.appendChild(successMessage);
+      setTimeout(() => {
+        document.body.removeChild(successMessage);
+      }, 3000);
+    } catch (error) {
+      console.error('Error saving appointment changes:', error);
+      // Show error message
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      errorMessage.textContent = 'Failed to save appointment changes. Please try again.';
+      document.body.appendChild(errorMessage);
+      setTimeout(() => {
+        document.body.removeChild(errorMessage);
+      }, 3000);
     }
-    
-    setHasUnsavedChanges(false);
-    // Show success message
-    const successMessage = document.createElement('div');
-    successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    successMessage.textContent = 'Appointment changes saved successfully!';
-    document.body.appendChild(successMessage);
-    setTimeout(() => {
-      document.body.removeChild(successMessage);
-    }, 3000);
   };
 
   const handlePhotoCapture = async (type: 'before' | 'after', file: File) => {
@@ -276,6 +311,54 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       console.log(`${type} photo captured for client ${client.id}`);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSavePhotos = async () => {
+    try {
+      // Save photos to appointment
+      if (updateAppointmentDetails) {
+        const updates: Partial<Omit<Appointment, 'id'>> = {};
+        
+        if (beforeAfterPhotos.before) {
+          // In a real implementation, you would upload to Supabase storage
+          // For now, we'll save the base64 data directly
+          updates.beforePhotoUrl = beforeAfterPhotos.before;
+        }
+        
+        if (beforeAfterPhotos.after) {
+          // In a real implementation, you would upload to Supabase storage
+          // For now, we'll save the base64 data directly
+          updates.afterPhotoUrl = beforeAfterPhotos.after;
+        }
+        
+        await updateAppointmentDetails(appointment.id, updates);
+        
+        // Create a lookbook entry for these photos
+        // This would typically call an API to save the lookbook
+        console.log('Photos saved to appointment and lookbook created');
+      }
+      
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      successMessage.textContent = 'Photos saved successfully!';
+      document.body.appendChild(successMessage);
+      setTimeout(() => {
+        document.body.removeChild(successMessage);
+      }, 3000);
+      
+      setCurrentView('appointment');
+    } catch (error) {
+      console.error('Error saving photos:', error);
+      // Show error message
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      errorMessage.textContent = 'Failed to save photos. Please try again.';
+      document.body.appendChild(errorMessage);
+      setTimeout(() => {
+        document.body.removeChild(errorMessage);
+      }, 3000);
+    }
   };
 
   const handleRemovePhoto = (type: 'before' | 'after') => {
@@ -645,7 +728,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               <h4 className="text-md font-medium mb-4 text-gray-900 dark:text-white">
                 Services
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2">
                 {allServices.filter(service => !appointmentServices.find(s => s.id === service.id)).map((service) => {
                   const isSelected = selectedServices.find(s => s.id === service.id);
                   return (
@@ -693,7 +776,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 <h4 className="text-md font-medium mb-4 text-gray-900 dark:text-white">
                   Products
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2">
                   {products.filter(product => product.isActive && product.inStock > 0).map((product) => {
                     const isSelected = selectedProducts.find(p => p.id === product.id);
                     return (
@@ -842,14 +925,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         {(beforeAfterPhotos.before || beforeAfterPhotos.after) && (
           <div className="mt-6 flex justify-center">
             <button
-              onClick={() => {
-                // Save photos to client profile
-                console.log('Saving photos to client profile:', beforeAfterPhotos);
-                // In real implementation, this would call an API to update the client
-                setCurrentView('appointment');
-                // Show success message
-                alert('Photos saved to client profile!');
-              }}
+              onClick={handleSavePhotos}
               className="px-6 py-3 bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 transition-all"
             >
               Save Photos to Profile

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { mapToAccentColor } from '../../utils/colorUtils';
 import type { Client, Appointment } from '../../types';
-import { ChevronLeftIcon, UserIcon, CalendarIcon, DesignStudioIcon, MapPinIcon, EditIcon, TrashIcon, CreditCardIcon } from '../common/Icons';
+import { ChevronLeftIcon, UserIcon, CalendarIcon, DesignStudioIcon, MapPinIcon, EditIcon, TrashIcon, CreditCardIcon, PhotoIcon } from '../common/Icons';
 import AppointmentPaymentModal from '../booking/AppointmentPaymentModal';
 
 interface ClientDetailPageProps {
@@ -24,6 +24,16 @@ const ClientDetailPage: React.FC<ClientDetailPageProps> = ({ client, onBack, onE
 
   const servicesById = React.useMemo(() => services.reduce((acc, s) => ({ ...acc, [s.id]: s }), {} as Record<string, typeof services[0]>), [services]);
   const hairstylistsById = React.useMemo(() => hairstylists.reduce((acc, h) => ({ ...acc, [h.id]: h }), {} as Record<string, typeof hairstylists[0]>), [hairstylists]);
+
+  const getStatusLabel = (status: Appointment['status']) => {
+    switch (status) {
+      case 'confirmed': return t('booking.status.confirmed');
+      case 'unconfirmed': return t('booking.status.notConfirmed');
+      case 'late': return t('booking.status.late');
+      case 'cancelled': return t('booking.status.cancelled');
+      default: return t('booking.status.confirmed');
+    }
+  };
 
   return (
     <div className="animate-fade-in h-full flex flex-col">
@@ -67,6 +77,76 @@ const ClientDetailPage: React.FC<ClientDetailPageProps> = ({ client, onBack, onE
           </div>
 
           <div className="lg:col-span-2 space-y-8">
+            {/* Before and After Photos from Appointments */}
+            {clientAppointments.some(app => app.beforePhotoUrl || app.afterPhotoUrl) && (
+              <div>
+                <h3 className={`text-2xl font-bold flex items-center gap-3 mb-4`}>
+                  <PhotoIcon className={`w-6 h-6 ${mapToAccentColor('text-accent-500')}`}/> 
+                  {t('clients.detail.appointmentPhotos')}
+                </h3>
+                <div className="bg-white dark:bg-gray-800/50 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {clientAppointments
+                      .filter(app => app.beforePhotoUrl || app.afterPhotoUrl)
+                      .map(app => {
+                        const service = servicesById[app.serviceId];
+                        const hairstylist = hairstylistsById[app.hairstylistId];
+                        const appointmentDate = new Date(`${app.date}T${app.time}`);
+                        
+                        return (
+                          <div key={app.id} className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-semibold">{service?.name || t('clients.detail.unknownService')}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {appointmentDate.toLocaleString(t('language.code'), { dateStyle: 'medium', timeStyle: 'short' })}
+                                </p>
+                              </div>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                app.status === 'confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                app.status === 'unconfirmed' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                app.status === 'late' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                              }`}>
+                                {getStatusLabel(app.status)}
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              {app.beforePhotoUrl && (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Before</p>
+                                  <div className="aspect-square rounded-lg overflow-hidden">
+                                    <img 
+                                      src={app.beforePhotoUrl} 
+                                      alt="Before" 
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {app.afterPhotoUrl && (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">After</p>
+                                  <div className="aspect-square rounded-lg overflow-hidden">
+                                    <img 
+                                      src={app.afterPhotoUrl} 
+                                      alt="After" 
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <h3 className={`text-2xl font-bold flex items-center gap-3 mb-4`}><CalendarIcon className={`w-6 h-6 ${mapToAccentColor('text-accent-500')}`}/> {t('clients.detail.appointmentHistory')}</h3>
               <div className="bg-white dark:bg-gray-800/50 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50 space-y-4 max-h-80 overflow-y-auto">

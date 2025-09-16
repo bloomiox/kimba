@@ -158,6 +158,8 @@ export interface Appointment {
   status: AppointmentStatus;
   isDemo?: boolean;
   durationOverride?: number; // Duration in minutes, overrides service duration
+  beforePhotoUrl?: string; // URL to before photo
+  afterPhotoUrl?: string; // URL to after photo
 }
 
 export interface AngleView {

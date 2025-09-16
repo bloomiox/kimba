@@ -200,6 +200,7 @@
   "clients.detail.notes": "Kundennotizen",
   "clients.detail.noNotes": "Keine Notizen für diesen Kunden.",
   "clients.detail.appointmentHistory": "Terminhistorie",
+  "clients.detail.appointmentPhotos": "Terminfotos",
   "clients.detail.noAppointments": "Dieser Kunde hat keine vergangenen Termine.",
   "clients.detail.lookbookGallery": "Lookbook-Galerie",
   "clients.detail.noLookbooks": "Keine Lookbooks für diesen Kunden erstellt.",
