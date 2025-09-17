@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogoIcon } from '../common/Icons';
+import { LogoIcon, EmailIcon } from '../common/Icons';
 import AuthLayout from './AuthLayout';
 import { useSettings } from '../../contexts/SettingsContext';
 import { supabase } from '../../services/supabaseClient';
@@ -15,6 +15,7 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ onNavigate }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,13 +34,19 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ onNavigate }) => {
 
     if (error) {
       setError(error.message);
-    } else if (data.user) {
-      // Also create a profile in our public table
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({ id: data.user.id, salon_name: salonName, settings: {} });
+      setLoading(false);
+    } else {
+      // With Supabase email confirmation enabled, we'll always show the success message
+      // regardless of whether data.user is present
+      setSignupSuccess(true);
       
-      if (profileError) {
+      // Only try to create a profile if we have a user ID
+      if (data.user?.id) {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({ id: data.user.id, salon_name: salonName, settings: {} });
+        
+        if (profileError) {
           console.error('Profile creation error:', profileError);
           // Don't show RLS errors to user, just log them
           if (profileError.message.includes('row-level security')) {
@@ -47,13 +54,38 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ onNavigate }) => {
           } else {
             setError(profileError.message);
           }
-      } else {
-        // Don't navigate - let App.tsx handle the onboarding flow
-        // The auth state change will trigger the onboarding automatically
+        }
       }
+      setLoading(false);
     }
-    setLoading(false);
   };
+
+  if (signupSuccess) {
+    return (
+      <AuthLayout>
+        <div className="w-full max-w-sm">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+              <EmailIcon className="h-10 w-10 text-green-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.signUp.confirmationTitle')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {t('auth.signUp.confirmationMessage', { email })}
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {t('auth.signUp.confirmationInstruction')}
+            </p>
+            <button 
+              onClick={() => onNavigate('signin')}
+              className="w-full py-3 px-4 bg-accent text-white font-bold rounded-lg hover:opacity-90"
+            >
+              {t('auth.signUp.backToSignIn')}
+            </button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>
