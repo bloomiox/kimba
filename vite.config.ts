@@ -19,8 +19,15 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           input: {
             main: path.resolve(__dirname, 'index.html')
+          },
+          external: ['tr46/lib/mappingTable.json'],
+          output: {
+            manualChunks: undefined
           }
         }
+      },
+      optimizeDeps: {
+        exclude: ['tr46']
       }
     };
 });

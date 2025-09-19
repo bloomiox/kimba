@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/copy-assets.js",
+    "build": "node scripts/build.js",
+    "build:vite": "vite build && node scripts/copy-assets.js",
+    "verify": "node scripts/verify-build.js",
+    "deploy": "npm run build && npm run verify",
     "preview": "vite preview",
     "setup-storage": "node supabase/setup-storage.js",
     "test-storage": "node supabase/test-storage.js"

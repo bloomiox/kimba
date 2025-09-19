@@ -1,34 +1,45 @@
 name = "kimba-hairstylist-crm"
 compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
 
-[env.production]
-routes = [
-  { pattern = "kimba.ch/*", zone_name = "kimba.ch" }
-]
+[build]
+command = "npm run build"
 
-[[env.production.rules]]
-type = "Text"
-globs = ["**/*.html"]
-[env.production.rules.result]
-"Cache-Control" = "public, max-age=0, must-revalidate"
-
-[[env.production.rules]]
-type = "Text" 
-globs = ["**/*.json"]
-[env.production.rules.result]
+[[headers]]
+for = "/i18n/locales/*.json"
+[headers.values]
 "Content-Type" = "application/json"
 "Cache-Control" = "public, max-age=300"
 
-[[env.production.rules]]
-type = "Text"
-globs = ["**/*.css"]
-[env.production.rules.result]
+[[headers]]
+for = "/*.css"
+[headers.values]
 "Content-Type" = "text/css"
 "Cache-Control" = "public, max-age=31536000"
 
-[[env.production.rules]]
-type = "Text"
-globs = ["**/*.js"]
-[env.production.rules.result]
+[[headers]]
+for = "/*.js"
+[headers.values]
 "Content-Type" = "application/javascript"
 "Cache-Control" = "public, max-age=31536000"
+
+[[headers]]
+for = "/*.html"
+[headers.values]
+"Content-Type" = "text/html"
+"Cache-Control" = "public, max-age=0, must-revalidate"
+
+[[redirects]]
+from = "/i18n/*"
+to = "/i18n/:splat"
+status = 200
+
+[[redirects]]
+from = "/assets/*"
+to = "/assets/:splat"
+status = 200
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
