@@ -49,12 +49,15 @@
 - `public/i18n/locales/*.json` - Translation files in public directory
 - `scripts/copy-assets.js` - ES module build script to copy assets
 - `scripts/build.js` - ES module build script with fallback logic
-- `wrangler.toml` - Cloudflare Pages configuration
+- `scripts/verify-build.js` - Build verification script
 - `dist/` - Complete build output ready for deployment
 
 ### Modified Files:
 - `vite.config.ts` - Added external dependencies and optimization exclusions
 - `package.json` - Updated build script and added Rollup dependencies
+
+### Removed Files:
+- `wrangler.toml` - Not needed for Cloudflare Pages (was causing build failures)
 
 ## Deployment Status: READY ✅
 
