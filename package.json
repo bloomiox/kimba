@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/copy-assets.js",
     "preview": "vite preview",
     "setup-storage": "node supabase/setup-storage.js",
     "test-storage": "node supabase/test-storage.js"
@@ -23,6 +23,6 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.50.2",
-    "@rollup/rollup-win32-x64-msvc": "^4.50.2"
+    "@rollup/rollup-win32-x64-msvc": "^4.51.0"
   }
 }

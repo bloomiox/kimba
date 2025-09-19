@@ -12,6 +12,15 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      publicDir: 'public',
+      assetsInclude: ['**/*.json'],
+      build: {
+        rollupOptions: {
+          input: {
+            main: path.resolve(__dirname, 'index.html')
+          }
+        }
       }
     };
 });
