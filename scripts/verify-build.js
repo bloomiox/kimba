@@ -13,6 +13,7 @@ const requiredFiles = [
   'index.css',
   '_redirects',
   '_headers',
+  'functions/_middleware.js',
   'i18n/locales/de.json',
   'i18n/locales/en.json',
   'i18n/locales/fr.json',

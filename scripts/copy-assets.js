@@ -44,4 +44,22 @@ const publicDir = path.join(__dirname, '..', 'public');
   }
 });
 
+// Copy functions directory
+const functionsDir = path.join(__dirname, '..', 'functions');
+const distFunctionsDir = path.join(distDir, 'functions');
+
+if (fs.existsSync(functionsDir)) {
+  if (!fs.existsSync(distFunctionsDir)) {
+    fs.mkdirSync(distFunctionsDir, { recursive: true });
+  }
+  
+  const functionFiles = fs.readdirSync(functionsDir);
+  functionFiles.forEach(file => {
+    const srcPath = path.join(functionsDir, file);
+    const destPath = path.join(distFunctionsDir, file);
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`Copied functions/${file}`);
+  });
+}
+
 console.log('Asset copying completed!');
