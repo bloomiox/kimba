@@ -75,7 +75,7 @@ console.log('\n⚙️  Checking configuration files...');
 const redirectsPath = path.join(distDir, '_redirects');
 if (fs.existsSync(redirectsPath)) {
   const content = fs.readFileSync(redirectsPath, 'utf8');
-  if (content.includes('/i18n/*') && content.includes('/* /index.html 200')) {
+  if (content.includes('/assets/*') && content.includes('/i18n/*') && content.includes('/index.html')) {
     console.log('✅ _redirects - Contains required rules');
   } else {
     console.log('⚠️  _redirects - May be missing required rules');
