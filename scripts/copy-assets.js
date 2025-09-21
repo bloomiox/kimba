@@ -32,10 +32,10 @@ if (fs.existsSync(publicI18nDir)) {
   });
 }
 
-// Copy _redirects, _headers, and index.css
+// Copy _redirects, _headers, .htaccess, index.css, and test files
 const publicDir = path.join(__dirname, '..', 'public');
 
-['_redirects', '_headers', 'index.css'].forEach(file => {
+['_redirects', '_headers', '.htaccess', 'index.css', 'test.html'].forEach(file => {
   const srcPath = path.join(publicDir, file);
   const destPath = path.join(distDir, file);
   if (fs.existsSync(srcPath)) {

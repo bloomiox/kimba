@@ -6,10 +6,10 @@ export async function onRequest(context) {
 
   // Define MIME types
   const mimeTypes = {
-    '.css': 'text/css',
-    '.js': 'application/javascript',
-    '.json': 'application/json',
-    '.html': 'text/html',
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.html': 'text/html; charset=utf-8',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
@@ -35,6 +35,19 @@ export async function onRequest(context) {
   };
 
   try {
+    // For root path, explicitly serve index.html
+    if (pathname === '/' || pathname === '') {
+      const indexResponse = await env.ASSETS.fetch(new URL('/index.html', request.url));
+      return new Response(indexResponse.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    }
+    
     // Try to fetch the requested file directly
     const response = await env.ASSETS.fetch(request);
     
@@ -48,7 +61,8 @@ export async function onRequest(context) {
           'Content-Type': mimeType,
           'Cache-Control': pathname.includes('/assets/') || pathname.endsWith('.css') || pathname.endsWith('.js') 
             ? 'public, max-age=31536000' 
-            : 'public, max-age=300'
+            : 'public, max-age=300',
+          'X-Content-Type-Options': 'nosniff'
         }
       });
     }
@@ -59,8 +73,9 @@ export async function onRequest(context) {
       return new Response(indexResponse.body, {
         status: 200,
         headers: {
-          'Content-Type': 'text/html',
-          'Cache-Control': 'public, max-age=0, must-revalidate'
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+          'X-Content-Type-Options': 'nosniff'
         }
       });
     }
@@ -77,8 +92,9 @@ export async function onRequest(context) {
       return new Response(indexResponse.body, {
         status: 200,
         headers: {
-          'Content-Type': 'text/html',
-          'Cache-Control': 'public, max-age=0, must-revalidate'
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+          'X-Content-Type-Options': 'nosniff'
         }
       });
     } catch (fallbackError) {
