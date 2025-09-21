@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-09-21T16:56:14.033Z",
+  "timestamp": "2025-09-21T19:22:46.699Z",
   "summary": {
     "total": 6,
-    "passed": 5,
-    "failed": 1
+    "passed": 6,
+    "failed": 0
   },
   "tests": [
     {
@@ -18,12 +18,8 @@
     },
     {
       "name": "All languages have identical key sets",
-      "passed": false,
-      "errors": [
-        "de: Missing 5 keys: auth.signIn.emailLabel, auth.signIn.emailPlaceholder, auth.signIn.passwordLabel...",
-        "fr: Missing 6 keys: auth.signIn.emailLabel, auth.signIn.emailPlaceholder, auth.signIn.passwordLabel...",
-        "it: Missing 6 keys: auth.signIn.emailLabel, auth.signIn.emailPlaceholder, auth.signIn.passwordLabel..."
-      ]
+      "passed": true,
+      "errors": []
     },
     {
       "name": "Public and dist translation files are synchronized",

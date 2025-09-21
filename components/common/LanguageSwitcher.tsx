@@ -3,8 +3,11 @@ import { useSettings } from '../../contexts/SettingsContext';
 import type { Language } from '../../i18n/translator';
 
 const LanguageSwitcher: React.FC = () => {
-  const { language, setLanguage, t } = useSettings();
+  const { language, setLanguage, t, loading } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Debug logging
+  console.log('LanguageSwitcher Debug:', { language, loading, setLanguage: typeof setLanguage });
 
   const languages: { code: Language; name: string; flag: string }[] = [
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
@@ -16,9 +19,24 @@ const LanguageSwitcher: React.FC = () => {
   const currentLanguage = languages.find(lang => lang.code === language) || languages[0];
 
   const handleLanguageChange = (newLanguage: Language) => {
-    setLanguage(newLanguage);
-    setIsOpen(false);
+    console.log('Language change requested:', newLanguage);
+    try {
+      setLanguage(newLanguage);
+      setIsOpen(false);
+      console.log('Language change successful');
+    } catch (error) {
+      console.error('Language change failed:', error);
+    }
   };
+
+  // Don't render if still loading
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2 px-3 py-2">
+        <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

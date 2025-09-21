@@ -233,6 +233,7 @@ const DEFAULT_SETTINGS: UserSettings = {
             serviceIds: ['service_1', 'service_2'],
             skills: [],
             availability: [],
+            timeOff: [],
             commissions: [],
             performance: [],
             isActive: true
@@ -423,8 +424,10 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
                 dayOfWeek: a.day_of_week,
                 startTime: a.start_time,
                 endTime: a.end_time,
-                isAvailable: a.is_available
+                isAvailable: a.is_available,
+                breaks: []
               })),
+              timeOff: [],
               commissions: [],
               performance: [],
               isActive: h.is_active,
@@ -473,6 +476,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
             })) || (dbSettings.sales ?? DEFAULT_SETTINGS.sales),
             menuCustomization: dbSettings.menuCustomization ?? DEFAULT_SETTINGS.menuCustomization,
             stickyNotes: dbSettings.stickyNotes ?? DEFAULT_SETTINGS.stickyNotes,
+            imageCount: dbSettings.imageCount ?? DEFAULT_SETTINGS.imageCount,
             hasCompletedOnboarding: dbSettings.hasCompletedOnboarding ?? DEFAULT_SETTINGS.hasCompletedOnboarding,
         };
         
@@ -590,7 +594,13 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
             } else {
                 setLoading(false);
                 // Load default language for login screen
-                loadTranslations(DEFAULT_SETTINGS.language).then(() => setTranslationsLoaded(true));
+                loadTranslations(DEFAULT_SETTINGS.language).then(() => {
+                    setTranslationsLoaded(true);
+                }).catch((error) => {
+                    console.error('Failed to load default translations:', error);
+                    // Even if translations fail to load, set to true to prevent blocking
+                    setTranslationsLoaded(true);
+                });
             }
         });
 
@@ -779,6 +789,11 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
       if (!user) {
           console.error("updateSettings: User not authenticated");
+          // For unauthenticated users (e.g., on landing page), update local state only
+          const currentSettings = profile.settings || DEFAULT_SETTINGS;
+          const updatedSettings = { ...currentSettings, ...newSettings };
+          console.log("Updating settings locally (no user):", newSettings);
+          setProfile(p => ({ ...p, settings: updatedSettings }));
           return;
       }
       
@@ -892,11 +907,11 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
       Object.entries(shades).forEach(([shade, value]) => {
         if (shade.includes('-rgb')) {
           // Set RGB values for shadow utilities
-          document.documentElement.style.setProperty(`--accent-color-${shade}-custom`, value);
+          document.documentElement.style.setProperty(`--accent-color-${shade}-custom`, value as string);
         } else {
           // Set both the old format and the Tailwind expected format
-          document.documentElement.style.setProperty(`--accent-color-${shade}`, value);
-          document.documentElement.style.setProperty(`--accent-${shade}`, value); // This is what Tailwind expects
+          document.documentElement.style.setProperty(`--accent-color-${shade}`, value as string);
+          document.documentElement.style.setProperty(`--accent-${shade}`, value as string); // This is what Tailwind expects
         }
         console.log(`Setting --accent-${shade} to ${value}`);
       });
@@ -1243,13 +1258,13 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
         if (!user) throw new Error("User not authenticated");
         
         const defaultAvailability: HairstylistAvailability[] = [
-            { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isAvailable: true }, // Monday
-            { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', isAvailable: true }, // Tuesday
-            { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', isAvailable: true }, // Wednesday
-            { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', isAvailable: true }, // Thursday
-            { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', isAvailable: true }, // Friday
-            { dayOfWeek: 6, startTime: '10:00', endTime: '16:00', isAvailable: false }, // Saturday
-            { dayOfWeek: 0, startTime: '10:00', endTime: '16:00', isAvailable: false }, // Sunday
+            { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isAvailable: true, breaks: [] }, // Monday
+            { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', isAvailable: true, breaks: [] }, // Tuesday
+            { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', isAvailable: true, breaks: [] }, // Wednesday
+            { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', isAvailable: true, breaks: [] }, // Thursday
+            { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', isAvailable: true, breaks: [] }, // Friday
+            { dayOfWeek: 6, startTime: '10:00', endTime: '16:00', isAvailable: false, breaks: [] }, // Saturday
+            { dayOfWeek: 0, startTime: '10:00', endTime: '16:00', isAvailable: false, breaks: [] }, // Sunday
         ];
         
         // Insert hairstylist into database
@@ -1293,6 +1308,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
           serviceIds: hairstylist.serviceIds || [],
           skills: hairstylist.skills || [],
           availability: hairstylist.availability || defaultAvailability,
+          timeOff: hairstylist.timeOff || [],
           commissions: hairstylist.commissions || [],
           performance: hairstylist.performance || [],
           isActive: hairstylistData.is_active,

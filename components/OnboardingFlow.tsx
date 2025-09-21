@@ -25,17 +25,58 @@ interface OnboardingData {
   salonName: string;
   salonLogo: string | null;
   designStyle: 'modern' | 'classic' | 'minimalist' | 'vibrant';
+  // Workspace Customization
+  theme: 'light' | 'dark';
+  accentColor: 'purple' | 'blue' | 'green' | 'pink' | 'orange' | 'red' | 'teal' | 'indigo' | 'yellow' | 'amber' | 'lime' | 'cyan' | 'sky' | 'violet' | 'fuchsia' | 'rose' | 'custom';
+  customAccentColor?: string;
+  typography: 'sans' | 'serif';
+  language: 'de' | 'en' | 'fr' | 'it';
+  currency: 'CHF' | 'EUR' | 'USD';
+  layout: 'standard' | 'compact';
+  // Services & Team
   selectedServices: string[];
   customServices: Array<{ name: string; duration: number; price: number }>;
   teamMembers: Array<{ name: string; type: 'expert' | 'station'; email?: string; phone?: string }>;
 }
 
+const ACCENT_COLORS = [
+  { name: 'purple', label: 'Purple', className: 'bg-[#8b5cf6]' },
+  { name: 'blue', label: 'Blue', className: 'bg-[#3b82f6]' },
+  { name: 'green', label: 'Green', className: 'bg-[#22c55e]' },
+  { name: 'pink', label: 'Pink', className: 'bg-[#ec4899]' },
+  { name: 'orange', label: 'Orange', className: 'bg-[#f97316]' },
+  { name: 'red', label: 'Red', className: 'bg-[#ef4444]' },
+  { name: 'teal', label: 'Teal', className: 'bg-[#14b8a6]' },
+  { name: 'indigo', label: 'Indigo', className: 'bg-[#6366f1]' },
+  { name: 'yellow', label: 'Yellow', className: 'bg-[#eab308]' },
+  { name: 'amber', label: 'Amber', className: 'bg-[#f59e0b]' },
+  { name: 'lime', label: 'Lime', className: 'bg-[#84cc16]' },
+  { name: 'cyan', label: 'Cyan', className: 'bg-[#06b6d4]' },
+  { name: 'sky', label: 'Sky', className: 'bg-[#0ea5e9]' },
+  { name: 'violet', label: 'Violet', className: 'bg-[#8b5cf6]' },
+  { name: 'fuchsia', label: 'Fuchsia', className: 'bg-[#d946ef]' },
+  { name: 'rose', label: 'Rose', className: 'bg-[#f43f5e]' }
+];
+
+const LANGUAGES = [
+  { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { id: 'en', label: 'English', flag: '🇺🇸' },
+  { id: 'fr', label: 'Français', flag: '🇫🇷' },
+  { id: 'it', label: 'Italiano', flag: '🇮🇹' }
+];
+
+const CURRENCIES = [
+  { id: 'CHF', label: 'CHF (Swiss Franc)', symbol: 'CHF' },
+  { id: 'EUR', label: 'EUR (Euro)', symbol: '€' },
+  { id: 'USD', label: 'USD (US Dollar)', symbol: '$' }
+];
+
 const DESIGN_STYLES = [
-  { id: 'modern', name: 'Modern', description: 'Clean lines and contemporary feel', color: mapToAccentColor('bg-accent-500') },
-  { id: 'classic', name: 'Classic', description: 'Timeless and elegant design', color: 'bg-purple-500' },
-  { id: 'minimalist', name: 'Minimalist', description: 'Simple and focused approach', color: 'bg-slate-500' },
-  { id: 'vibrant', name: 'Vibrant', description: 'Bold colors and energetic vibe', color: 'bg-pink-500' }
-] as const;
+  { id: 'modern', name: 'Modern', description: 'Clean and contemporary', color: 'bg-blue-500' },
+  { id: 'classic', name: 'Classic', description: 'Timeless elegance', color: 'bg-gray-600' },
+  { id: 'minimalist', name: 'Minimalist', description: 'Simple and refined', color: 'bg-green-500' },
+  { id: 'vibrant', name: 'Vibrant', description: 'Bold and colorful', color: 'bg-orange-500' }
+];
 
 const COMMON_SERVICES = [
   { name: 'Haircut & Styling', duration: 60, price: 50 },
@@ -49,14 +90,28 @@ const COMMON_SERVICES = [
 ];
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
-  const { t, setSalonName, setSalonLogo, setAccentColor, currency, completeOnboarding, updateSettings, addService, addHairstylist } = useSettings();
+  const { 
+    t, setSalonName, setSalonLogo, setAccentColor, setCustomAccentColor, setTheme, setTypography, setLanguage, setCurrency, setLayout, 
+    currency: currentCurrency, theme: currentTheme, accentColor: currentAccentColor, customAccentColor: currentCustomAccentColor,
+    completeOnboarding, updateSettings, addService, addHairstylist 
+  } = useSettings();
   const [currentStep, setCurrentStep] = useState(1);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showCustomColorPicker, setShowCustomColorPicker] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     salonName: '',
     salonLogo: null,
     designStyle: 'modern',
+    // Workspace defaults
+    theme: currentTheme || 'light',
+    accentColor: currentAccentColor || 'blue',
+    customAccentColor: currentCustomAccentColor || undefined,
+    typography: 'sans',
+    language: 'en',
+    currency: currentCurrency || 'USD',
+    layout: 'standard',
+    // Services & Team
     selectedServices: [],
     customServices: [],
     teamMembers: []
@@ -64,6 +119,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const steps = [
     'Salon Setup',
+    'Workspace Style',
     'Services Selection', 
     'Team Members',
     'Review & Complete'
@@ -95,14 +151,27 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         setSalonLogo(data.salonLogo);
       }
       
-      // Set accent color based on design style
-      const styleColorMap = {
-        modern: 'blue',
-        classic: 'purple', 
-        minimalist: 'blue', // Use blue instead of gray since gray might not be supported
-        vibrant: 'pink'
-      } as const;
-      setAccentColor(styleColorMap[data.designStyle]);
+      // Apply workspace customization
+      setTheme(data.theme);
+      setAccentColor(data.accentColor);
+      if (data.accentColor === 'custom' && data.customAccentColor) {
+        setCustomAccentColor(data.customAccentColor);
+      }
+      setTypography(data.typography);
+      setLanguage(data.language as any);
+      setCurrency(data.currency as any);
+      setLayout(data.layout);
+      
+      // Update additional settings
+      await updateSettings({
+        theme: data.theme,
+        accentColor: data.accentColor,
+        customAccentColor: data.customAccentColor,
+        typography: data.typography,
+        language: data.language as any,
+        currency: data.currency as any,
+        layout: data.layout
+      });
 
       // Prepare services data
       const newServices = [];
@@ -174,7 +243,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           availability: hairstylist.availability,
           commissions: hairstylist.commissions,
           performance: hairstylist.performance,
-          isActive: hairstylist.isActive
+          isActive: hairstylist.isActive,
+          timeOff: []
         });
       }
 
@@ -248,14 +318,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             {DESIGN_STYLES.map(style => (
               <button
                 key={style.id}
-                onClick={() => updateData({ designStyle: style.id })}
+                onClick={() => updateData({ designStyle: style.id as 'modern' | 'classic' | 'minimalist' | 'vibrant' })}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   data.designStyle === style.id
                     ? mapToAccentColor('border-accent-500 bg-accent-50 dark:bg-accent-900/20')
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <div className={`w-8 h-8 ${style.id === 'modern' ? style.color : style.color} rounded-full mx-auto mb-2`} />
+                <div className={`w-8 h-8 ${style.color} rounded-full mx-auto mb-2`} />
                 <h3 className="font-semibold text-gray-900 dark:text-white">{style.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{style.description}</p>
               </button>
@@ -267,6 +337,233 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   );
 
   const renderStep2 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Customize Your Workspace
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Choose your preferred theme, colors, and language settings
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Theme Selection */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Theme
+          </label>
+          <div className="flex gap-3">
+            <button
+              onClick={() => updateData({ theme: 'light' })}
+              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                data.theme === 'light'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-white border border-gray-200 rounded mx-auto mb-2" />
+              <div className="font-medium text-gray-900 dark:text-white">Light</div>
+            </button>
+            <button
+              onClick={() => updateData({ theme: 'dark' })}
+              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                data.theme === 'dark'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded mx-auto mb-2" />
+              <div className="font-medium text-gray-900 dark:text-white">Dark</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Typography Selection */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Typography
+          </label>
+          <div className="flex gap-3">
+            <button
+              onClick={() => updateData({ typography: 'sans' })}
+              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                data.typography === 'sans'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <div className="font-sans font-medium text-gray-900 dark:text-white">Sans-Serif</div>
+              <div className="font-sans text-sm text-gray-600 dark:text-gray-400">Modern & Clean</div>
+            </button>
+            <button
+              onClick={() => updateData({ typography: 'serif' })}
+              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                data.typography === 'serif'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <div className="font-serif font-medium text-gray-900 dark:text-white">Serif</div>
+              <div className="font-serif text-sm text-gray-600 dark:text-gray-400">Classic & Elegant</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Accent Color Selection */}
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Accent Color
+        </label>
+        <div className="flex flex-wrap gap-3 mb-3">
+          {ACCENT_COLORS.map(color => (
+            <button
+              key={color.name}
+              onClick={() => updateData({ accentColor: color.name as any })}
+              className={`w-10 h-10 rounded-full ${color.className} ${
+                data.accentColor === color.name
+                  ? 'ring-2 ring-offset-2 ring-white dark:ring-offset-gray-800 ring-current scale-110'
+                  : 'hover:scale-105'
+              } transition-all`}
+              title={color.label}
+            />
+          ))}
+          <button
+            onClick={() => {
+              updateData({ accentColor: 'custom' });
+              setShowCustomColorPicker(true);
+            }}
+            className={`w-10 h-10 rounded-full flex items-center justify-center border-2 border-dashed ${
+              data.accentColor === 'custom'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+            } transition-all`}
+            style={data.accentColor === 'custom' && data.customAccentColor ? { backgroundColor: data.customAccentColor, borderStyle: 'solid' } : {}}
+            title="Custom Color"
+          >
+            {data.accentColor !== 'custom' && (
+              <PlusIcon className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
+        </div>
+        
+        {/* Custom Color Picker */}
+        {showCustomColorPicker && (
+          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full border" style={{ backgroundColor: data.customAccentColor || '#3b82f6' }} />
+              <input
+                type="color"
+                value={data.customAccentColor || '#3b82f6'}
+                onChange={(e) => updateData({ customAccentColor: e.target.value })}
+                className="w-16 h-8 cursor-pointer rounded border-none"
+              />
+              <input
+                type="text"
+                value={data.customAccentColor || '#3b82f6'}
+                onChange={(e) => updateData({ customAccentColor: e.target.value })}
+                placeholder="#3b82f6"
+                className="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowCustomColorPicker(false)}
+                className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Language & Currency */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Language
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {LANGUAGES.map(lang => (
+              <button
+                key={lang.id}
+                onClick={() => updateData({ language: lang.id as any })}
+                className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  data.language === lang.id
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{lang.flag}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{lang.label}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Currency
+          </label>
+          <div className="space-y-2">
+            {CURRENCIES.map(curr => (
+              <button
+                key={curr.id}
+                onClick={() => updateData({ currency: curr.id as any })}
+                className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
+                  data.currency === curr.id
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-900 dark:text-white">{curr.label}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{curr.symbol}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Layout Style (Optional) */}
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Layout Style
+        </label>
+        <div className="flex gap-3">
+          <button
+            onClick={() => updateData({ layout: 'standard' })}
+            className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+              data.layout === 'standard'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            <div className="font-medium text-gray-900 dark:text-white">Standard</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Comfortable spacing</div>
+          </button>
+          <button
+            onClick={() => updateData({ layout: 'compact' })}
+            className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+              data.layout === 'compact'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            <div className="font-medium text-gray-900 dark:text-white">Compact</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Dense information</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -302,7 +599,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white">{service.name}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {service.duration} min • {service.price.toLocaleString('en-US', { style: 'currency', currency })}
+                      {service.duration} min • {service.price.toLocaleString('en-US', { style: 'currency', currency: data.currency })}
                     </p>
                   </div>
                   {data.selectedServices.includes(service.name) && (
@@ -366,7 +663,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 placeholder="Price"
                 className="w-20 p-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded"
               />
-              <span className="text-sm text-gray-500">{currency}</span>
+              <span className="text-sm text-gray-500">{data.currency}</span>
               <button
                 onClick={() => {
                   updateData({
@@ -384,7 +681,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     </div>
   );
 
-  const renderStep3 = () => (
+  const renderStep4 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -490,7 +787,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     </div>
   );
 
-  const renderStep4 = () => (
+  const renderStep5 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -521,6 +818,47 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           </div>
         </div>
 
+        {/* Workspace Customization */}
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+            Workspace Style
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Theme:</span>
+              <span className="ml-2 capitalize">{data.theme}</span>
+            </div>
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Typography:</span>
+              <span className="ml-2 capitalize">{data.typography}</span>
+            </div>
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Language:</span>
+              <span className="ml-2">{LANGUAGES.find(l => l.id === data.language)?.label}</span>
+            </div>
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Currency:</span>
+              <span className="ml-2">{data.currency}</span>
+            </div>
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Layout:</span>
+              <span className="ml-2 capitalize">{data.layout}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600 dark:text-gray-400">Accent:</span>
+              <div 
+                className="w-4 h-4 rounded-full border border-gray-300"
+                style={{ 
+                  backgroundColor: data.accentColor === 'custom' 
+                    ? data.customAccentColor 
+                    : ACCENT_COLORS.find(c => c.name === data.accentColor)?.className.replace('bg-[', '').replace(']', '') 
+                }}
+              />
+              <span className="capitalize">{data.accentColor}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Services */}
         <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -535,7 +873,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             ))}
             {data.customServices.map((service, index) => (
               <div key={index} className="text-sm text-gray-600 dark:text-gray-400">
-                • {service.name} ({service.duration} min, {service.price.toLocaleString('en-US', { style: 'currency', currency })})
+                • {service.name} ({service.duration} min, {service.price.toLocaleString('en-US', { style: 'currency', currency: data.currency })})
               </div>
             ))}
           </div>
@@ -582,10 +920,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       case 1:
         return data.salonName.trim().length > 0;
       case 2:
-        return data.selectedServices.length > 0 || data.customServices.length > 0;
+        return true; // Workspace customization is optional
       case 3:
-        return true; // Team members are optional
+        return data.selectedServices.length > 0 || data.customServices.length > 0;
       case 4:
+        return true; // Team members are optional
+      case 5:
         return true;
       default:
         return false;
@@ -612,11 +952,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             {currentStep === 2 && renderStep2()}
             {currentStep === 3 && renderStep3()}
             {currentStep === 4 && renderStep4()}
+            {currentStep === 5 && renderStep5()}
           </div>
         </div>
 
         {/* Navigation */}
-        {currentStep < 4 && (
+        {currentStep < 5 && (
           <div className="flex justify-between">
             <button
               onClick={handlePrevious}
