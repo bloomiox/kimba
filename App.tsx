@@ -7,7 +7,7 @@ import OnboardingFlow from './components/OnboardingFlow';
 import { supabase } from './services/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import LoadingSpinner from './components/common/LoadingSpinner';
-import TranslationDebug from './components/debug/TranslationDebug';
+
 
 
 const App: React.FC = () => {
@@ -66,7 +66,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      <TranslationDebug />
       {session ? <MainApp /> : <Auth />}
     </>
   );
