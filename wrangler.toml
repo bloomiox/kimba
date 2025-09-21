@@ -1,0 +1,8 @@
+name = "hairstylistcrm"
+compatibility_date = "2024-03-21"
+
+[env.production]
+main = "dist/index.html"
+
+[env.preview]
+main = "dist/index.html"
