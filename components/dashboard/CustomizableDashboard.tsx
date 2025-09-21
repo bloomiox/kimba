@@ -125,7 +125,8 @@ interface CustomizableDashboardProps {
 }
 
 const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAction, savedLookbooks }) => {
-  const { salonName } = useSettings();
+  const settings = useSettings();
+  const { salonName, updateSettings, dashboardConfiguration: savedDashboardConfig } = settings;
   
   // Advanced state management
   const [isCustomizing, setIsCustomizing] = useState(false);
@@ -149,10 +150,29 @@ const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAc
   const dragPreviewRef = useRef<HTMLDivElement>(null);
   const analyticsRef = useRef<GridMetrics>({ density: 0, efficiency: 0, alignment: 0, balance: 0 });
 
-  // Enhanced dashboard configuration with persistence prevention
+  // Enhanced dashboard configuration with Supabase persistence
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfiguration>(
-    DEFAULT_DASHBOARD_CONFIG
+    savedDashboardConfig || DEFAULT_DASHBOARD_CONFIG
   );
+
+  // Load dashboard configuration from settings context when available
+  useEffect(() => {
+    if (savedDashboardConfig) {
+      setDashboardConfig(savedDashboardConfig);
+    }
+  }, [savedDashboardConfig]);
+
+  // Save dashboard configuration to Supabase
+  const saveDashboardConfig = useCallback(async (newConfig: DashboardConfiguration) => {
+    setDashboardConfig(newConfig);
+    try {
+      await updateSettings({ dashboardConfiguration: newConfig });
+      console.log('✅ Dashboard configuration saved to Supabase');
+    } catch (error) {
+      console.error('❌ Failed to save dashboard configuration:', error);
+      // You could show a toast notification here
+    }
+  }, [updateSettings]);
 
   // Advanced responsive grid system
   useEffect(() => {
@@ -289,45 +309,49 @@ const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAc
       isVisible: true
     };
 
-    setDashboardConfig(prev => ({
-      ...prev,
-      widgets: [...prev.widgets, newWidget]
-    }));
+    const newConfig = {
+      ...dashboardConfig,
+      widgets: [...dashboardConfig.widgets, newWidget]
+    };
+    saveDashboardConfig(newConfig);
   }, [dashboardConfig.widgets.length]);
 
   const handleRemoveWidget = useCallback((widgetId: string) => {
-    setDashboardConfig(prev => ({
-      ...prev,
-      widgets: prev.widgets.filter(w => w.id !== widgetId)
-    }));
+    const newConfig = {
+      ...dashboardConfig,
+      widgets: dashboardConfig.widgets.filter(w => w.id !== widgetId)
+    };
+    saveDashboardConfig(newConfig);
   }, []);
 
   const handleResizeWidget = useCallback((widgetId: string, newSize: { width: number; height: number }) => {
-    setDashboardConfig(prev => ({
-      ...prev,
-      widgets: prev.widgets.map(w => 
+    const newConfig = {
+      ...dashboardConfig,
+      widgets: dashboardConfig.widgets.map(w => 
         w.id === widgetId ? { ...w, size: newSize } : w
       )
-    }));
+    };
+    saveDashboardConfig(newConfig);
   }, []);
 
   const handleReorderWidgets = useCallback((sourceIndex: number, targetIndex: number) => {
     // This function is kept for compatibility but the new grid system 
     // handles positioning through drag and drop directly
-    setDashboardConfig(prev => {
-      const newWidgets = [...prev.widgets];
-      const [movedWidget] = newWidgets.splice(sourceIndex, 1);
-      newWidgets.splice(targetIndex, 0, movedWidget);
-      
-      return {
-        ...prev,
-        widgets: newWidgets.map((widget, index) => ({
-          ...widget,
-          position: { ...widget.position, order: index }
-        }))
-      };
-    });
-  }, []);
+    const newWidgets = [...dashboardConfig.widgets];
+    const [movedWidget] = newWidgets.splice(sourceIndex, 1);
+    newWidgets.splice(targetIndex, 0, movedWidget);
+    
+    const reorderedWidgets = newWidgets.map((widget, index) => ({
+      ...widget,
+      position: { ...widget.position, order: index }
+    }));
+    
+    const newConfig = {
+      ...dashboardConfig,
+      widgets: reorderedWidgets
+    };
+    saveDashboardConfig(newConfig);
+  }, [dashboardConfig, saveDashboardConfig]);
 
   const getDefaultWidgetSize = (widgetType: WidgetType): { width: number; height: number } => {
     const sizeMap: Record<WidgetType, { width: number; height: number }> = {
@@ -528,7 +552,8 @@ const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAc
       }
     });
     
-    setDashboardConfig(prev => ({ ...prev, widgets: newWidgets }));
+    const newConfig = { ...dashboardConfig, widgets: newWidgets };
+    saveDashboardConfig(newConfig);
     
     setTimeout(() => setIsCompacting(false), 1000);
   }, [dashboardConfig]);
@@ -674,9 +699,9 @@ const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAc
       });
       
       // Apply all position changes
-      setDashboardConfig(prev => ({
-        ...prev,
-        widgets: prev.widgets.map(w => {
+      const newConfig = {
+        ...dashboardConfig,
+        widgets: dashboardConfig.widgets.map(w => {
           if (w.id === sourceWidgetId) {
             return { ...w, position: { ...w.position, x: newPosition.x, y: newPosition.y } };
           } else if (displacements.has(w.id)) {
@@ -685,7 +710,8 @@ const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAc
           }
           return w;
         })
-      }));
+      };
+      saveDashboardConfig(newConfig);
       
       // Show success feedback
       console.log(`✅ Widget "${sourceWidget.title}" moved to position (${newPosition.x}, ${newPosition.y})`);
@@ -717,7 +743,7 @@ const CustomizableDashboard: React.FC<CustomizableDashboardProps> = ({ onQuickAc
   };
 
   const resetToDefaults = () => {
-    setDashboardConfig(DEFAULT_DASHBOARD_CONFIG);
+    saveDashboardConfig(DEFAULT_DASHBOARD_CONFIG);
   };
 
   return (
