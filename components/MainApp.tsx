@@ -16,6 +16,7 @@ import SocialMediaPage from './social/SocialMediaPage';
 import TeamPage from './TeamPage';
 import ServicesPage from './ServicesPage';
 import ProductsPage from './ProductsPage';
+import LanguageSwitcher from './common/LanguageSwitcher';
 import { supabase } from '../services/supabaseClient';
 
 export type View = 'dashboard' | 'studio' | 'calendar' | 'settings' | 'booking' | 'clients' | 'analytics' | 'pos' | 'marketing' | 'social' | 'team' | 'services' | 'products';
@@ -116,7 +117,9 @@ const MainApp: React.FC = () => {
              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                 {salonName}
             </h1>
-            {/* Future header items can go here */}
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
+            </div>
         </header>
 
         <main className={`flex-grow p-4 sm:p-6 transition-opacity duration-300 ease-in-out ${contentVisible ? 'opacity-100' : 'opacity-0'}`}>

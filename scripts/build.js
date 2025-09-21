@@ -8,7 +8,18 @@ const __dirname = path.dirname(__filename);
 
 console.log('Starting build process...');
 
-// First, always copy assets to ensure they're available
+// First, validate translations to prevent building with incomplete translations
+console.log('Validating translations...');
+try {
+  execSync('node scripts/validate-translations.js', { stdio: 'inherit' });
+  console.log('✅ Translation validation passed!');
+} catch (error) {
+  console.error('❌ Translation validation failed! Build aborted.');
+  console.error('Please fix translation issues before building.');
+  process.exit(1);
+}
+
+// Copy assets to ensure they're available
 console.log('Copying assets...');
 try {
   execSync('node scripts/copy-assets.js', { stdio: 'inherit' });

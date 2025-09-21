@@ -1,0 +1,129 @@
+{
+  "timestamp": "2025-09-21T13:46:14.017Z",
+  "summary": {
+    "validation": true,
+    "completeness": true,
+    "integration": true,
+    "performance": true,
+    "overall": true
+  },
+  "details": {
+    "validation": {
+      "passed": true,
+      "report": {
+        "timestamp": "2025-09-21T13:46:13.523Z",
+        "summary": {
+          "total": 6,
+          "passed": 6,
+          "failed": 0
+        },
+        "tests": [
+          {
+            "name": "Translation files exist",
+            "passed": true,
+            "errors": []
+          },
+          {
+            "name": "Translation files contain valid JSON",
+            "passed": true,
+            "errors": []
+          },
+          {
+            "name": "All languages have identical key sets",
+            "passed": true,
+            "errors": []
+          },
+          {
+            "name": "Public and dist translation files are synchronized",
+            "passed": true,
+            "errors": []
+          },
+          {
+            "name": "Required translation keys are present",
+            "passed": true,
+            "errors": []
+          },
+          {
+            "name": "No empty translation values",
+            "passed": true,
+            "errors": []
+          }
+        ]
+      }
+    },
+    "completeness": {
+      "passed": true
+    },
+    "integration": {
+      "passed": true,
+      "tests": [
+        {
+          "name": "Translator module exists",
+          "passed": true
+        },
+        {
+          "name": "en files loadable",
+          "passed": true
+        },
+        {
+          "name": "de files loadable",
+          "passed": true
+        },
+        {
+          "name": "fr files loadable",
+          "passed": true
+        },
+        {
+          "name": "it files loadable",
+          "passed": true
+        },
+        {
+          "name": "en critical keys",
+          "passed": true
+        },
+        {
+          "name": "de critical keys",
+          "passed": true
+        },
+        {
+          "name": "fr critical keys",
+          "passed": true
+        },
+        {
+          "name": "it critical keys",
+          "passed": true
+        }
+      ]
+    },
+    "performance": {
+      "passed": true,
+      "tests": [
+        {
+          "name": "en file size",
+          "passed": true,
+          "size": "5.05"
+        },
+        {
+          "name": "de file size",
+          "passed": true,
+          "size": "5.32"
+        },
+        {
+          "name": "fr file size",
+          "passed": true,
+          "size": "5.39"
+        },
+        {
+          "name": "it file size",
+          "passed": true,
+          "size": "5.30"
+        },
+        {
+          "name": "JSON parsing performance",
+          "passed": true,
+          "time": 5
+        }
+      ]
+    }
+  }
+}

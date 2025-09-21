@@ -9,6 +9,11 @@
     "build:vite": "vite build && node scripts/copy-assets.js",
     "verify": "node scripts/verify-build.js",
     "test-urls": "node scripts/test-urls.js",
+    "test-translations": "node scripts/test-translations.js",
+    "validate-translations": "node scripts/validate-translations.js",
+    "test-translation-suite": "node scripts/translation-test-suite.js",
+    "pre-commit-check": "node scripts/pre-commit-translation-check.js",
+    "test-local": "node scripts/local-server.js",
     "deploy": "npm run build && npm run verify",
     "preview": "vite preview",
     "setup-storage": "node supabase/setup-storage.js",
@@ -21,12 +26,13 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.52.0",
     "@types/node": "^22.14.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.50.2",
-    "@rollup/rollup-win32-x64-msvc": "^4.51.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.52.0",
+    "@rollup/rollup-win32-x64-msvc": "^4.52.0"
   }
 }

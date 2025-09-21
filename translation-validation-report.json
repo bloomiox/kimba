@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-09-21T13:46:13.523Z",
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "tests": [
+    {
+      "name": "Translation files exist",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "Translation files contain valid JSON",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "All languages have identical key sets",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "Public and dist translation files are synchronized",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "Required translation keys are present",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "No empty translation values",
+      "passed": true,
+      "errors": []
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import React from 'react';
 // FIX: Replaced missing BarChartIcon with TrendingUpIcon.
 import { LogoIcon, SparklesIcon, UsersIcon, CalendarIcon, TrendingUpIcon, CheckCircleIcon, HeartIcon } from '../common/Icons';
 import { useSettings } from '../../contexts/SettingsContext';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 interface LandingPageProps {
   onNavigate: (page: 'signin' | 'signup') => void;
@@ -25,6 +26,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <a href="#contact" className="hover:text-accent transition-colors font-semibold">{t('auth.landing.nav.contact')}</a>
           </div>
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <button onClick={() => onNavigate('signin')} className="hover:text-accent transition-colors font-semibold">{t('auth.landing.signIn')}</button>
             <button onClick={() => onNavigate('signup')} className="px-5 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white transition-all shadow-md">{t('auth.landing.getStarted')}</button>
           </div>
@@ -33,26 +35,61 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative text-center py-20 md:py-32 px-6 bg-white dark:bg-gray-900 overflow-hidden">
-            <div className="absolute inset-0 bg-grid-gray-200/50 dark:bg-grid-gray-800/50 [mask-image:linear-gradient(to_bottom,white_10%,transparent_100%)]"></div>
+        <section className="relative text-center py-20 md:py-32 px-6 bg-gradient-to-br from-white via-accent-50/30 to-accent-100/20 dark:from-gray-900 dark:via-accent-950/30 dark:to-accent-900/20 overflow-hidden">
+            <div className="absolute inset-0 bg-grid-gray-200/30 dark:bg-grid-gray-800/30 [mask-image:radial-gradient(ellipse_at_center,white_20%,transparent_80%)]"></div>
+            
+            {/* Floating elements */}
+            <div className="absolute top-20 left-10 w-20 h-20 bg-accent/10 rounded-full blur-xl animate-float-slow"></div>
+            <div className="absolute top-40 right-20 w-32 h-32 bg-accent/5 rounded-full blur-2xl animate-float-slower"></div>
+            <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-accent/15 rounded-full blur-lg animate-float"></div>
+            
             <div className="container mx-auto relative z-10">
-                <h2 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight text-gray-900 dark:text-white">{t('auth.landing.hero.title')}</h2>
-                <p className="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-400 mb-8">
-                {t('auth.landing.hero.subtitle')}
-                </p>
-                <div className="flex justify-center gap-4">
-                    <button onClick={() => onNavigate('signup')} className="px-8 py-4 bg-accent hover:opacity-90 rounded-lg text-lg font-bold text-white transition-all shadow-xl">{t('auth.landing.freeTrial')}</button>
+                <div className="animate-fade-in-up">
+                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight text-gray-900 dark:text-white leading-tight">
+                        {t('auth.landing.hero.title')}
+                    </h2>
+                    <p className="max-w-3xl mx-auto text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed">
+                        {t('auth.landing.hero.subtitle')}
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+                        <button 
+                            onClick={() => onNavigate('signup')} 
+                            className="group px-8 py-4 bg-accent hover:bg-accent-600 rounded-xl text-lg font-bold text-white transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                {t('auth.landing.freeTrial')}
+                                <SparklesIcon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                            </span>
+                        </button>
+                        <button 
+                            onClick={() => onNavigate('signin')} 
+                            className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-lg font-bold text-gray-900 dark:text-white transition-all duration-300 shadow-lg hover:shadow-xl"
+                        >
+                            {t('auth.landing.signIn')}
+                        </button>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        {t('auth.landing.noCreditCard')}
+                    </p>
                 </div>
-                <p className="mt-4 text-sm text-gray-500">{t('auth.landing.noCreditCard')}</p>
             </div>
              <style>{`
-                .bg-grid-gray-200\\/50 {
-                    background-image: linear-gradient(to right, #e5e7eb80 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb80 1px, transparent 1px);
-                    background-size: 2rem 2rem;
+                .bg-grid-gray-200\\/30 {
+                    background-image: linear-gradient(to right, #e5e7eb50 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb50 1px, transparent 1px);
+                    background-size: 3rem 3rem;
                 }
-                .dark .bg-grid-gray-800\\/50 {
-                    background-image: linear-gradient(to right, #37415180 1px, transparent 1px), linear-gradient(to bottom, #37415180 1px, transparent 1px);
+                .dark .bg-grid-gray-800\\/30 {
+                    background-image: linear-gradient(to right, #37415150 1px, transparent 1px), linear-gradient(to bottom, #37415150 1px, transparent 1px);
                 }
+                @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+                @keyframes float-slow { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-30px) rotate(180deg); } }
+                @keyframes float-slower { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-15px) rotate(-90deg); } }
+                @keyframes fade-in-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-float { animation: float 6s ease-in-out infinite; }
+                .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+                .animate-float-slower { animation: float-slower 10s ease-in-out infinite; }
+                .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
             `}</style>
         </section>
 

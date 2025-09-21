@@ -7,6 +7,8 @@ import OnboardingFlow from './components/OnboardingFlow';
 import { supabase } from './services/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import TranslationDebug from './components/debug/TranslationDebug';
+
 
 const App: React.FC = () => {
   // Wrap the useSettings hook in a try-catch to handle the case where SettingsProvider might not be available
@@ -62,7 +64,12 @@ const App: React.FC = () => {
     return <OnboardingFlow onComplete={() => window.location.reload()} />;
   }
 
-  return session ? <MainApp /> : <Auth />;
+  return (
+    <>
+      <TranslationDebug />
+      {session ? <MainApp /> : <Auth />}
+    </>
+  );
 };
 
 export default App;

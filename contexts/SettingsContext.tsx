@@ -191,7 +191,7 @@ const DEFAULT_SETTINGS: UserSettings = {
     welcomeMessage: 'Start by providing a clear, front-facing photo of yourself.',
     sms: { enabled: false, provider: 'none', twilioSid: '', twilioAuthToken: '', twilioFromNumber: '' },
     isDemoDataEnabled: false,
-    language: 'en',
+    language: 'de',
     currency: 'USD',
     studioInitialGenerations: 4,
     customHairstyles: [],

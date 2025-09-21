@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogoIcon } from '../common/Icons';
 import { useSettings } from '../../contexts/SettingsContext';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -9,7 +10,12 @@ interface AuthLayoutProps {
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   const { t } = useSettings();
   return (
-    <div className="min-h-screen w-full lg:grid lg:grid-cols-2">
+    <div className="min-h-screen w-full lg:grid lg:grid-cols-2 relative">
+      {/* Language Switcher - Fixed Position */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
+      
       <div className="hidden lg:flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800/50 p-8 border-r border-gray-200 dark:border-gray-700">
         <div className="max-w-md text-center">
             <LogoIcon className="w-24 h-24 text-accent mx-auto mb-6" />
