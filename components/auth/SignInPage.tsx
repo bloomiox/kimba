@@ -5,7 +5,7 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { supabase } from '../../services/supabaseClient';
 
 interface SignInPageProps {
-  onNavigate: (page: 'signup' | 'landing') => void;
+  onNavigate: (page: 'signup' | 'landing' | 'about' | 'contact' | 'blog' | 'terms' | 'privacy') => void;
 }
 
 const SignInPage: React.FC<SignInPageProps> = ({ onNavigate }) => {

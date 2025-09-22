@@ -924,6 +924,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
         setTranslationsLoaded(false);
         loadTranslations(settings.language).then(() => {
           setTranslationsLoaded(true);
+        }).catch((error) => {
+          console.error('Failed to load translations for language:', settings.language, error);
+          setTranslationsLoaded(true); // Set to true to prevent infinite loading
         });
     }
   }, [profile.settings]);

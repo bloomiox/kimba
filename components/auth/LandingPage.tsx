@@ -5,7 +5,7 @@ import { useSettings } from '../../contexts/SettingsContext';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 
 interface LandingPageProps {
-  onNavigate: (page: 'signin' | 'signup') => void;
+  onNavigate: (page: 'signin' | 'signup' | 'about' | 'capabilities' | 'contact' | 'blog') => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
@@ -21,9 +21,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Kimba</h1>
           </div>
           <div className="hidden md:flex items-center gap-4">
-            <a href="#features" className="hover:text-accent transition-colors font-semibold">{t('auth.landing.nav.features')}</a>
-            <a href="#pricing" className="hover:text-accent transition-colors font-semibold">{t('auth.landing.nav.pricing')}</a>
-            <a href="#contact" className="hover:text-accent transition-colors font-semibold">{t('auth.landing.nav.contact')}</a>
+            <span className="text-accent font-semibold">{t('nav.home')}</span>
+            <button onClick={() => onNavigate('about')} className="hover:text-accent transition-colors font-semibold">{t('nav.about')}</button>
+            <button onClick={() => onNavigate('capabilities')} className="hover:text-accent transition-colors font-semibold">{t('capabilities.nav.capabilities')}</button>
+            <button onClick={() => onNavigate('contact')} className="hover:text-accent transition-colors font-semibold">{t('nav.contact')}</button>
+            <button onClick={() => onNavigate('blog')} className="hover:text-accent transition-colors font-semibold">{t('nav.blog')}</button>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
@@ -158,7 +160,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                         description={t('auth.landing.pricing.enterprise.description')}
                         features={[t('auth.landing.pricing.enterprise.f1'), t('auth.landing.pricing.enterprise.f2'), t('auth.landing.pricing.enterprise.f3')]}
                         buttonText={t('auth.landing.pricing.enterprise.cta')}
-                        onSelect={() => { window.location.href = 'mailto:sales@aistylist.pro' }}
+                        onSelect={() => onNavigate('signup')}
                     />
                 </div>
             </div>
@@ -175,19 +177,93 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
         {/* Contact Section */}
         <section id="contact" className="py-20 px-6">
-            <div className="container mx-auto text-center">
+            <div className="container mx-auto text-center max-w-4xl">
                  <h3 className="text-3xl md:text-4xl font-bold mb-3">{t('auth.landing.contact.title')}</h3>
-                 <p className="text-gray-600 dark:text-gray-400 mb-6">{t('auth.landing.contact.subtitle')}</p>
-                 <a href="mailto:support@aistylist.pro" className="text-accent font-bold text-xl hover:underline">support@aistylist.pro</a>
+                 <p className="text-gray-600 dark:text-gray-400 mb-12">{t('auth.landing.contact.subtitle')}</p>
+                 
+                 <div className="grid md:grid-cols-3 gap-8">
+                   <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                     <div className="w-12 h-12 bg-accent/10 text-accent rounded-lg flex items-center justify-center mx-auto mb-4">
+                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                       </svg>
+                     </div>
+                     <h4 className="text-lg font-semibold mb-2">Email Support</h4>
+                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Get help with any questions</p>
+                     <a href="mailto:support@kimba.pro" className="text-accent font-semibold hover:underline">support@kimba.pro</a>
+                   </div>
+                   
+                   <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                     <div className="w-12 h-12 bg-accent/10 text-accent rounded-lg flex items-center justify-center mx-auto mb-4">
+                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                       </svg>
+                     </div>
+                     <h4 className="text-lg font-semibold mb-2">Live Chat</h4>
+                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Chat with our team</p>
+                     <button className="text-accent font-semibold hover:underline">Start Conversation</button>
+                   </div>
+                   
+                   <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                     <div className="w-12 h-12 bg-accent/10 text-accent rounded-lg flex items-center justify-center mx-auto mb-4">
+                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                       </svg>
+                     </div>
+                     <h4 className="text-lg font-semibold mb-2">Help Center</h4>
+                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Browse our guides</p>
+                     <button onClick={() => onNavigate('blog')} className="text-accent font-semibold hover:underline">View Articles</button>
+                   </div>
+                 </div>
             </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="py-8 bg-gray-100 dark:bg-gray-800/50">
-        <div className="container mx-auto px-6 text-center text-gray-600 dark:text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Kimba. {t('auth.landing.copyright')}</p>
-            <p className="text-sm mt-2 flex items-center justify-center gap-1.5">{t('auth.landing.madeIn')} <HeartIcon className="w-4 h-4 text-red-500" /></p>
+      <footer className="py-12 bg-gray-100 dark:bg-gray-800/50">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <LogoIcon className="w-8 h-8 text-accent" />
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white">Kimba</h4>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                AI-powered CRM platform for beauty professionals.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-900 dark:text-white mb-3">Product</h5>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#features" className="text-gray-600 dark:text-gray-400 hover:text-accent">Features</a></li>
+                <li><a href="#pricing" className="text-gray-600 dark:text-gray-400 hover:text-accent">Pricing</a></li>
+                <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-accent">API</a></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-900 dark:text-white mb-3">Company</h5>
+              <ul className="space-y-2 text-sm">
+                <li><button onClick={() => onNavigate('about')} className="text-gray-600 dark:text-gray-400 hover:text-accent">{t('nav.about')}</button></li>
+                <li><button onClick={() => onNavigate('contact')} className="text-gray-600 dark:text-gray-400 hover:text-accent">{t('nav.contact')}</button></li>
+                <li><button onClick={() => onNavigate('blog')} className="text-gray-600 dark:text-gray-400 hover:text-accent">{t('nav.blog')}</button></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-900 dark:text-white mb-3">Legal</h5>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/privacy" className="text-gray-600 dark:text-gray-400 hover:text-accent">{t('footer.legal.privacy')}</a></li>
+                <li><a href="/terms" className="text-gray-600 dark:text-gray-400 hover:text-accent">{t('footer.legal.terms')}</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              {t('footer.copyright')}
+            </p>
+            <p className="text-sm mt-2 md:mt-0 flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+              {t('footer.madeWith')} <HeartIcon className="w-4 h-4 text-red-500" /> {t('footer.forProfessionals')}
+            </p>
+          </div>
         </div>
       </footer>
     </div>
