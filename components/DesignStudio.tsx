@@ -409,7 +409,7 @@ const DesignStudio: React.FC = () => {
             {showConfetti && <Confetti />}
 
             {currentStep > 0 && (
-                <div className="pb-6 px-2 flex-shrink-0">
+                <div className="pb-8 px-4 flex-shrink-0">
                     <Stepper steps={STEPS} currentStep={currentStep} />
                 </div>
             )}

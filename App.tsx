@@ -27,7 +27,7 @@ const App: React.FC = () => {
     );
   }
   
-  const { session, setSession, hasCompletedOnboarding, services, hairstylists, loading: settingsLoading } = settingsData;
+  const { session, setSession, hasCompletedOnboarding, services, hairstylists, salonName, loading: settingsLoading } = settingsData;
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const App: React.FC = () => {
   );
 
   if (needsOnboarding) {
-    return <OnboardingFlow onComplete={() => window.location.reload()} />;
+    return <OnboardingFlow onComplete={() => window.location.reload()} initialSalonName={salonName} />;
   }
 
   return (

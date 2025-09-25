@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import Stepper from './Stepper';
 import Confetti from './Confetti';
@@ -19,12 +19,12 @@ import { mapToAccentColor } from '../utils/colorUtils';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
+  initialSalonName?: string;
 }
 
 interface OnboardingData {
   salonName: string;
   salonLogo: string | null;
-  designStyle: 'modern' | 'classic' | 'minimalist' | 'vibrant';
   // Workspace Customization
   theme: 'light' | 'dark';
   accentColor: 'purple' | 'blue' | 'green' | 'pink' | 'orange' | 'red' | 'teal' | 'indigo' | 'yellow' | 'amber' | 'lime' | 'cyan' | 'sky' | 'violet' | 'fuchsia' | 'rose' | 'custom';
@@ -71,12 +71,6 @@ const CURRENCIES = [
   { id: 'USD', label: 'USD (US Dollar)', symbol: '$' }
 ];
 
-const DESIGN_STYLES = [
-  { id: 'modern', name: 'Modern', description: 'Clean and contemporary', color: 'bg-blue-500' },
-  { id: 'classic', name: 'Classic', description: 'Timeless elegance', color: 'bg-gray-600' },
-  { id: 'minimalist', name: 'Minimalist', description: 'Simple and refined', color: 'bg-green-500' },
-  { id: 'vibrant', name: 'Vibrant', description: 'Bold and colorful', color: 'bg-orange-500' }
-];
 
 const COMMON_SERVICES = [
   { name: 'Haircut & Styling', duration: 60, price: 50 },
@@ -89,40 +83,97 @@ const COMMON_SERVICES = [
   { name: 'Hair Wash', duration: 15, price: 15 }
 ];
 
-const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
+const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, initialSalonName = '' }) => {
   const { 
     t, setSalonName, setSalonLogo, setAccentColor, setCustomAccentColor, setTheme, setTypography, setLanguage, setCurrency, setLayout, 
     currency: currentCurrency, theme: currentTheme, accentColor: currentAccentColor, customAccentColor: currentCustomAccentColor,
-    completeOnboarding, updateSettings, addService, addHairstylist 
+    completeOnboarding, updateSettings, addService, addHairstylist, salonName: contextSalonName, user
   } = useSettings();
+  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCustomColorPicker, setShowCustomColorPicker] = useState(false);
-  const [data, setData] = useState<OnboardingData>({
-    salonName: '',
+  const [isSkipping, setIsSkipping] = useState(false);
+  const salonNameSetRef = useRef(false);
+  
+  // Debounce settings updates to prevent rapid changes
+  const settingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const debouncedSettingsUpdate = (updateFn: () => void) => {
+    if (settingsTimeoutRef.current) {
+      clearTimeout(settingsTimeoutRef.current);
+    }
+    settingsTimeoutRef.current = setTimeout(updateFn, 300); // 300ms delay
+  };
+  const [data, setData] = useState<OnboardingData>(() => ({
+    salonName: initialSalonName,
     salonLogo: null,
-    designStyle: 'modern',
-    // Workspace defaults
-    theme: currentTheme || 'light',
-    accentColor: currentAccentColor || 'blue',
-    customAccentColor: currentCustomAccentColor || undefined,
+    // Workspace defaults - Set to Light theme, Sans-Serif, Deutsch, CHF
+    theme: 'light',
+    accentColor: 'blue', // Use fixed default instead of currentAccentColor
+    customAccentColor: undefined, // Use fixed default instead of currentCustomAccentColor
     typography: 'sans',
-    language: 'en',
-    currency: currentCurrency || 'USD',
+    language: 'de',
+    currency: 'CHF',
     layout: 'standard',
     // Services & Team
     selectedServices: [],
     customServices: [],
     teamMembers: []
-  });
+  }));
+
+  // Update salon name when initialSalonName changes or from context/user metadata
+  useEffect(() => {
+    // Only run this once to prevent infinite loops
+    if (salonNameSetRef.current) return;
+    
+    let salonNameToUse = initialSalonName;
+    
+    // Try to get salon name from context first
+    if (!salonNameToUse && contextSalonName && contextSalonName !== 'My Salon') {
+      salonNameToUse = contextSalonName;
+    }
+    
+    // Try to get salon name from user metadata as fallback
+    if (!salonNameToUse && user?.user_metadata?.salon_name) {
+      salonNameToUse = user.user_metadata.salon_name;
+    }
+    
+    if (salonNameToUse && salonNameToUse !== data.salonName) {
+      setData(prev => ({ ...prev, salonName: salonNameToUse }));
+      salonNameSetRef.current = true;
+    }
+  }, [initialSalonName, contextSalonName, user]);
+
+  // Show confetti when reaching final step
+  useEffect(() => {
+    if (currentStep === 4) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
+
+  // Cleanup debounced settings timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (settingsTimeoutRef.current) {
+        clearTimeout(settingsTimeoutRef.current);
+      }
+    };
+  }, []);
+
+
 
   const steps = [
-    'Salon Setup',
-    'Workspace Style',
-    'Services Selection', 
-    'Team Members',
-    'Review & Complete'
+    t('onboarding.steps.salonInfo'),
+    t('onboarding.steps.servicesSelection'),
+    t('onboarding.steps.teamMembers'),
+    t('onboarding.steps.reviewComplete')
   ];
 
   const updateData = (updates: Partial<OnboardingData>) => {
@@ -251,317 +302,327 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       // Mark onboarding as complete
       await updateSettings({ hasCompletedOnboarding: true });
       
-      // Show confetti and complete
-      setShowConfetti(true);
-      setTimeout(() => {
-        onComplete();
-      }, 3000);
+      // Complete onboarding
+      onComplete();
     } catch (error) {
       console.error('Error completing onboarding:', error);
       setIsCompleting(false);
     }
   };
 
+  const handleSkip = async () => {
+    setIsSkipping(true);
+    
+    try {
+      // Apply basic settings only
+      setSalonName(data.salonName);
+      if (data.salonLogo) {
+        setSalonLogo(data.salonLogo);
+      }
+      
+      // Apply workspace customization
+      setTheme(data.theme);
+      setAccentColor(data.accentColor);
+      if (data.accentColor === 'custom' && data.customAccentColor) {
+        setCustomAccentColor(data.customAccentColor);
+      }
+      setTypography(data.typography);
+      setLanguage(data.language as any);
+      setCurrency(data.currency as any);
+      setLayout(data.layout);
+      
+      // Mark onboarding as complete
+      await updateSettings({ hasCompletedOnboarding: true });
+      
+      // Complete onboarding
+      onComplete();
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+      setIsSkipping(false);
+    }
+  };
+
   const renderStep1 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
+    <div className="space-y-8">
+      <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Welcome! Let's set up your salon
+          {data.salonName ? t('onboarding.step1.titleWithName', { salonName: data.salonName }) : t('onboarding.step1.title')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Tell us about your salon and choose your style
+          {data.salonName ? t('onboarding.step1.subtitleWithName') : t('onboarding.step1.subtitle')}
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Salon Name *
-          </label>
-          <input
-            type="text"
-            value={data.salonName}
-            onChange={(e) => updateData({ salonName: e.target.value })}
-            className="w-full p-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
-            placeholder="Enter your salon name"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Salon Logo (Optional)
-          </label>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
-              {data.salonLogo ? (
-                <img src={data.salonLogo} alt="Logo" className="w-full h-full object-cover" />
-              ) : (
-                <UploadIcon className="w-6 h-6 text-gray-400" />
-              )}
-            </div>
+      {/* Salon Information */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <LogoIcon className="w-5 h-5" />
+          {t('onboarding.step5.salonInformation')}
+        </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('onboarding.step1.salonNameLabel')}
+            </label>
             <input
-              type="url"
-              value={data.salonLogo || ''}
-              onChange={(e) => updateData({ salonLogo: e.target.value || null })}
-              className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
-              placeholder="https://example.com/logo.png"
+              type="text"
+              value={data.salonName}
+              onChange={(e) => updateData({ salonName: e.target.value })}
+              className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+              placeholder={t('onboarding.step1.salonNamePlaceholder')}
+              required
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('onboarding.step1.salonLogoLabel')}
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                {data.salonLogo ? (
+                  <img src={data.salonLogo} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <UploadIcon className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+              <input
+                type="url"
+                value={data.salonLogo || ''}
+                onChange={(e) => updateData({ salonLogo: e.target.value || null })}
+                className="flex-1 p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                placeholder={t('onboarding.step1.salonLogoPlaceholder')}
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Design Style
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            {DESIGN_STYLES.map(style => (
+      {/* Workspace Settings */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          {t('onboarding.step2.title')}
+        </h3>
+        <div className="space-y-6">
+          {/* Theme and Typography Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Theme Selection */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('onboarding.step2.theme')}
+              </label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (data.theme !== 'light') {
+                      updateData({ theme: 'light' });
+                      debouncedSettingsUpdate(() => setTheme('light'));
+                    }
+                  }}
+                  className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                    data.theme === 'light'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="w-6 h-6 bg-gradient-to-br from-gray-100 to-white border border-gray-200 rounded mx-auto mb-1" />
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{t('onboarding.step2.themeLight')}</div>
+                </button>
+                <button
+                  onClick={() => {
+                    if (data.theme !== 'dark') {
+                      updateData({ theme: 'dark' });
+                      debouncedSettingsUpdate(() => setTheme('dark'));
+                    }
+                  }}
+                  className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                    data.theme === 'dark'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="w-6 h-6 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded mx-auto mb-1" />
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{t('onboarding.step2.themeDark')}</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Typography Selection */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('onboarding.step2.typography')}
+              </label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => updateData({ typography: 'sans' })}
+                  className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                    data.typography === 'sans'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="text-sm font-sans font-medium text-gray-900 dark:text-white">{t('onboarding.step2.typographySans')}</div>
+                  <div className="text-xs font-sans text-gray-600 dark:text-gray-400">{t('onboarding.step2.typographySansDesc')}</div>
+                </button>
+                <button
+                  onClick={() => updateData({ typography: 'serif' })}
+                  className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                    data.typography === 'serif'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="text-sm font-serif font-medium text-gray-900 dark:text-white">{t('onboarding.step2.typographySerif')}</div>
+                  <div className="text-xs font-serif text-gray-600 dark:text-gray-400">{t('onboarding.step2.typographySerifDesc')}</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Accent Colors */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('onboarding.step2.accentColor')}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {ACCENT_COLORS.slice(0, 8).map(color => (
+                <button
+                  key={color.name}
+                  onClick={() => {
+                    if (data.accentColor !== color.name) {
+                      updateData({ accentColor: color.name as any });
+                      debouncedSettingsUpdate(() => setAccentColor(color.name as any));
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full ${color.className} ${
+                    data.accentColor === color.name
+                      ? 'ring-2 ring-offset-2 ring-white dark:ring-offset-gray-800 ring-current scale-110'
+                      : 'hover:scale-105'
+                  } transition-all`}
+                  title={color.label}
+                />
+              ))}
               <button
-                key={style.id}
-                onClick={() => updateData({ designStyle: style.id as 'modern' | 'classic' | 'minimalist' | 'vibrant' })}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  data.designStyle === style.id
-                    ? mapToAccentColor('border-accent-500 bg-accent-50 dark:bg-accent-900/20')
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                }`}
+                onClick={() => {
+                  if (data.accentColor !== 'custom') {
+                    updateData({ accentColor: 'custom' });
+                    debouncedSettingsUpdate(() => setAccentColor('custom'));
+                  }
+                  setShowCustomColorPicker(true);
+                }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 border-dashed ${
+                  data.accentColor === 'custom'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                } transition-all`}
+                style={data.accentColor === 'custom' && data.customAccentColor ? { backgroundColor: data.customAccentColor, borderStyle: 'solid' } : {}}
+                title={t('onboarding.step2.customColor')}
               >
-                <div className={`w-8 h-8 ${style.color} rounded-full mx-auto mb-2`} />
-                <h3 className="font-semibold text-gray-900 dark:text-white">{style.name}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{style.description}</p>
+                {data.accentColor !== 'custom' && (
+                  <PlusIcon className="w-3 h-3 text-gray-400" />
+                )}
               </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Customize Your Workspace
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Choose your preferred theme, colors, and language settings
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Theme Selection */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Theme
-          </label>
-          <div className="flex gap-3">
-            <button
-              onClick={() => updateData({ theme: 'light' })}
-              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-                data.theme === 'light'
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-white border border-gray-200 rounded mx-auto mb-2" />
-              <div className="font-medium text-gray-900 dark:text-white">Light</div>
-            </button>
-            <button
-              onClick={() => updateData({ theme: 'dark' })}
-              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-                data.theme === 'dark'
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded mx-auto mb-2" />
-              <div className="font-medium text-gray-900 dark:text-white">Dark</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Typography Selection */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Typography
-          </label>
-          <div className="flex gap-3">
-            <button
-              onClick={() => updateData({ typography: 'sans' })}
-              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-                data.typography === 'sans'
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              <div className="font-sans font-medium text-gray-900 dark:text-white">Sans-Serif</div>
-              <div className="font-sans text-sm text-gray-600 dark:text-gray-400">Modern & Clean</div>
-            </button>
-            <button
-              onClick={() => updateData({ typography: 'serif' })}
-              className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-                data.typography === 'serif'
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              <div className="font-serif font-medium text-gray-900 dark:text-white">Serif</div>
-              <div className="font-serif text-sm text-gray-600 dark:text-gray-400">Classic & Elegant</div>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Accent Color Selection */}
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Accent Color
-        </label>
-        <div className="flex flex-wrap gap-3 mb-3">
-          {ACCENT_COLORS.map(color => (
-            <button
-              key={color.name}
-              onClick={() => updateData({ accentColor: color.name as any })}
-              className={`w-10 h-10 rounded-full ${color.className} ${
-                data.accentColor === color.name
-                  ? 'ring-2 ring-offset-2 ring-white dark:ring-offset-gray-800 ring-current scale-110'
-                  : 'hover:scale-105'
-              } transition-all`}
-              title={color.label}
-            />
-          ))}
-          <button
-            onClick={() => {
-              updateData({ accentColor: 'custom' });
-              setShowCustomColorPicker(true);
-            }}
-            className={`w-10 h-10 rounded-full flex items-center justify-center border-2 border-dashed ${
-              data.accentColor === 'custom'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-            } transition-all`}
-            style={data.accentColor === 'custom' && data.customAccentColor ? { backgroundColor: data.customAccentColor, borderStyle: 'solid' } : {}}
-            title="Custom Color"
-          >
-            {data.accentColor !== 'custom' && (
-              <PlusIcon className="w-4 h-4 text-gray-400" />
+            </div>
+            
+            {/* Custom Color Picker */}
+            {showCustomColorPicker && (
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-6 h-6 rounded-full border" style={{ backgroundColor: data.customAccentColor || '#3b82f6' }} />
+                  <input
+                    type="color"
+                    value={data.customAccentColor || '#3b82f6'}
+                    onChange={(e) => {
+                      if (data.customAccentColor !== e.target.value) {
+                        updateData({ customAccentColor: e.target.value });
+                        debouncedSettingsUpdate(() => setCustomAccentColor(e.target.value));
+                      }
+                    }}
+                    className="w-12 h-6 cursor-pointer rounded border-none"
+                  />
+                  <input
+                    type="text"
+                    value={data.customAccentColor || '#3b82f6'}
+                    onChange={(e) => {
+                      if (data.customAccentColor !== e.target.value) {
+                        updateData({ customAccentColor: e.target.value });
+                        debouncedSettingsUpdate(() => setCustomAccentColor(e.target.value));
+                      }
+                    }}
+                    placeholder="#3b82f6"
+                    className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowCustomColorPicker(false)}
+                  className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
+                >
+                  {t('onboarding.step2.customColorDone')}
+                </button>
+              </div>
             )}
-          </button>
-        </div>
-        
-        {/* Custom Color Picker */}
-        {showCustomColorPicker && (
-          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full border" style={{ backgroundColor: data.customAccentColor || '#3b82f6' }} />
-              <input
-                type="color"
-                value={data.customAccentColor || '#3b82f6'}
-                onChange={(e) => updateData({ customAccentColor: e.target.value })}
-                className="w-16 h-8 cursor-pointer rounded border-none"
-              />
-              <input
-                type="text"
-                value={data.customAccentColor || '#3b82f6'}
-                onChange={(e) => updateData({ customAccentColor: e.target.value })}
-                placeholder="#3b82f6"
-                className="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
-              />
+          </div>
+
+          {/* Language & Currency Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('onboarding.step2.language')}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {LANGUAGES.map(lang => (
+                  <button
+                    key={lang.id}
+                    onClick={() => {
+                      if (data.language !== lang.id) {
+                        updateData({ language: lang.id as any });
+                        debouncedSettingsUpdate(() => setLanguage(lang.id as any));
+                      }
+                    }}
+                    className={`p-2 rounded-lg border-2 transition-all text-left ${
+                      data.language === lang.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{lang.flag}</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{lang.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowCustomColorPicker(false)}
-                className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                Done
-              </button>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('onboarding.step2.currency')}
+              </label>
+              <div className="space-y-2">
+                {CURRENCIES.map(curr => (
+                  <button
+                    key={curr.id}
+                    onClick={() => updateData({ currency: curr.id as any })}
+                    className={`w-full p-2 rounded-lg border-2 transition-all text-left ${
+                      data.currency === curr.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{curr.label}</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">{curr.symbol}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Language & Currency */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Language
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {LANGUAGES.map(lang => (
-              <button
-                key={lang.id}
-                onClick={() => updateData({ language: lang.id as any })}
-                className={`p-3 rounded-lg border-2 transition-all text-left ${
-                  data.language === lang.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{lang.flag}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{lang.label}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Currency
-          </label>
-          <div className="space-y-2">
-            {CURRENCIES.map(curr => (
-              <button
-                key={curr.id}
-                onClick={() => updateData({ currency: curr.id as any })}
-                className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                  data.currency === curr.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900 dark:text-white">{curr.label}</span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{curr.symbol}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Layout Style (Optional) */}
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Layout Style
-        </label>
-        <div className="flex gap-3">
-          <button
-            onClick={() => updateData({ layout: 'standard' })}
-            className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-              data.layout === 'standard'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="font-medium text-gray-900 dark:text-white">Standard</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Comfortable spacing</div>
-          </button>
-          <button
-            onClick={() => updateData({ layout: 'compact' })}
-            className={`flex-1 p-3 rounded-lg border-2 transition-all ${
-              data.layout === 'compact'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="font-medium text-gray-900 dark:text-white">Compact</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Dense information</div>
-          </button>
         </div>
       </div>
     </div>
   );
+
+
 
   const renderStep3 = () => (
     <div className="space-y-6">
@@ -812,9 +873,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               )}
               <span className="font-medium">{data.salonName}</span>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Style: {DESIGN_STYLES.find(s => s.id === data.designStyle)?.name}
-            </p>
+
           </div>
         </div>
 
@@ -899,16 +958,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           <button
             onClick={handleComplete}
             disabled={isCompleting}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 ${mapToAccentColor('bg-accent-500 hover:bg-accent-600')} text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCompleting ? 'animate-pulse' : ''}`}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCompleting ? 'animate-pulse' : ''}`}
           >
-            <CheckIcon className="w-5 h-5" />
-            {isCompleting ? 'Setting up your salon...' : 'Complete Setup'}
+            <CalendarIcon className="w-5 h-5" />
+            {isCompleting ? t('onboarding.step5.settingUp') : t('onboarding.step5.bookAppointment')}
           </button>
           <button
-            onClick={handleComplete}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            onClick={handleSkip}
+            disabled={isSkipping}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSkipping ? 'animate-pulse' : ''}`}
           >
-            Skip for Now
+            {isSkipping ? t('onboarding.step5.goingToDashboard') : t('onboarding.step5.skipForNow')}
           </button>
         </div>
       </div>
@@ -920,12 +980,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       case 1:
         return data.salonName.trim().length > 0;
       case 2:
-        return true; // Workspace customization is optional
-      case 3:
         return data.selectedServices.length > 0 || data.customServices.length > 0;
-      case 4:
+      case 3:
         return true; // Team members are optional
-      case 5:
+      case 4:
         return true;
       default:
         return false;
@@ -934,44 +992,45 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      {showConfetti && <Confetti />}
+      {showConfetti && currentStep === 4 && <Confetti />}
       
       <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-8">
             <LogoIcon className={`w-12 h-12 ${mapToAccentColor('text-accent-500')}`} />
           </div>
-          <Stepper steps={steps} currentStep={currentStep} />
+          <div className="px-4">
+            <Stepper steps={steps} currentStep={currentStep} />
+          </div>
         </div>
 
         {/* Content */}
         <div className="mb-8 min-h-[500px]">
           <div className="animate-fade-in">
             {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
-            {currentStep === 4 && renderStep4()}
-            {currentStep === 5 && renderStep5()}
+            {currentStep === 2 && renderStep3()}
+            {currentStep === 3 && renderStep4()}
+            {currentStep === 4 && renderStep5()}
           </div>
         </div>
 
         {/* Navigation */}
-        {currentStep < 5 && (
+        {currentStep < 4 && (
           <div className="flex justify-between">
             <button
               onClick={handlePrevious}
               disabled={currentStep === 1}
               className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600"
             >
-              Previous
+              {t('onboarding.navigation.previous')}
             </button>
             <button
               onClick={handleNext}
               disabled={!canProceed()}
               className={`px-6 py-2 ${mapToAccentColor('bg-accent-500')} text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90`}
             >
-              Next
+              {t('onboarding.navigation.next')}
             </button>
           </div>
         )}

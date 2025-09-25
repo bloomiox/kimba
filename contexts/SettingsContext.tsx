@@ -333,9 +333,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode, publicSalonId?: s
         // If no profile exists (e.g., new signup, DB delay), create a default one.
         if (!profileData) {
             console.warn("User profile not found for user_id:", userId, "Creating a default profile.");
+            // Try to get salon name from user metadata first
+            const userObj = typeof userOrId === 'string' ? user : userOrId;
+            const salonNameFromMetadata = userObj?.user_metadata?.salon_name || 'My Salon';
             const { data: newProfile, error: insertError } = await supabase
                 .from('user_profiles')
-                .insert({ id: userId, salon_name: 'My Salon' })
+                .insert({ id: userId, salon_name: salonNameFromMetadata })
                 .select('salon_name, settings')
                 .single();
             if (insertError) throw insertError;
