@@ -3,7 +3,7 @@ import { SocialPost, EngagementMetrics } from '../../types';
 import { useSettings } from '../../contexts/SettingsContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { 
+import {
   HeartIcon,
   ChatBubbleLeftIcon,
   ShareIcon,
@@ -12,13 +12,13 @@ import {
   PhotoIcon,
   ArrowTopRightOnSquareIcon,
   FunnelIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
 } from '../common/Icons';
 import {
   HeartIconSolid,
   ChatBubbleLeftIconSolid,
   ShareIconSolid,
-  EyeIconSolid
+  EyeIconSolid,
 } from '../common/Icons';
 
 interface PostHistoryProps {}
@@ -45,16 +45,17 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
           platform: 'instagram',
           status: 'published',
           postId: 'ig_123',
-          url: 'https://instagram.com/p/123'
+          url: 'https://instagram.com/p/123',
         },
         {
           platform: 'facebook',
           status: 'published',
           postId: 'fb_456',
-          url: 'https://facebook.com/posts/456'
-        }
+          url: 'https://facebook.com/posts/456',
+        },
       ],
-      caption: '✨ Amazing transformation for Sarah! From vision to reality - love how this classic bob turned out! 💫',
+      caption:
+        '✨ Amazing transformation for Sarah! From vision to reality - love how this classic bob turned out! 💫',
       hashtags: ['#hairtransformation', '#newlook', '#hairgoals', '#salon', '#hairstyle'],
       status: 'published',
       publishedAt: new Date('2024-01-15T14:30:00Z'),
@@ -63,13 +64,13 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
         comments: 12,
         shares: 5,
         views: 1250,
-        lastUpdated: new Date('2024-01-15T18:00:00Z')
+        lastUpdated: new Date('2024-01-15T18:00:00Z'),
       },
       externalIds: {
         instagram: 'ig_123',
-        facebook: 'fb_456'
+        facebook: 'fb_456',
       },
-      createdAt: new Date('2024-01-15T14:30:00Z')
+      createdAt: new Date('2024-01-15T14:30:00Z'),
     },
     {
       id: '2',
@@ -80,10 +81,11 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
           platform: 'instagram',
           status: 'published',
           postId: 'ig_789',
-          url: 'https://instagram.com/p/789'
-        }
+          url: 'https://instagram.com/p/789',
+        },
       ],
-      caption: 'Jessica is absolutely glowing with her new modern layers! ✨ Sometimes a fresh cut is all you need to feel amazing! 💕',
+      caption:
+        'Jessica is absolutely glowing with her new modern layers! ✨ Sometimes a fresh cut is all you need to feel amazing! 💕',
       hashtags: ['#beforeandafter', '#hairmakeover', '#beauty', '#confidence', '#style'],
       status: 'published',
       publishedAt: new Date('2024-01-10T10:15:00Z'),
@@ -92,12 +94,12 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
         comments: 23,
         shares: 8,
         views: 2100,
-        lastUpdated: new Date('2024-01-10T16:30:00Z')
+        lastUpdated: new Date('2024-01-10T16:30:00Z'),
       },
       externalIds: {
-        instagram: 'ig_789'
+        instagram: 'ig_789',
       },
-      createdAt: new Date('2024-01-10T10:15:00Z')
+      createdAt: new Date('2024-01-10T10:15:00Z'),
     },
     {
       id: '3',
@@ -108,10 +110,10 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
           platform: 'tiktok',
           status: 'published',
           postId: 'tt_321',
-          url: 'https://tiktok.com/@salon/video/321'
-        }
+          url: 'https://tiktok.com/@salon/video/321',
+        },
       ],
-      caption: 'The joy on Emily\'s face says it all! 😍 This elegant updo is pure perfection! ✂️✨',
+      caption: "The joy on Emily's face says it all! 😍 This elegant updo is pure perfection! ✂️✨",
       hashtags: ['#haircut', '#haircolor', '#professional', '#glamour', '#selfcare'],
       status: 'published',
       publishedAt: new Date('2024-01-05T16:45:00Z'),
@@ -120,13 +122,13 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
         comments: 45,
         shares: 67,
         views: 5600,
-        lastUpdated: new Date('2024-01-05T20:00:00Z')
+        lastUpdated: new Date('2024-01-05T20:00:00Z'),
       },
       externalIds: {
-        tiktok: 'tt_321'
+        tiktok: 'tt_321',
       },
-      createdAt: new Date('2024-01-05T16:45:00Z')
-    }
+      createdAt: new Date('2024-01-05T16:45:00Z'),
+    },
   ];
 
   useEffect(() => {
@@ -138,18 +140,17 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
 
     // Filter by platform
     if (filterBy !== 'all') {
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.platforms.some(platform => platform.platform === filterBy)
       );
     }
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(post =>
-        post.caption.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.hashtags.some(hashtag => 
-          hashtag.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+      filtered = filtered.filter(
+        post =>
+          post.caption.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.hashtags.some(hashtag => hashtag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -161,8 +162,10 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
         case 'oldest':
           return new Date(a.publishedAt!).getTime() - new Date(b.publishedAt!).getTime();
         case 'engagement':
-          const aEngagement = (a.engagementMetrics?.likes || 0) + (a.engagementMetrics?.comments || 0);
-          const bEngagement = (b.engagementMetrics?.likes || 0) + (b.engagementMetrics?.comments || 0);
+          const aEngagement =
+            (a.engagementMetrics?.likes || 0) + (a.engagementMetrics?.comments || 0);
+          const bEngagement =
+            (b.engagementMetrics?.likes || 0) + (b.engagementMetrics?.comments || 0);
           return bEngagement - aEngagement;
         default:
           return 0;
@@ -174,19 +177,27 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
-      case 'instagram': return '📷';
-      case 'facebook': return '👥';
-      case 'tiktok': return '🎵';
-      default: return '📱';
+      case 'instagram':
+        return '📷';
+      case 'facebook':
+        return '👥';
+      case 'tiktok':
+        return '🎵';
+      default:
+        return '📱';
     }
   };
 
   const getPlatformColor = (platform: string) => {
     switch (platform) {
-      case 'instagram': return 'from-pink-500 to-purple-600';
-      case 'facebook': return 'from-blue-500 to-blue-700';
-      case 'tiktok': return 'from-gray-800 to-gray-900';
-      default: return 'from-gray-500 to-gray-700';
+      case 'instagram':
+        return 'from-pink-500 to-purple-600';
+      case 'facebook':
+        return 'from-blue-500 to-blue-700';
+      case 'tiktok':
+        return 'from-gray-800 to-gray-900';
+      default:
+        return 'from-gray-500 to-gray-700';
     }
   };
 
@@ -196,7 +207,7 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
       likes: metrics.likes || 0,
       comments: metrics.comments || 0,
       shares: metrics.shares || 0,
-      views: metrics.views || 0
+      views: metrics.views || 0,
     };
   };
 
@@ -205,7 +216,7 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(new Date(date));
   };
 
@@ -222,7 +233,7 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
                 type="text"
                 placeholder={t('social.searchPosts')}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-800 dark:text-white"
               />
             </div>
@@ -233,7 +244,7 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
                 <FunnelIcon className="h-4 w-4 text-gray-500" />
                 <select
                   value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                  onChange={e => setFilterBy(e.target.value as FilterOption)}
                   className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-500 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="all">{t('social.allPlatforms')}</option>
@@ -245,7 +256,7 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
 
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                onChange={e => setSortBy(e.target.value as SortOption)}
                 className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-500 dark:bg-gray-800 dark:text-white"
               >
                 <option value="newest">{t('social.sortNewest')}</option>
@@ -266,18 +277,17 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
               {t('social.noPostsFound')}
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              {searchQuery || filterBy !== 'all' 
+              {searchQuery || filterBy !== 'all'
                 ? t('social.noPostsMatchFilter')
-                : t('social.noPostsYet')
-              }
+                : t('social.noPostsYet')}
             </p>
           </div>
         </Card>
       ) : (
         <div className="space-y-6">
-          {filteredPosts.map((post) => {
+          {filteredPosts.map(post => {
             const engagement = formatEngagement(post.engagementMetrics);
-            
+
             return (
               <Card key={post.id}>
                 <div className="p-6">
@@ -305,28 +315,27 @@ const PostHistory: React.FC<PostHistoryProps> = () => {
 
                     {/* External Links */}
                     <div className="flex items-center space-x-2">
-                      {post.platforms.map((platform, index) => (
-                        platform.url && (
-                          <Button
-                            key={index}
-                            onClick={() => window.open(platform.url, '_blank')}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center space-x-1"
-                          >
-                            <span>{getPlatformIcon(platform.platform)}</span>
-                            <ArrowTopRightOnSquareIcon className="h-3 w-3" />
-                          </Button>
-                        )
-                      ))}
+                      {post.platforms.map(
+                        (platform, index) =>
+                          platform.url && (
+                            <Button
+                              key={index}
+                              onClick={() => window.open(platform.url, '_blank')}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center space-x-1"
+                            >
+                              <span>{getPlatformIcon(platform.platform)}</span>
+                              <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+                            </Button>
+                          )
+                      )}
                     </div>
                   </div>
 
                   {/* Post Content */}
                   <div className="mb-4">
-                    <p className="text-gray-900 dark:text-white mb-2">
-                      {post.caption}
-                    </p>
+                    <p className="text-gray-900 dark:text-white mb-2">{post.caption}</p>
                     {post.hashtags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {post.hashtags.map((hashtag, index) => (

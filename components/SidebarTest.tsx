@@ -38,7 +38,7 @@ const SidebarTest: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Current view: <span className="font-semibold text-accent">{activeView}</span>
             </p>
-            
+
             <div className="space-y-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
@@ -50,7 +50,7 @@ const SidebarTest: React.FC = () => {
                   <li>3. Check browser console for drag events</li>
                 </ol>
               </div>
-              
+
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
                   👥 Test Grouping
@@ -62,7 +62,7 @@ const SidebarTest: React.FC = () => {
                   <li>4. Create the group and test expand/collapse</li>
                 </ol>
               </div>
-              
+
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                 <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
                   👁️ Test Hide/Show

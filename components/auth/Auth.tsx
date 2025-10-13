@@ -10,7 +10,17 @@ import PrivacyPage from '../pages/PrivacyPage';
 import CapabilitiesPage from '../pages/CapabilitiesPage';
 
 const Auth: React.FC = () => {
-  const [page, setPage] = useState<'landing' | 'signin' | 'signup' | 'about' | 'capabilities' | 'contact' | 'blog' | 'terms' | 'privacy'>('landing');
+  const [page, setPage] = useState<
+    | 'landing'
+    | 'signin'
+    | 'signup'
+    | 'about'
+    | 'capabilities'
+    | 'contact'
+    | 'blog'
+    | 'terms'
+    | 'privacy'
+  >('landing');
 
   // The actual sign-in/sign-up logic is now handled inside the respective
   // components using Supabase, so this component just routes between them.

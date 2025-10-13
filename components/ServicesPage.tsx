@@ -1,6 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
-import { ClipboardListIcon, PlusIcon, CloseIcon, EditIcon, TrashIcon, ChevronRightIcon, FilterIcon } from './common/Icons';
+import {
+  ClipboardListIcon,
+  PlusIcon,
+  CloseIcon,
+  EditIcon,
+  TrashIcon,
+  ChevronRightIcon,
+  FilterIcon,
+} from './common/Icons';
 import type { Service, ServiceGroup } from '../types';
 
 interface ServiceModalProps {
@@ -29,7 +37,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
           description: description || undefined,
           duration,
           price,
-          serviceGroupId: serviceGroupId || undefined
+          serviceGroupId: serviceGroupId || undefined,
         });
       } else {
         addService({
@@ -38,7 +46,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
           duration,
           price,
           parentId,
-          serviceGroupId: serviceGroupId || undefined
+          serviceGroupId: serviceGroupId || undefined,
         });
       }
       onClose();
@@ -48,7 +56,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
   return (
     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+        >
           <CloseIcon className="w-6 h-6" />
         </button>
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -56,7 +67,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('services.modal.name')}
             </label>
             <input
@@ -69,7 +83,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
             />
           </div>
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('services.modal.description')}
             </label>
             <textarea
@@ -82,7 +99,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
             />
           </div>
           <div>
-            <label htmlFor="serviceGroupId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="serviceGroupId"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Service Group (Optional)
             </label>
             <select
@@ -101,7 +121,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="duration"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 {t('services.modal.duration')}
               </label>
               <div className="flex items-center gap-2">
@@ -118,7 +141,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, parentId, onClose 
               </div>
             </div>
             <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 {t('services.modal.price')} ({currency})
               </label>
               <input
@@ -172,12 +198,12 @@ const ServiceGroupModal: React.FC<ServiceGroupModalProps> = ({ group, parentId, 
       if (group) {
         updateServiceGroup({
           ...group,
-          name
+          name,
         });
       } else {
         addServiceGroup({
           name,
-          parentId
+          parentId,
         });
       }
       onClose();
@@ -187,7 +213,10 @@ const ServiceGroupModal: React.FC<ServiceGroupModalProps> = ({ group, parentId, 
   return (
     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fade-in">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+        >
           <CloseIcon className="w-6 h-6" />
         </button>
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -195,7 +224,10 @@ const ServiceGroupModal: React.FC<ServiceGroupModalProps> = ({ group, parentId, 
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('services.modal.groupName')}
             </label>
             <input
@@ -238,14 +270,14 @@ interface ServiceTreeProps {
   onAddGroup: (parentId: string | null) => void;
 }
 
-const ServiceTree: React.FC<ServiceTreeProps> = ({ 
-  parentId, 
-  level, 
-  searchTerm, 
-  onEditService, 
-  onEditGroup, 
-  onAddService, 
-  onAddGroup 
+const ServiceTree: React.FC<ServiceTreeProps> = ({
+  parentId,
+  level,
+  searchTerm,
+  onEditService,
+  onEditGroup,
+  onAddService,
+  onAddGroup,
 }) => {
   const { services, serviceGroups, deleteService, deleteServiceGroup, currency, t } = useSettings();
 
@@ -259,9 +291,11 @@ const ServiceTree: React.FC<ServiceTreeProps> = ({
   const filteredServices = useMemo(() => {
     return services
       .filter(s => s.parentId === parentId)
-      .filter(s => searchTerm === '' || 
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      .filter(
+        s =>
+          searchTerm === '' ||
+          s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [services, parentId, searchTerm]);
@@ -293,37 +327,37 @@ const ServiceTree: React.FC<ServiceTreeProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => onAddService(group.id)} 
+              <button
+                onClick={() => onAddService(group.id)}
                 className="p-2 text-accent hover:bg-accent/10 rounded-lg transition-colors"
                 title={t('services.addService')}
               >
                 <PlusIcon className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => onAddGroup(group.id)} 
+              <button
+                onClick={() => onAddGroup(group.id)}
                 className="p-2 text-accent hover:bg-accent/10 rounded-lg transition-colors"
                 title={t('services.addSubgroup')}
               >
                 <ClipboardListIcon className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => onEditGroup(group)} 
+              <button
+                onClick={() => onEditGroup(group)}
                 className="p-2 text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <EditIcon className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => handleDeleteGroup(group.id)} 
+              <button
+                onClick={() => handleDeleteGroup(group.id)}
                 className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               >
                 <TrashIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
-          <ServiceTree 
-            parentId={group.id} 
-            level={level + 1} 
+          <ServiceTree
+            parentId={group.id}
+            level={level + 1}
             searchTerm={searchTerm}
             onEditService={onEditService}
             onEditGroup={onEditGroup}
@@ -332,9 +366,12 @@ const ServiceTree: React.FC<ServiceTreeProps> = ({
           />
         </div>
       ))}
-      
+
       {filteredServices.map(service => (
-        <div key={service.id} className="my-2 p-4 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-lg hover:shadow-md transition-shadow">
+        <div
+          key={service.id}
+          className="my-2 p-4 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-lg hover:shadow-md transition-shadow"
+        >
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -344,9 +381,9 @@ const ServiceTree: React.FC<ServiceTreeProps> = ({
                     ⏱️ {service.duration} {t('services.minutes')}
                   </span>
                   <span className="font-medium text-accent">
-                    {service.price.toLocaleString(t('language.code'), { 
-                      style: 'currency', 
-                      currency: currency 
+                    {service.price.toLocaleString(t('language.code'), {
+                      style: 'currency',
+                      currency: currency,
                     })}
                   </span>
                 </div>
@@ -358,14 +395,14 @@ const ServiceTree: React.FC<ServiceTreeProps> = ({
               )}
             </div>
             <div className="flex items-center gap-2 ml-4">
-              <button 
-                onClick={() => onEditService(service)} 
+              <button
+                onClick={() => onEditService(service)}
                 className="p-2 text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <EditIcon className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => handleDeleteService(service.id)} 
+              <button
+                onClick={() => handleDeleteService(service.id)}
                 className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               >
                 <TrashIcon className="w-4 h-4" />
@@ -417,7 +454,8 @@ const ServicesPage: React.FC = () => {
           <div>
             <h2 className="text-3xl font-bold">{t('services.title')}</h2>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              {totalServices} {t('services.servicesCount')} • {totalGroups} {t('services.groupsCount')}
+              {totalServices} {t('services.servicesCount')} • {totalGroups}{' '}
+              {t('services.groupsCount')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -449,7 +487,7 @@ const ServicesPage: React.FC = () => {
             </button>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
             <input
@@ -468,7 +506,9 @@ const ServicesPage: React.FC = () => {
         {totalServices === 0 && totalGroups === 0 ? (
           <div className="text-center py-16">
             <ClipboardListIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">{t('services.empty.title')}</p>
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              {t('services.empty.title')}
+            </p>
             <p className="text-gray-500 dark:text-gray-400 mt-1">{t('services.empty.subtitle')}</p>
             <div className="flex justify-center gap-3 mt-6">
               <button
@@ -488,9 +528,9 @@ const ServicesPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <ServiceTree 
-            parentId={null} 
-            level={0} 
+          <ServiceTree
+            parentId={null}
+            level={0}
             searchTerm={searchTerm}
             onEditService={handleEditService}
             onEditGroup={handleEditGroup}
@@ -501,17 +541,17 @@ const ServicesPage: React.FC = () => {
       </div>
 
       {modalState.type === 'service' && (
-        <ServiceModal 
-          service={modalState.data as Service | undefined} 
-          parentId={modalState.parentId ?? null} 
-          onClose={closeModal} 
+        <ServiceModal
+          service={modalState.data as Service | undefined}
+          parentId={modalState.parentId ?? null}
+          onClose={closeModal}
         />
       )}
       {modalState.type === 'group' && (
-        <ServiceGroupModal 
-          group={modalState.data as ServiceGroup | undefined} 
-          parentId={modalState.parentId ?? null} 
-          onClose={closeModal} 
+        <ServiceGroupModal
+          group={modalState.data as ServiceGroup | undefined}
+          parentId={modalState.parentId ?? null}
+          onClose={closeModal}
         />
       )}
     </div>

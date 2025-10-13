@@ -8,8 +8,6 @@ import { supabase } from './services/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
-
-
 const App: React.FC = () => {
   // Wrap the useSettings hook in a try-catch to handle the case where SettingsProvider might not be available
   let settingsData;
@@ -26,9 +24,18 @@ const App: React.FC = () => {
       </div>
     );
   }
-  
-  const { session, setSession, hasCompletedOnboarding, services, hairstylists, salonName, loading: settingsLoading } = settingsData;
+
+  const {
+    session,
+    setSession,
+    hasCompletedOnboarding,
+    services,
+    hairstylists,
+    salonName,
+    loading: settingsLoading,
+  } = settingsData;
   const [loading, setLoading] = useState(true);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,12 +43,26 @@ const App: React.FC = () => {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
   }, [setSession]);
+
+  useEffect(() => {
+    if (!session) {
+      setOnboardingDismissed(false);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (hasCompletedOnboarding) {
+      setOnboardingDismissed(true);
+    }
+  }, [hasCompletedOnboarding]);
 
   if (loading || settingsLoading) {
     return (
@@ -54,21 +75,23 @@ const App: React.FC = () => {
   // Check if user needs onboarding
   // New users: hasCompletedOnboarding is explicitly false
   // Existing users: if they have services or team members, assume onboarding is complete
-  const needsOnboarding = session && (
-    hasCompletedOnboarding === false && 
-    services.length === 0 && 
-    hairstylists.length === 0
-  );
+  const needsOnboarding =
+    session &&
+    !onboardingDismissed &&
+    hasCompletedOnboarding === false &&
+    services.length === 0 &&
+    hairstylists.length === 0;
 
   if (needsOnboarding) {
-    return <OnboardingFlow onComplete={() => window.location.reload()} initialSalonName={salonName} />;
+    return (
+      <OnboardingFlow
+        onComplete={() => setOnboardingDismissed(true)}
+        initialSalonName={salonName}
+      />
+    );
   }
 
-  return (
-    <>
-      {session ? <MainApp /> : <Auth />}
-    </>
-  );
+  return <>{session ? <MainApp /> : <Auth />}</>;
 };
 
 export default App;

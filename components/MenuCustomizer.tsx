@@ -9,11 +9,11 @@ interface MenuCustomizerProps {
   onUpdateItems: (items: MenuItem[]) => void;
 }
 
-const MenuCustomizer: React.FC<MenuCustomizerProps> = ({ 
-  isOpen, 
-  onClose, 
-  menuItems, 
-  onUpdateItems 
+const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
+  isOpen,
+  onClose,
+  menuItems,
+  onUpdateItems,
 }) => {
   const { t } = useSettings();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -23,10 +23,8 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
   if (!isOpen) return null;
 
   const handleItemToggle = (itemId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
+    setSelectedItems(prev =>
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
     );
   };
 
@@ -35,7 +33,7 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
 
     const groupId = `group_${Date.now()}`;
     const maxOrder = Math.max(...menuItems.map(item => item.order));
-    
+
     const updatedItems = menuItems.map(item => {
       if (selectedItems.includes(item.id)) {
         return { ...item, parentId: groupId };
@@ -50,7 +48,7 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
       isVisible: true,
       order: maxOrder + 1,
       isGroup: true,
-      isExpanded: true
+      isExpanded: true,
     };
 
     onUpdateItems([...updatedItems, groupItem]);
@@ -66,9 +64,7 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Customize Menu
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Customize Menu</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -101,7 +97,7 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
                   </div>
                   <button
                     onClick={() => {
-                      const updatedItems = menuItems.map(i => 
+                      const updatedItems = menuItems.map(i =>
                         i.id === item.id ? { ...i, isVisible: false } : i
                       );
                       onUpdateItems(updatedItems);
@@ -133,7 +129,7 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
                     </div>
                     <button
                       onClick={() => {
-                        const updatedItems = menuItems.map(i => 
+                        const updatedItems = menuItems.map(i =>
                           i.id === item.id ? { ...i, isVisible: true } : i
                         );
                         onUpdateItems(updatedItems);
@@ -151,9 +147,7 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
           {/* Group Creation */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                Create Group
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Create Group</h3>
               <button
                 onClick={() => setShowGroupDialog(!showGroupDialog)}
                 disabled={selectedItems.length < 2}
@@ -166,13 +160,13 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
                 Group Selected ({selectedItems.length})
               </button>
             </div>
-            
+
             {showGroupDialog && (
               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <input
                   type="text"
                   value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
+                  onChange={e => setGroupName(e.target.value)}
                   placeholder="Enter group name..."
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-3"
                 />
@@ -203,12 +197,14 @@ const MenuCustomizer: React.FC<MenuCustomizerProps> = ({
             <button
               onClick={() => {
                 // Reset to defaults
-                const defaultItems = menuItems.map(item => ({
-                  ...item,
-                  isVisible: true,
-                  parentId: undefined,
-                  order: menuItems.findIndex(i => i.id === item.id)
-                })).filter(item => !item.isGroup);
+                const defaultItems = menuItems
+                  .map(item => ({
+                    ...item,
+                    isVisible: true,
+                    parentId: undefined,
+                    order: menuItems.findIndex(i => i.id === item.id),
+                  }))
+                  .filter(item => !item.isGroup);
                 onUpdateItems(defaultItems);
               }}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"

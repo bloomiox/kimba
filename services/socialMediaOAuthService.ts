@@ -42,7 +42,12 @@ class SocialMediaOAuthService {
       clientId: import.meta.env.VITE_FACEBOOK_APP_ID || '',
       clientSecret: import.meta.env.VITE_FACEBOOK_APP_SECRET || '',
       redirectUri: `${window.location.origin}/auth/instagram/callback`,
-      scope: ['instagram_basic', 'instagram_content_publish', 'pages_show_list', 'pages_read_engagement']
+      scope: [
+        'instagram_basic',
+        'instagram_content_publish',
+        'pages_show_list',
+        'pages_read_engagement',
+      ],
     };
 
     // Facebook Pages
@@ -50,7 +55,12 @@ class SocialMediaOAuthService {
       clientId: import.meta.env.VITE_FACEBOOK_APP_ID || '',
       clientSecret: import.meta.env.VITE_FACEBOOK_APP_SECRET || '',
       redirectUri: `${window.location.origin}/auth/facebook/callback`,
-      scope: ['pages_manage_posts', 'pages_read_engagement', 'pages_show_list', 'publish_to_groups']
+      scope: [
+        'pages_manage_posts',
+        'pages_read_engagement',
+        'pages_show_list',
+        'publish_to_groups',
+      ],
     };
 
     // TikTok Business
@@ -58,7 +68,7 @@ class SocialMediaOAuthService {
       clientId: import.meta.env.VITE_TIKTOK_CLIENT_KEY || '',
       clientSecret: import.meta.env.VITE_TIKTOK_CLIENT_SECRET || '',
       redirectUri: `${window.location.origin}/auth/tiktok/callback`,
-      scope: ['video.list', 'video.upload', 'user.info.basic']
+      scope: ['video.list', 'video.upload', 'user.info.basic'],
     };
   }
 
@@ -76,7 +86,7 @@ class SocialMediaOAuthService {
       redirect_uri: config.redirectUri,
       scope: config.scope.join(','),
       response_type: 'code',
-      state: this.generateState(platform)
+      state: this.generateState(platform),
     });
 
     switch (platform) {
@@ -103,7 +113,7 @@ class SocialMediaOAuthService {
       if (!this.verifyState(platform, state)) {
         return {
           success: false,
-          error: 'Invalid state parameter. Possible CSRF attack.'
+          error: 'Invalid state parameter. Possible CSRF attack.',
         };
       }
 
@@ -131,7 +141,7 @@ class SocialMediaOAuthService {
       if (!userInfo.success) {
         return {
           success: false,
-          error: 'Failed to fetch user information'
+          error: 'Failed to fetch user information',
         };
       }
 
@@ -145,19 +155,18 @@ class SocialMediaOAuthService {
         expiresAt: tokenData.expiresAt || new Date(Date.now() + 3600000), // 1 hour default
         isActive: true,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       return {
         success: true,
-        connection
+        connection,
       };
-
     } catch (error) {
       console.error(`OAuth error for ${platform}:`, error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown OAuth error'
+        error: error instanceof Error ? error.message : 'Unknown OAuth error',
       };
     }
   }
@@ -186,12 +195,11 @@ class SocialMediaOAuthService {
       }
 
       return result;
-
     } catch (error) {
       console.error(`Token refresh error for ${platform}:`, error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Token refresh failed'
+        error: error instanceof Error ? error.message : 'Token refresh failed',
       };
     }
   }
@@ -217,12 +225,11 @@ class SocialMediaOAuthService {
       }
 
       return { success: true };
-
     } catch (error) {
       console.error(`Token revocation error for ${platform}:`, error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Token revocation failed'
+        error: error instanceof Error ? error.message : 'Token revocation failed',
       };
     }
   }
@@ -234,26 +241,29 @@ class SocialMediaOAuthService {
       client_id: config.clientId,
       client_secret: config.clientSecret,
       redirect_uri: config.redirectUri,
-      code
+      code,
     });
 
-    const response = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`, {
-      method: 'GET'
-    });
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`,
+      {
+        method: 'GET',
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.error?.message || 'Token exchange failed'
+        error: data.error?.message || 'Token exchange failed',
       };
     }
 
     return {
       success: true,
       accessToken: data.access_token,
-      expiresAt: new Date(Date.now() + (data.expires_in * 1000))
+      expiresAt: new Date(Date.now() + data.expires_in * 1000),
     };
   }
 
@@ -263,15 +273,15 @@ class SocialMediaOAuthService {
       client_secret: config.clientSecret,
       code,
       grant_type: 'authorization_code',
-      redirect_uri: config.redirectUri
+      redirect_uri: config.redirectUri,
     };
 
     const response = await fetch('https://open-api.tiktok.com/oauth/access_token/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -279,7 +289,7 @@ class SocialMediaOAuthService {
     if (!response.ok || data.error) {
       return {
         success: false,
-        error: data.error_description || data.message || 'Token exchange failed'
+        error: data.error_description || data.message || 'Token exchange failed',
       };
     }
 
@@ -287,52 +297,60 @@ class SocialMediaOAuthService {
       success: true,
       accessToken: data.data.access_token,
       refreshToken: data.data.refresh_token,
-      expiresAt: new Date(Date.now() + (data.data.expires_in * 1000))
+      expiresAt: new Date(Date.now() + data.data.expires_in * 1000),
     };
   }
 
   // Token refresh methods
 
-  private async refreshFacebookToken(refreshToken: string, config: OAuthConfig): Promise<TokenRefreshResult> {
+  private async refreshFacebookToken(
+    refreshToken: string,
+    config: OAuthConfig
+  ): Promise<TokenRefreshResult> {
     // Facebook long-lived tokens don't typically need refresh, but we can extend them
     const params = new URLSearchParams({
       grant_type: 'fb_exchange_token',
       client_id: config.clientId,
       client_secret: config.clientSecret,
-      fb_exchange_token: refreshToken
+      fb_exchange_token: refreshToken,
     });
 
-    const response = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`);
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`
+    );
     const data = await response.json();
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.error?.message || 'Token refresh failed'
+        error: data.error?.message || 'Token refresh failed',
       };
     }
 
     return {
       success: true,
       accessToken: data.access_token,
-      expiresAt: new Date(Date.now() + (data.expires_in * 1000))
+      expiresAt: new Date(Date.now() + data.expires_in * 1000),
     };
   }
 
-  private async refreshTikTokToken(refreshToken: string, config: OAuthConfig): Promise<TokenRefreshResult> {
+  private async refreshTikTokToken(
+    refreshToken: string,
+    config: OAuthConfig
+  ): Promise<TokenRefreshResult> {
     const body = {
       client_key: config.clientId,
       client_secret: config.clientSecret,
       grant_type: 'refresh_token',
-      refresh_token: refreshToken
+      refresh_token: refreshToken,
     };
 
     const response = await fetch('https://open-api.tiktok.com/oauth/refresh_token/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -340,14 +358,14 @@ class SocialMediaOAuthService {
     if (!response.ok || data.error) {
       return {
         success: false,
-        error: data.error_description || data.message || 'Token refresh failed'
+        error: data.error_description || data.message || 'Token refresh failed',
       };
     }
 
     return {
       success: true,
       accessToken: data.data.access_token,
-      expiresAt: new Date(Date.now() + (data.data.expires_in * 1000))
+      expiresAt: new Date(Date.now() + data.data.expires_in * 1000),
     };
   }
 
@@ -355,7 +373,7 @@ class SocialMediaOAuthService {
 
   private async revokeFacebookToken(accessToken: string): Promise<void> {
     await fetch(`https://graph.facebook.com/v18.0/me/permissions?access_token=${accessToken}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
   }
 
@@ -382,14 +400,16 @@ class SocialMediaOAuthService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get user info'
+        error: error instanceof Error ? error.message : 'Failed to get user info',
       };
     }
   }
 
   private async getInstagramUserInfo(accessToken: string): Promise<any> {
     // First get Facebook user pages
-    const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+    const pagesResponse = await fetch(
+      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+    );
     const pagesData = await pagesResponse.json();
 
     if (!pagesResponse.ok) {
@@ -413,7 +433,7 @@ class SocialMediaOAuthService {
         return {
           success: true,
           userId,
-          username: userInfo.username
+          username: userInfo.username,
         };
       }
     }
@@ -422,7 +442,9 @@ class SocialMediaOAuthService {
   }
 
   private async getFacebookUserInfo(accessToken: string): Promise<any> {
-    const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+    );
     const data = await response.json();
 
     if (!response.ok) {
@@ -438,7 +460,7 @@ class SocialMediaOAuthService {
     return {
       success: true,
       userId: page.id,
-      username: page.name
+      username: page.name,
     };
   }
 
@@ -446,8 +468,8 @@ class SocialMediaOAuthService {
     const response = await fetch('https://open-api.tiktok.com/user/info/', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
 
     const data = await response.json();
@@ -459,7 +481,7 @@ class SocialMediaOAuthService {
     return {
       success: true,
       userId: data.data.user.open_id,
-      username: data.data.user.display_name
+      username: data.data.user.display_name,
     };
   }
 
@@ -469,7 +491,7 @@ class SocialMediaOAuthService {
     const state = {
       platform,
       timestamp: Date.now(),
-      random: Math.random().toString(36).substring(2)
+      random: Math.random().toString(36).substring(2),
     };
     return btoa(JSON.stringify(state));
   }
@@ -477,7 +499,7 @@ class SocialMediaOAuthService {
   private verifyState(platform: string, state: string): boolean {
     try {
       const decoded = JSON.parse(atob(state));
-      return decoded.platform === platform && (Date.now() - decoded.timestamp) < 600000; // 10 minutes
+      return decoded.platform === platform && Date.now() - decoded.timestamp < 600000; // 10 minutes
     } catch {
       return false;
     }

@@ -1,7 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
-import { UsersIcon, PlusIcon, CloseIcon, ChevronRightIcon, UserIcon, ClockIcon, ClipboardListIcon, EditIcon, TrashIcon, StarIcon, DollarSignIcon, BarChartIcon, CheckIcon, FilterIcon } from './common/Icons';
-import type { Hairstylist, Service, HairstylistSkill, HairstylistAvailability, HairstylistCommission, HairstylistPerformance } from '../types';
+import {
+  UsersIcon,
+  PlusIcon,
+  CloseIcon,
+  ChevronRightIcon,
+  UserIcon,
+  ClockIcon,
+  ClipboardListIcon,
+  EditIcon,
+  TrashIcon,
+  StarIcon,
+  DollarSignIcon,
+  BarChartIcon,
+  CheckIcon,
+  FilterIcon,
+} from './common/Icons';
+import type {
+  Hairstylist,
+  Service,
+  HairstylistSkill,
+  HairstylistAvailability,
+  HairstylistCommission,
+  HairstylistPerformance,
+} from '../types';
 
 import HairstylistDetailPage from './team/HairstylistDetailPage';
 import TeamAnalytics from './team/TeamAnalytics';
@@ -20,7 +42,8 @@ const getSkillLevelClass = (level: string) => {
 };
 
 const TeamPage: React.FC = () => {
-  const { hairstylists, services, addHairstylist, updateHairstylist, deleteHairstylist, t } = useSettings();
+  const { hairstylists, services, addHairstylist, updateHairstylist, deleteHairstylist, t } =
+    useSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHairstylist, setSelectedHairstylist] = useState<Hairstylist | null>(null);
@@ -58,13 +81,13 @@ const TeamPage: React.FC = () => {
           photoUrl: photoUrl || undefined,
           email: email || undefined,
           phone: phone || undefined,
-          hireDate: hireDate || undefined
+          hireDate: hireDate || undefined,
         });
         setEditingHairstylist(null);
       } else {
-        addHairstylist({ 
-          name, 
-          type, 
+        addHairstylist({
+          name,
+          type,
           photoUrl: photoUrl || undefined,
           email: email || undefined,
           phone: phone || undefined,
@@ -74,7 +97,7 @@ const TeamPage: React.FC = () => {
           availability: [],
           commissions: [],
           performance: [],
-          isActive: true
+          isActive: true,
         });
       }
       setIsModalOpen(false);
@@ -151,7 +174,7 @@ const TeamPage: React.FC = () => {
             </button>
           )}
         </div>
-        
+
         {activeView === 'team' && (
           <div className="flex flex-wrap items-center gap-4">
             <input
@@ -161,7 +184,7 @@ const TeamPage: React.FC = () => {
               onChange={e => setSearchTerm(e.target.value)}
               className="flex-1 min-w-64 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
             />
-            
+
             <div className="flex items-center gap-2">
               <FilterIcon className="w-5 h-5 text-gray-500" />
               <select
@@ -184,67 +207,86 @@ const TeamPage: React.FC = () => {
         ) : (
           <div className="bg-white dark:bg-gray-800/50 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50">
             {filteredHairstylists.length > 0 ? (
-          <div className="space-y-3">
-            {filteredHairstylists.map(hairstylist => {
-              const assignedServicesCount = hairstylist.serviceIds?.length || 0;
-              const skillsCount = hairstylist.skills?.length || 0;
-              const topSkill = hairstylist.skills?.[0];
-              
-              return (
-                <button
-                  key={hairstylist.id}
-                  onClick={() => setSelectedHairstylist(hairstylist)}
-                  className="w-full flex items-center justify-between p-4 bg-gray-100/50 dark:bg-gray-900/40 hover:bg-gray-100 dark:hover:bg-gray-900/80 rounded-lg transition-colors text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden relative">
-                      {hairstylist.photoUrl ? (
-                        <img src={hairstylist.photoUrl} alt={hairstylist.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <UserIcon className="w-7 h-7 text-gray-500 dark:text-gray-400" />
-                      )}
-                      {hairstylist.type === 'expert' && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full flex items-center justify-center">
-                          <StarIcon className="w-3 h-3 text-white" />
+              <div className="space-y-3">
+                {filteredHairstylists.map(hairstylist => {
+                  const assignedServicesCount = hairstylist.serviceIds?.length || 0;
+                  const skillsCount = hairstylist.skills?.length || 0;
+                  const topSkill = hairstylist.skills?.[0];
+
+                  return (
+                    <button
+                      key={hairstylist.id}
+                      onClick={() => setSelectedHairstylist(hairstylist)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-100/50 dark:bg-gray-900/40 hover:bg-gray-100 dark:hover:bg-gray-900/80 rounded-lg transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                          {hairstylist.photoUrl ? (
+                            <img
+                              src={hairstylist.photoUrl}
+                              alt={hairstylist.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <UserIcon className="w-7 h-7 text-gray-500 dark:text-gray-400" />
+                          )}
+                          {hairstylist.type === 'expert' && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full flex items-center justify-center">
+                              <StarIcon className="w-3 h-3 text-white" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-gray-900 dark:text-white">{hairstylist.name}</p>
-                        {topSkill && (
-                          <span className={'px-2 py-1 text-xs rounded-full ' + getSkillLevelClass(topSkill.level)}>
-                            {t(`team.skillLevels.${topSkill.level}`)}
-                          </span>
-                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-gray-900 dark:text-white">
+                              {hairstylist.name}
+                            </p>
+                            {topSkill && (
+                              <span
+                                className={
+                                  'px-2 py-1 text-xs rounded-full ' +
+                                  getSkillLevelClass(topSkill.level)
+                                }
+                              >
+                                {t(`team.skillLevels.${topSkill.level}`)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                            {hairstylist.type === 'expert' ? t('team.expert') : t('team.station')}
+                          </p>
+                          {hairstylist.email && (
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              {hairstylist.email}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                        {hairstylist.type === 'expert' ? t('team.expert') : t('team.station')}
-                      </p>
-                      {hairstylist.email && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500">{hairstylist.email}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right text-sm text-gray-500 dark:text-gray-400">
-                      <p>{assignedServicesCount} {t('team.servicesAssigned')}</p>
-                      <p>{skillsCount} {t('team.skills')}</p>
-                    </div>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <UsersIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">{t('team.empty.title')}</p>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
-              {searchTerm ? t('team.empty.searchSubtitle') : t('team.empty.subtitle')}
-            </p>
-          </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                          <p>
+                            {assignedServicesCount} {t('team.servicesAssigned')}
+                          </p>
+                          <p>
+                            {skillsCount} {t('team.skills')}
+                          </p>
+                        </div>
+                        <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <UsersIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  {t('team.empty.title')}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  {searchTerm ? t('team.empty.searchSubtitle') : t('team.empty.subtitle')}
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -253,7 +295,10 @@ const TeamPage: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
-            <button onClick={closeModal} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+            >
               <CloseIcon className="w-6 h-6" />
             </button>
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -262,7 +307,10 @@ const TeamPage: React.FC = () => {
             <form onSubmit={handleAddHairstylist} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     {t('team.modal.name')}
                   </label>
                   <input
@@ -275,7 +323,10 @@ const TeamPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="type"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     {t('team.modal.type')}
                   </label>
                   <select
@@ -290,10 +341,13 @@ const TeamPage: React.FC = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     {t('team.modal.email')}
                   </label>
                   <input
@@ -305,7 +359,10 @@ const TeamPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     {t('team.modal.phone')}
                   </label>
                   <input
@@ -317,9 +374,12 @@ const TeamPage: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div>
-                <label htmlFor="hireDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="hireDate"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   {t('team.modal.hireDate')}
                 </label>
                 <input
@@ -330,9 +390,12 @@ const TeamPage: React.FC = () => {
                   className="w-full mt-1 p-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
                 />
               </div>
-              
+
               <div>
-                <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="photoUrl"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   {t('team.modal.photoUrl')}
                 </label>
                 <input

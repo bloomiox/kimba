@@ -30,13 +30,13 @@ export class FacebookApiService {
       const response = await fetch(
         `${this.baseUrl}/${connection.userId}?fields=name,category,fan_count,talking_about_count,checkins,website,about&access_token=${connection.accessToken}`
       );
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get page info');
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to get Facebook page info:', error);
@@ -55,23 +55,20 @@ export class FacebookApiService {
 
     for (const imageUrl of imageUrls) {
       try {
-        const response = await fetch(
-          `${this.baseUrl}/${connection.userId}/photos`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              url: imageUrl,
-              published: false,
-              access_token: connection.accessToken
-            })
-          }
-        );
+        const response = await fetch(`${this.baseUrl}/${connection.userId}/photos`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: imageUrl,
+            published: false,
+            access_token: connection.accessToken,
+          }),
+        });
 
         const data = await response.json();
-        
+
         if (response.ok) {
           attachedMedia.push({ media_fbid: data.id });
         } else {
@@ -94,10 +91,10 @@ export class FacebookApiService {
   ): Promise<{ success: boolean; postId?: string; url?: string; error?: string }> {
     try {
       const message = this.formatCaption(content.caption, content.hashtags);
-      
+
       let postData: any = {
         message,
-        access_token: connection.accessToken
+        access_token: connection.accessToken,
       };
 
       // Add media if provided
@@ -114,36 +111,32 @@ export class FacebookApiService {
         }
       }
 
-      const response = await fetch(
-        `${this.baseUrl}/${connection.userId}/feed`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(postData)
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/${connection.userId}/feed`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.error?.message || 'Failed to publish Facebook post'
+          error: data.error?.message || 'Failed to publish Facebook post',
         };
       }
 
       return {
         success: true,
         postId: data.id,
-        url: `https://www.facebook.com/${data.id}`
+        url: `https://www.facebook.com/${data.id}`,
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Facebook publish failed'
+        error: error instanceof Error ? error.message : 'Facebook publish failed',
       };
     }
   }
@@ -159,7 +152,7 @@ export class FacebookApiService {
     try {
       const message = this.formatCaption(content.caption, content.hashtags);
       const scheduledTimestamp = Math.floor(scheduledTime.getTime() / 1000);
-      
+
       // Check if scheduled time is at least 10 minutes in the future
       const minScheduleTime = Math.floor((Date.now() + 10 * 60 * 1000) / 1000);
       if (scheduledTimestamp < minScheduleTime) {
@@ -170,7 +163,7 @@ export class FacebookApiService {
         message,
         scheduled_publish_time: scheduledTimestamp,
         published: false,
-        access_token: connection.accessToken
+        access_token: connection.accessToken,
       };
 
       // Add media if provided
@@ -185,35 +178,31 @@ export class FacebookApiService {
         }
       }
 
-      const response = await fetch(
-        `${this.baseUrl}/${connection.userId}/feed`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(postData)
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/${connection.userId}/feed`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.error?.message || 'Failed to schedule Facebook post'
+          error: data.error?.message || 'Failed to schedule Facebook post',
         };
       }
 
       return {
         success: true,
-        postId: data.id
+        postId: data.id,
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Facebook schedule failed'
+        error: error instanceof Error ? error.message : 'Facebook schedule failed',
       };
     }
   }
@@ -231,7 +220,7 @@ export class FacebookApiService {
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get Facebook metrics');
       }
@@ -241,7 +230,7 @@ export class FacebookApiService {
         comments: data.comments?.summary?.total_count || 0,
         shares: data.shares?.count || 0,
         views: 0, // Facebook doesn't provide view counts for regular posts
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
     } catch (error) {
       console.error('Failed to get Facebook metrics:', error);
@@ -263,7 +252,7 @@ export class FacebookApiService {
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get page insights');
       }
@@ -278,17 +267,14 @@ export class FacebookApiService {
   /**
    * Get recent Facebook posts
    */
-  async getRecentPosts(
-    connection: SocialMediaConnection,
-    limit: number = 10
-  ): Promise<any[]> {
+  async getRecentPosts(connection: SocialMediaConnection, limit: number = 10): Promise<any[]> {
     try {
       const response = await fetch(
         `${this.baseUrl}/${connection.userId}/posts?fields=id,message,created_time,likes.summary(true),comments.summary(true),shares&limit=${limit}&access_token=${connection.accessToken}`
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get Facebook posts');
       }
@@ -311,7 +297,7 @@ export class FacebookApiService {
       const response = await fetch(
         `${this.baseUrl}/${postId}?access_token=${connection.accessToken}`,
         {
-          method: 'DELETE'
+          method: 'DELETE',
         }
       );
 
@@ -320,7 +306,7 @@ export class FacebookApiService {
       if (!response.ok) {
         return {
           success: false,
-          error: data.error?.message || 'Failed to delete Facebook post'
+          error: data.error?.message || 'Failed to delete Facebook post',
         };
       }
 
@@ -328,7 +314,7 @@ export class FacebookApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Delete failed'
+        error: error instanceof Error ? error.message : 'Delete failed',
       };
     }
   }
@@ -343,7 +329,7 @@ export class FacebookApiService {
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get scheduled posts');
       }
@@ -369,18 +355,18 @@ export class FacebookApiService {
       );
 
       const rateLimitUsage = response.headers.get('X-Business-Use-Case-Usage');
-      
+
       if (rateLimitUsage) {
         const usage = JSON.parse(rateLimitUsage);
         const businessUsage = usage[Object.keys(usage)[0]];
-        
+
         // If usage is above 75%, suggest waiting
         const canPost = businessUsage.call_count < 75;
-        
+
         return {
           canPost,
           remaining: 100 - businessUsage.call_count,
-          resetTime: new Date(Date.now() + 3600000) // Reset hourly
+          resetTime: new Date(Date.now() + 3600000), // Reset hourly
         };
       }
 
@@ -396,12 +382,14 @@ export class FacebookApiService {
    */
   private formatCaption(caption: string, hashtags: string[]): string {
     let formatted = caption;
-    
+
     if (hashtags.length > 0) {
-      const hashtagString = '\n\n' + hashtags
-        .slice(0, 20) // Recommended limit for Facebook
-        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-        .join(' ');
+      const hashtagString =
+        '\n\n' +
+        hashtags
+          .slice(0, 20) // Recommended limit for Facebook
+          .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
+          .join(' ');
       formatted += hashtagString;
     }
 
@@ -426,14 +414,12 @@ export class FacebookApiService {
 
     // Check file extension
     const validExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
-    const hasValidExtension = validExtensions.some(ext => 
-      imageUrl.toLowerCase().includes(ext)
-    );
+    const hasValidExtension = validExtensions.some(ext => imageUrl.toLowerCase().includes(ext));
 
     if (!hasValidExtension) {
-      return { 
-        valid: false, 
-        error: 'Facebook supports JPG, PNG, and GIF images' 
+      return {
+        valid: false,
+        error: 'Facebook supports JPG, PNG, and GIF images',
       };
     }
 
@@ -455,20 +441,20 @@ export class FacebookApiService {
         minSize: { width: 600, height: 315 },
         maxSize: { width: 1200, height: 630 },
         aspectRatios: ['16:9', '1:1', '4:5'],
-        maxFileSize: '10MB'
+        maxFileSize: '10MB',
       },
       captionLimits: {
         maxLength: 63206,
-        recommendedLength: 400
+        recommendedLength: 400,
       },
       hashtagLimits: {
         maxHashtags: 20,
-        recommendedHashtags: 5
+        recommendedHashtags: 5,
       },
       schedulingLimits: {
         minAdvanceTime: '10 minutes',
-        maxAdvanceTime: '6 months'
-      }
+        maxAdvanceTime: '6 months',
+      },
     };
   }
 
@@ -481,38 +467,35 @@ export class FacebookApiService {
     description?: string
   ): Promise<{ success: boolean; albumId?: string; error?: string }> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${connection.userId}/albums`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name,
-            description: description || '',
-            access_token: connection.accessToken
-          })
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/${connection.userId}/albums`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          description: description || '',
+          access_token: connection.accessToken,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.error?.message || 'Failed to create photo album'
+          error: data.error?.message || 'Failed to create photo album',
         };
       }
 
       return {
         success: true,
-        albumId: data.id
+        albumId: data.id,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Album creation failed'
+        error: error instanceof Error ? error.message : 'Album creation failed',
       };
     }
   }
@@ -530,23 +513,20 @@ export class FacebookApiService {
       const photoIds = [];
 
       for (const imageUrl of imageUrls) {
-        const response = await fetch(
-          `${this.baseUrl}/${albumId}/photos`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              url: imageUrl,
-              message: caption || '',
-              access_token: connection.accessToken
-            })
-          }
-        );
+        const response = await fetch(`${this.baseUrl}/${albumId}/photos`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: imageUrl,
+            message: caption || '',
+            access_token: connection.accessToken,
+          }),
+        });
 
         const data = await response.json();
-        
+
         if (response.ok) {
           photoIds.push(data.id);
         }
@@ -554,12 +534,12 @@ export class FacebookApiService {
 
       return {
         success: photoIds.length > 0,
-        photoIds
+        photoIds,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to add photos to album'
+        error: error instanceof Error ? error.message : 'Failed to add photos to album',
       };
     }
   }

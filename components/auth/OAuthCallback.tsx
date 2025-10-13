@@ -32,11 +32,7 @@ const OAuthCallback: React.FC<OAuthCallbackProps> = ({ platform }) => {
         }
 
         // Exchange code for access token
-        const result = await socialMediaOAuthService.exchangeCodeForToken(
-          platform,
-          code,
-          state
-        );
+        const result = await socialMediaOAuthService.exchangeCodeForToken(platform, code, state);
 
         if (!result.success || !result.connection) {
           throw new Error(result.error || 'Failed to exchange authorization code');
@@ -48,8 +44,8 @@ const OAuthCallback: React.FC<OAuthCallbackProps> = ({ platform }) => {
         // Update settings with new connection
         await updateSettings({
           socialMedia: {
-            [platform]: result.connection
-          }
+            [platform]: result.connection,
+          },
         });
 
         setStatus('success');
@@ -60,7 +56,6 @@ const OAuthCallback: React.FC<OAuthCallbackProps> = ({ platform }) => {
           // Or redirect to main app
           window.location.href = '/marketing?tab=social';
         }, 2000);
-
       } catch (error) {
         console.error(`OAuth callback error for ${platform}:`, error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
@@ -78,40 +73,60 @@ const OAuthCallback: React.FC<OAuthCallbackProps> = ({ platform }) => {
           <div className="text-center">
             <LoadingSpinner size="lg" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-4">
-              {t('social.oauth.connecting', { platform: platform.charAt(0).toUpperCase() + platform.slice(1) })}
+              {t('social.oauth.connecting', {
+                platform: platform.charAt(0).toUpperCase() + platform.slice(1),
+              })}
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              {t('social.oauth.processing')}
-            </p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">{t('social.oauth.processing')}</p>
           </div>
         );
-      
+
       case 'success':
         return (
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-8 h-8 text-green-600 dark:text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {t('social.oauth.success')}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mt-2">
-              {t('social.oauth.successDesc', { platform: platform.charAt(0).toUpperCase() + platform.slice(1) })}
+              {t('social.oauth.successDesc', {
+                platform: platform.charAt(0).toUpperCase() + platform.slice(1),
+              })}
             </p>
-            <p className="text-sm text-gray-400 mt-4">
-              {t('social.oauth.redirecting')}
-            </p>
+            <p className="text-sm text-gray-400 mt-4">{t('social.oauth.redirecting')}</p>
           </div>
         );
-      
+
       case 'error':
         return (
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-8 h-8 text-red-600 dark:text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -128,7 +143,7 @@ const OAuthCallback: React.FC<OAuthCallbackProps> = ({ platform }) => {
             </button>
           </div>
         );
-      
+
       default:
         return null;
     }

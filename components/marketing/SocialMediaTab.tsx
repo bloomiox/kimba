@@ -7,13 +7,7 @@ import PostComposer from './PostComposer';
 import PostHistory from './PostHistory';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { 
-  LinkIcon, 
-  PhotoIcon, 
-  PencilSquareIcon, 
-  ClockIcon,
-  CheckCircleIcon
-} from '../common/Icons';
+import { LinkIcon, PhotoIcon, PencilSquareIcon, ClockIcon, CheckCircleIcon } from '../common/Icons';
 
 type SocialMediaView = 'overview' | 'connect' | 'compose' | 'history';
 type ComposeStep = 'select-photos' | 'compose-post';
@@ -53,9 +47,9 @@ const SocialMediaTab: React.FC = () => {
 
   // Check if any social media platforms are connected
   const hasConnections = Boolean(
-    settings?.socialMedia?.instagram || 
-    settings?.socialMedia?.facebook || 
-    settings?.socialMedia?.tiktok
+    settings?.socialMedia?.instagram ||
+      settings?.socialMedia?.facebook ||
+      settings?.socialMedia?.tiktok
   );
 
   const renderOverview = () => (
@@ -66,33 +60,43 @@ const SocialMediaTab: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {t('social.connectionStatus')}
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Instagram Status */}
             <div className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className={`w-3 h-3 rounded-full ${settings?.socialMedia?.instagram ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <div
+                className={`w-3 h-3 rounded-full ${settings?.socialMedia?.instagram ? 'bg-green-500' : 'bg-gray-400'}`}
+              />
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">Instagram</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {settings?.socialMedia?.instagram ? t('social.connected') : t('social.notConnected')}
+                  {settings?.socialMedia?.instagram
+                    ? t('social.connected')
+                    : t('social.notConnected')}
                 </p>
               </div>
             </div>
 
             {/* Facebook Status */}
             <div className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className={`w-3 h-3 rounded-full ${settings?.socialMedia?.facebook ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <div
+                className={`w-3 h-3 rounded-full ${settings?.socialMedia?.facebook ? 'bg-green-500' : 'bg-gray-400'}`}
+              />
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">Facebook</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {settings?.socialMedia?.facebook ? t('social.connected') : t('social.notConnected')}
+                  {settings?.socialMedia?.facebook
+                    ? t('social.connected')
+                    : t('social.notConnected')}
                 </p>
               </div>
             </div>
 
             {/* TikTok Status */}
             <div className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className={`w-3 h-3 rounded-full ${settings?.socialMedia?.tiktok ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <div
+                className={`w-3 h-3 rounded-full ${settings?.socialMedia?.tiktok ? 'bg-green-500' : 'bg-gray-400'}`}
+              />
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">TikTok</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -111,7 +115,7 @@ const SocialMediaTab: React.FC = () => {
               <LinkIcon className="h-4 w-4" />
               <span>{t('social.managePlatforms')}</span>
             </Button>
-            
+
             {hasConnections && (
               <>
                 <Button
@@ -121,7 +125,7 @@ const SocialMediaTab: React.FC = () => {
                   <PencilSquareIcon className="h-4 w-4" />
                   <span>{t('social.createPost')}</span>
                 </Button>
-                
+
                 <Button
                   onClick={() => setActiveView('history')}
                   variant="outline"
@@ -143,7 +147,7 @@ const SocialMediaTab: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               {t('social.quickActions')}
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div
                 onClick={startCompose}
@@ -157,15 +161,13 @@ const SocialMediaTab: React.FC = () => {
                   {t('social.shareTransformationDesc')}
                 </p>
               </div>
-              
+
               <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg opacity-50">
                 <ClockIcon className="h-8 w-8 text-gray-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-white mb-1">
                   {t('social.schedulePost')}
                 </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {t('social.comingSoon')}
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('social.comingSoon')}</p>
               </div>
             </div>
           </div>
@@ -180,9 +182,7 @@ const SocialMediaTab: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {t('social.getStarted')}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              {t('social.getStartedDesc')}
-            </p>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">{t('social.getStartedDesc')}</p>
             <Button
               onClick={() => setActiveView('connect')}
               className="bg-accent-600 hover:bg-accent-700"
@@ -200,11 +200,7 @@ const SocialMediaTab: React.FC = () => {
       {/* View Navigation */}
       {activeView !== 'overview' && (
         <div className="flex items-center space-x-4 mb-6">
-          <Button
-            onClick={() => setActiveView('overview')}
-            variant="outline"
-            size="sm"
-          >
+          <Button onClick={() => setActiveView('overview')} variant="outline" size="sm">
             ← {t('common.back')}
           </Button>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -220,11 +216,9 @@ const SocialMediaTab: React.FC = () => {
       {activeView === 'connect' && <ConnectionManager />}
       {activeView === 'compose' && (
         <>
-          {composeStep === 'select-photos' && (
-            <PhotoSelector onNext={handlePhotosSelected} />
-          )}
+          {composeStep === 'select-photos' && <PhotoSelector onNext={handlePhotosSelected} />}
           {composeStep === 'compose-post' && selectedClient && selectedPhotos.length > 0 && (
-            <PostComposer 
+            <PostComposer
               selectedPhotos={selectedPhotos}
               client={selectedClient}
               onBack={handleBackToPhotoSelection}

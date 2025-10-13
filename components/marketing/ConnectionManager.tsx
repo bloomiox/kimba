@@ -7,13 +7,13 @@ import { socialMediaConfigService } from '../../services/socialMediaConfigServic
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
-import { 
-  LinkIcon, 
-  XMarkIcon, 
+import {
+  LinkIcon,
+  XMarkIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ArrowTopRightOnSquareIcon,
-  SettingsIcon
+  SettingsIcon,
 } from '../common/Icons';
 
 interface PlatformInfo {
@@ -30,22 +30,22 @@ const PLATFORMS: PlatformInfo[] = [
     name: 'Instagram',
     description: 'Share photos and stories to your Instagram Business account',
     color: 'from-pink-500 to-purple-600',
-    icon: '📷'
+    icon: '📷',
   },
   {
     id: 'facebook',
     name: 'Facebook',
     description: 'Post to your Facebook Business Page',
     color: 'from-blue-500 to-blue-700',
-    icon: '👥'
+    icon: '👥',
   },
   {
     id: 'tiktok',
     name: 'TikTok',
     description: 'Share videos to your TikTok Business account',
     color: 'from-gray-800 to-gray-900',
-    icon: '🎵'
-  }
+    icon: '🎵',
+  },
 ];
 
 const ConnectionManager: React.FC = () => {
@@ -56,7 +56,7 @@ const ConnectionManager: React.FC = () => {
 
   const handleConnect = async (platform: PlatformInfo) => {
     setIsConnecting(platform.id);
-    
+
     try {
       // Check if platform is configured
       if (!socialMediaConfigService.isPlatformConfigured(platform.id)) {
@@ -67,7 +67,7 @@ const ConnectionManager: React.FC = () => {
 
       // Get OAuth authorization URL
       const authUrl = socialMediaOAuthService.getAuthorizationUrl(platform.id);
-      
+
       // Open OAuth flow in popup or redirect
       const popup = window.open(
         authUrl,
@@ -84,7 +84,6 @@ const ConnectionManager: React.FC = () => {
           window.location.reload();
         }
       }, 1000);
-
     } catch (error) {
       console.error(`Failed to connect to ${platform.name}:`, error);
       setIsConnecting(null);
@@ -105,8 +104,8 @@ const ConnectionManager: React.FC = () => {
       await updateSettings({
         socialMedia: {
           ...socialMedia,
-          [platformId]: null
-        }
+          [platformId]: null,
+        },
       });
 
       setShowDisconnectModal(null);
@@ -128,7 +127,7 @@ const ConnectionManager: React.FC = () => {
     if (connection) {
       return {
         status: 'connected' as const,
-        username: connection.username
+        username: connection.username,
       };
     }
     return { status: 'disconnected' as const };
@@ -146,7 +145,7 @@ const ConnectionManager: React.FC = () => {
           </p>
 
           <div className="space-y-4">
-            {PLATFORMS.map((platform) => {
+            {PLATFORMS.map(platform => {
               const connectionStatus = getConnectionStatus(platform.id);
               const connecting = isConnecting === platform.id;
               const configured = socialMediaConfigService.isPlatformConfigured(platform.id);
@@ -157,13 +156,13 @@ const ConnectionManager: React.FC = () => {
                   className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${platform.color} flex items-center justify-center text-2xl`}>
+                    <div
+                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${platform.color} flex items-center justify-center text-2xl`}
+                    >
                       {platform.icon}
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {platform.name}
-                      </h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white">{platform.name}</h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {platform.description}
                       </p>
@@ -196,10 +195,7 @@ const ConnectionManager: React.FC = () => {
                         >
                           <XMarkIcon className="h-4 w-4" />
                         </Button>
-                        <Button
-                          onClick={() => handleConnect(platform)}
-                          variant="secondary"
-                        >
+                        <Button onClick={() => handleConnect(platform)} variant="secondary">
                           {t('social.refresh')}
                         </Button>
                       </>
@@ -263,17 +259,14 @@ const ConnectionManager: React.FC = () => {
             <div className="flex items-center space-x-3 mb-4">
               <ExclamationTriangleIcon className="h-6 w-6 text-amber-500" />
               <p className="text-gray-600 dark:text-gray-300">
-                {t('social.disconnectWarning', { 
-                  platform: PLATFORMS.find(p => p.id === showDisconnectModal)?.name 
+                {t('social.disconnectWarning', {
+                  platform: PLATFORMS.find(p => p.id === showDisconnectModal)?.name,
                 })}
               </p>
             </div>
-            
+
             <div className="flex justify-end space-x-3">
-              <Button
-                onClick={() => setShowDisconnectModal(null)}
-                variant="secondary"
-              >
+              <Button onClick={() => setShowDisconnectModal(null)} variant="secondary">
                 {t('common.cancel')}
               </Button>
               <Button
@@ -297,8 +290,10 @@ const ConnectionManager: React.FC = () => {
           <div className="p-6">
             {(() => {
               const platform = PLATFORMS.find(p => p.id === showSetupModal);
-              const instructions = socialMediaConfigService.getSetupInstructions(showSetupModal as any);
-              
+              const instructions = socialMediaConfigService.getSetupInstructions(
+                showSetupModal as any
+              );
+
               return (
                 <div>
                   <div className="mb-4">
@@ -309,7 +304,7 @@ const ConnectionManager: React.FC = () => {
                       You need to configure API credentials to connect {platform?.name}.
                     </p>
                   </div>
-                  
+
                   <div className="mb-4">
                     <h5 className="font-medium text-gray-900 dark:text-white mb-2">Setup Steps:</h5>
                     <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
@@ -318,14 +313,16 @@ const ConnectionManager: React.FC = () => {
                       ))}
                     </ol>
                   </div>
-                  
+
                   <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">Redirect URI:</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      Redirect URI:
+                    </p>
                     <code className="text-xs text-gray-600 dark:text-gray-300 break-all">
                       {instructions.redirectUri}
                     </code>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <Button
                       onClick={() => window.open(instructions.documentsUrl, '_blank')}
@@ -335,11 +332,8 @@ const ConnectionManager: React.FC = () => {
                       <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                       <span>View Documentation</span>
                     </Button>
-                    
-                    <Button
-                      onClick={() => setShowSetupModal(null)}
-                      variant="primary"
-                    >
+
+                    <Button onClick={() => setShowSetupModal(null)} variant="primary">
                       Got it
                     </Button>
                   </div>

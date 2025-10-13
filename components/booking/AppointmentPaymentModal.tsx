@@ -20,7 +20,7 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
   hairstylist,
   isOpen,
   onClose,
-  onPaymentComplete
+  onPaymentComplete,
 }) => {
   const { t, currency, vatRate, addSale } = useSettings();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
@@ -47,12 +47,14 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
     addSale({
       clientId: client.id,
       hairstylistId: hairstylist.id,
-      items: [{
-        id: service.id,
-        name: service.name,
-        price: service.price,
-        type: 'service'
-      }],
+      items: [
+        {
+          id: service.id,
+          name: service.name,
+          price: service.price,
+          type: 'service',
+        },
+      ],
       subtotal: calculations.subtotal,
       discount: null,
       vatRate: useVat ? vatRate : 0,
@@ -74,7 +76,10 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
   };
 
   const langCode = t('language.code');
-  const formattedTotal = calculations.total.toLocaleString(langCode, { style: 'currency', currency });
+  const formattedTotal = calculations.total.toLocaleString(langCode, {
+    style: 'currency',
+    currency,
+  });
   const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
 
   if (!isOpen) return null;
@@ -89,8 +94,8 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
             {t('booking.payment.paidFor')} {service.name}
           </p>
           <p className="text-lg font-semibold text-accent mb-6">{formattedTotal}</p>
-          <button 
-            onClick={handleComplete} 
+          <button
+            onClick={handleComplete}
             className="w-full px-6 py-3 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
           >
             {t('common.done')}
@@ -100,7 +105,7 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
     );
   }
 
-  const paymentOptions: {id: PaymentMethod, label: string, icon: string}[] = [
+  const paymentOptions: { id: PaymentMethod; label: string; icon: string }[] = [
     { id: 'card', label: t('pos.payment.card'), icon: '💳' },
     { id: 'cash', label: t('pos.payment.cash'), icon: '💵' },
     { id: 'twint', label: t('pos.payment.twint'), icon: '📱' },
@@ -109,7 +114,7 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
   return (
     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto">
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
         >
@@ -118,12 +123,16 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
 
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4 text-center">{t('booking.payment.title')}</h2>
-          
+
           {/* Client Info */}
           <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg mb-4">
             <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
               {client.photoUrl ? (
-                <img src={client.photoUrl} alt={client.name} className="w-full h-full object-cover" />
+                <img
+                  src={client.photoUrl}
+                  alt={client.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <UserIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
               )}
@@ -141,20 +150,23 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <p className="font-semibold text-lg text-blue-900 dark:text-blue-100">{service.name}</p>
+                <p className="font-semibold text-lg text-blue-900 dark:text-blue-100">
+                  {service.name}
+                </p>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  {appointmentDateTime.toLocaleDateString(langCode, { 
+                  {appointmentDateTime.toLocaleDateString(langCode, {
                     weekday: 'long',
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
                   })}
                 </p>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  {appointmentDateTime.toLocaleTimeString(langCode, { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })} • {service.duration} {t('common.minutes')}
+                  {appointmentDateTime.toLocaleTimeString(langCode, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}{' '}
+                  • {service.duration} {t('common.minutes')}
                 </p>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
                   {t('booking.payment.with')} {hairstylist.name}
@@ -172,37 +184,41 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
           <div className="space-y-3 mb-6">
             <div className="flex justify-between text-sm">
               <span>{t('pos.summary.subtotal')}</span>
-              <span>{calculations.subtotal.toLocaleString(langCode, { style: 'currency', currency })}</span>
+              <span>
+                {calculations.subtotal.toLocaleString(langCode, { style: 'currency', currency })}
+              </span>
             </div>
-            
+
             <div className="flex justify-between items-center text-sm">
               <label htmlFor="vatToggle" className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  id="vatToggle" 
-                  checked={useVat} 
-                  onChange={e => setUseVat(e.target.checked)} 
-                  className="w-4 h-4 rounded text-accent focus:ring-accent" 
+                <input
+                  type="checkbox"
+                  id="vatToggle"
+                  checked={useVat}
+                  onChange={e => setUseVat(e.target.checked)}
+                  className="w-4 h-4 rounded text-accent focus:ring-accent"
                 />
                 {t('pos.summary.vat')} ({vatRate}%)
               </label>
-              <span>{calculations.vatAmount.toLocaleString(langCode, { style: 'currency', currency })}</span>
+              <span>
+                {calculations.vatAmount.toLocaleString(langCode, { style: 'currency', currency })}
+              </span>
             </div>
 
             <div className="flex justify-between items-center text-sm">
               <span>{t('pos.summary.tip')}</span>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleRoundUp} 
+                <button
+                  onClick={handleRoundUp}
                   className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                 >
                   {t('pos.summary.roundUp')}
                 </button>
-                <input 
-                  type="number" 
-                  value={tip} 
-                  onChange={e => setTip(Number(e.target.value))} 
-                  className="w-20 p-1 text-right bg-gray-100 dark:bg-gray-700 rounded-md text-sm" 
+                <input
+                  type="number"
+                  value={tip}
+                  onChange={e => setTip(Number(e.target.value))}
+                  className="w-20 p-1 text-right bg-gray-100 dark:bg-gray-700 rounded-md text-sm"
                   placeholder="0.00"
                   step="0.50"
                   min="0"
@@ -220,12 +236,12 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
           <div className="space-y-3 mb-6">
             <h3 className="font-semibold">{t('booking.payment.selectMethod')}</h3>
             {paymentOptions.map(option => (
-              <button 
-                key={option.id} 
+              <button
+                key={option.id}
                 onClick={() => setSelectedMethod(option.id)}
                 className={`w-full p-4 border-2 rounded-lg font-semibold transition-all flex items-center gap-3 ${
-                  selectedMethod === option.id 
-                    ? 'border-accent bg-accent/10' 
+                  selectedMethod === option.id
+                    ? 'border-accent bg-accent/10'
                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
@@ -237,14 +253,14 @@ const AppointmentPaymentModal: React.FC<AppointmentPaymentModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg font-semibold text-gray-800 dark:text-gray-200"
             >
               {t('common.cancel')}
             </button>
-            <button 
-              onClick={handleConfirmPayment} 
+            <button
+              onClick={handleConfirmPayment}
               className="flex-1 px-6 py-3 bg-accent hover:opacity-90 rounded-lg font-semibold text-white"
             >
               {t('booking.payment.payNow')} {formattedTotal}

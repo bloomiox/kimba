@@ -29,415 +29,503 @@ enum StudioState {
 }
 
 const INITIAL_STYLE_PROMPTS = [
-    { name: 'Sleek Bob', prompt: 'a sleek, sharp, chin-length bob haircut, very straight and glossy' },
-    { name: 'Wavy Lob', prompt: 'a shoulder-length lob with soft, beachy waves and natural-looking texture' },
-    { name: 'Long Layers', prompt: 'long hair with face-framing layers that create movement and volume' },
-    { name: 'Textured Pixie', prompt: 'a short, textured pixie cut with volume on top and slightly tousled styling' },
+  {
+    name: 'Sleek Bob',
+    prompt: 'a sleek, sharp, chin-length bob haircut, very straight and glossy',
+  },
+  {
+    name: 'Wavy Lob',
+    prompt: 'a shoulder-length lob with soft, beachy waves and natural-looking texture',
+  },
+  {
+    name: 'Long Layers',
+    prompt: 'long hair with face-framing layers that create movement and volume',
+  },
+  {
+    name: 'Textured Pixie',
+    prompt: 'a short, textured pixie cut with volume on top and slightly tousled styling',
+  },
 ];
 
 const STEPS = ['Select Client', 'Upload Photo', 'Discover Styles', 'Refine Look', 'Final Lookbook'];
 
-
 const DesignStudio: React.FC = () => {
-    const [studioState, setStudioState] = useState<StudioState>(StudioState.Step1_SelectClient);
-    const [contentVisible, setContentVisible] = useState<boolean>(true);
-    
-    // State for the final lookbook object
-    const [lookbookPieces, setLookbookPieces] = useState<{ userImage: UserImage | null; baseStyle: GeneratedImage | null; clientId: string | null }>({ userImage: null, baseStyle: null, clientId: null });
-    
-    const [initialStyles, setInitialStyles] = useState<GeneratedImage[]>([]);
-    const [styleToRefine, setStyleToRefine] = useState<GeneratedImage | null>(null);
-    const [finalLook, setFinalLook] = useState<{mainImage: GeneratedImage, angleViews: AngleView[] } | null>(null);
-    const [sessionHistory, setSessionHistory] = useState<(GeneratedImage | AngleView)[]>([]);
+  const [studioState, setStudioState] = useState<StudioState>(StudioState.Step1_SelectClient);
+  const [contentVisible, setContentVisible] = useState<boolean>(true);
 
-    const [error, setError] = useState<string | null>(null);
-    const [showConfetti, setShowConfetti] = useState(false);
+  // State for the final lookbook object
+  const [lookbookPieces, setLookbookPieces] = useState<{
+    userImage: UserImage | null;
+    baseStyle: GeneratedImage | null;
+    clientId: string | null;
+  }>({ userImage: null, baseStyle: null, clientId: null });
 
-    const { incrementImageCount, saveLookbook, clients, addClient } = useSettings();
+  const [initialStyles, setInitialStyles] = useState<GeneratedImage[]>([]);
+  const [styleToRefine, setStyleToRefine] = useState<GeneratedImage | null>(null);
+  const [finalLook, setFinalLook] = useState<{
+    mainImage: GeneratedImage;
+    angleViews: AngleView[];
+  } | null>(null);
+  const [sessionHistory, setSessionHistory] = useState<(GeneratedImage | AngleView)[]>([]);
 
-    useEffect(() => {
-        if (showConfetti) {
-            const timer = setTimeout(() => setShowConfetti(false), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [showConfetti]);
+  const [error, setError] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-    const resetStudioState = useCallback(() => {
-        setLookbookPieces({ userImage: null, baseStyle: null, clientId: null });
-        setInitialStyles([]);
-        setStyleToRefine(null);
-        setFinalLook(null);
-        setSessionHistory([]);
-        setError(null);
-        setStudioState(StudioState.Step1_SelectClient);
-    }, []);
+  const { incrementImageCount, saveLookbook, clients, addClient } = useSettings();
 
-    const changeStudioState = useCallback((newState: StudioState, postTransitionCallback?: () => void) => {
-        setContentVisible(false);
-        setTimeout(() => {
+  useEffect(() => {
+    if (showConfetti) {
+      const timer = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showConfetti]);
+
+  const resetStudioState = useCallback(() => {
+    setLookbookPieces({ userImage: null, baseStyle: null, clientId: null });
+    setInitialStyles([]);
+    setStyleToRefine(null);
+    setFinalLook(null);
+    setSessionHistory([]);
+    setError(null);
+    setStudioState(StudioState.Step1_SelectClient);
+  }, []);
+
+  const changeStudioState = useCallback(
+    (newState: StudioState, postTransitionCallback?: () => void) => {
+      setContentVisible(false);
+      setTimeout(() => {
         if (postTransitionCallback) postTransitionCallback();
         setStudioState(newState);
         setContentVisible(true);
-        }, 300);
-    }, []);
-    
-    const handleClientSelected = (clientId: string) => {
-        changeStudioState(StudioState.Step1_Upload, () => {
-            setLookbookPieces(prev => ({ ...prev, clientId }));
-        });
-    };
+      }, 300);
+    },
+    []
+  );
 
-    const handleImageReady = (base64: string, mimeType: string) => {
-        const image = { base64, mimeType };
-        changeStudioState(StudioState.Step2_GeneratingInitial, () => {
-            setLookbookPieces(prev => ({...prev, userImage: image}));
-        });
-    };
-    
-    const handleMagicTryOnComplete = (userImage: UserImage, generatedImage: GeneratedImage) => {
-        incrementImageCount(); // Count the successful generation from MagicTryOn
-        changeStudioState(StudioState.Step3_Refining, () => {
-            setLookbookPieces(prev => ({ ...prev, userImage, baseStyle: generatedImage }));
-            setStyleToRefine(generatedImage);
-            setSessionHistory([generatedImage]);
-        });
-    };
+  const handleClientSelected = (clientId: string) => {
+    changeStudioState(StudioState.Step1_Upload, () => {
+      setLookbookPieces(prev => ({ ...prev, clientId }));
+    });
+  };
 
-    const handleGenerateInitialStyles = useCallback(async () => {
-        if (!lookbookPieces.userImage) return;
+  const handleImageReady = (base64: string, mimeType: string) => {
+    const image = { base64, mimeType };
+    changeStudioState(StudioState.Step2_GeneratingInitial, () => {
+      setLookbookPieces(prev => ({ ...prev, userImage: image }));
+    });
+  };
 
-        setInitialStyles([]);
+  const handleMagicTryOnComplete = (userImage: UserImage, generatedImage: GeneratedImage) => {
+    incrementImageCount(); // Count the successful generation from MagicTryOn
+    changeStudioState(StudioState.Step3_Refining, () => {
+      setLookbookPieces(prev => ({ ...prev, userImage, baseStyle: generatedImage }));
+      setStyleToRefine(generatedImage);
+      setSessionHistory([generatedImage]);
+    });
+  };
 
-        try {
-            const generationPromises = INITIAL_STYLE_PROMPTS.map(styleInfo =>
-                generateHairstyle(lookbookPieces.userImage!.base64, lookbookPieces.userImage!.mimeType, styleInfo.prompt)
-                .then(resultBase64 => {
-                    if (resultBase64) {
-                        const newImage: GeneratedImage = {
-                            src: `data:image/png;base64,${resultBase64}`,
-                            prompt: styleInfo.prompt,
-                            hairstyleId: styleInfo.name.toLowerCase().replace(/\s/g, '-'),
-                            hairstyleName: styleInfo.name,
-                        };
-                        incrementImageCount();
-                        return newImage;
-                    }
-                    return null;
-                }).catch(error => {
-                    console.error(`Failed to generate initial style "${styleInfo.name}":`, error);
-                    return null;
-                })
-            );
-            
-            const results = await Promise.all(generationPromises);
-            const successfulCreations = results.filter((r): r is GeneratedImage => r !== null);
+  const handleGenerateInitialStyles = useCallback(async () => {
+    if (!lookbookPieces.userImage) return;
 
-            if (successfulCreations.length === 0) {
-                throw new Error("We couldn't generate any styles for this photo. Please try a different one.");
-            }
-            
-            changeStudioState(StudioState.Step2_ShowInitial, () => {
-                setInitialStyles(successfulCreations);
-                setSessionHistory(successfulCreations);
-            });
+    setInitialStyles([]);
 
-        } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred during preview generation.";
-        changeStudioState(StudioState.ERROR, () => {
-            setError(errorMessage);
-        });
-        }
-    }, [lookbookPieces.userImage, changeStudioState, incrementImageCount]);
-
-    const handleStyleSelectedToRefine = (selectedStyle: GeneratedImage) => {
-        changeStudioState(StudioState.Step3_Refining, () => {
-            setLookbookPieces(prev => ({ ...prev, baseStyle: selectedStyle }));
-            setStyleToRefine(selectedStyle);
-        });
-    };
-
-    const handleFinalize = (finalPrompt: string) => {
-        if (!lookbookPieces.userImage || !styleToRefine) return;
-        
-        const finalMainImage: GeneratedImage = {
-            ...styleToRefine,
-            prompt: finalPrompt,
-        };
-
-        changeStudioState(StudioState.Step4_GeneratingFinal, () => {
-            setStyleToRefine(finalMainImage); 
-        });
-    };
-
-    const handleGenerateFinalViews = useCallback(async () => {
-        if (!lookbookPieces.userImage || !styleToRefine || !lookbookPieces.clientId) return;
-
-        const finalPrompt = styleToRefine.prompt;
-
-        try {
-            const mainImageBase64 = await generateHairstyle(lookbookPieces.userImage.base64, lookbookPieces.userImage.mimeType, finalPrompt);
-            if (!mainImageBase64) throw new Error("Could not generate the main refined hairstyle.");
-
-            const mainFinalImage: GeneratedImage = {
-                ...styleToRefine,
-                src: `data:image/png;base64,${mainImageBase64}`,
-            };
-            incrementImageCount();
-            
-            const viewPrompts = [
-                { view: 'Side', promptModifier: ', side view, from the left' },
-                { view: 'Angled', promptModifier: ', 45-degree angle view' },
-                { view: 'Back', promptModifier: ', from the back' },
-            ];
-
-            const anglePromises = viewPrompts.map(async (view) => {
-                const resultBase64 = await generateHairstyle(lookbookPieces.userImage!.base64, lookbookPieces.userImage!.mimeType, finalPrompt + view.promptModifier);
-                if (resultBase64) {
-                    incrementImageCount();
-                    return { view: view.view, src: `data:image/png;base64,${resultBase64}` };
-                }
-                return null;
-            });
-
-            const angleResults = await Promise.all(anglePromises);
-            const successfulAngles = angleResults.filter((r): r is AngleView => r !== null);
-            
-            if (lookbookPieces.userImage && lookbookPieces.baseStyle && lookbookPieces.clientId) {
-                const lookbookToSave: Omit<Lookbook, 'id' | 'createdAt'> = {
-                    clientId: lookbookPieces.clientId,
-                    userImage: lookbookPieces.userImage,
-                    baseStyle: lookbookPieces.baseStyle,
-                    finalImage: mainFinalImage,
-                    angleViews: successfulAngles,
-                };
-                saveLookbook(lookbookToSave);
-            }
-
-            changeStudioState(StudioState.Step4_ShowFinal, () => {
-                setFinalLook({
-                    mainImage: mainFinalImage,
-                    angleViews: successfulAngles,
-                });
-                setSessionHistory(prev => [...prev, mainFinalImage, ...successfulAngles]);
-                setShowConfetti(true);
-            });
-
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "An error occurred while generating final views.";
-            changeStudioState(StudioState.ERROR, () => {
-                setError(errorMessage);
-            });
-        }
-
-    }, [lookbookPieces, styleToRefine, changeStudioState, incrementImageCount, saveLookbook]);
-
-    useEffect(() => {
-        if (studioState === StudioState.Step2_GeneratingInitial && lookbookPieces.userImage) {
-            handleGenerateInitialStyles();
-        }
-    }, [studioState, lookbookPieces.userImage, handleGenerateInitialStyles]);
-
-    useEffect(() => {
-        if (studioState === StudioState.Step4_GeneratingFinal && styleToRefine) {
-            handleGenerateFinalViews();
-        }
-    }, [studioState, styleToRefine, handleGenerateFinalViews]);
-
-    const getCurrentStep = () => {
-        switch (studioState) {
-            case StudioState.Step1_SelectClient: return 1;
-            case StudioState.Step1_Upload:
-            case StudioState.Step1_MagicTryOn: return 2;
-            case StudioState.Step2_GeneratingInitial:
-            case StudioState.Step2_ShowInitial: return 3;
-            case StudioState.Step3_Refining: return 4;
-            case StudioState.Step4_GeneratingFinal:
-            case StudioState.Step4_ShowFinal: return 5;
-            default: return 0;
-        }
-    };
-    
-    const ClientSelector = () => {
-        const [showNewClientForm, setShowNewClientForm] = useState(false);
-        const [searchTerm, setSearchTerm] = useState('');
-
-        const handleAddNewClient = async (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const name = formData.get('name') as string;
-            const email = formData.get('email') as string;
-            if (name && email) {
-                const newClient = await addClient({ name, email });
-                handleClientSelected(newClient.id);
-            }
-        };
-        
-        const filteredClients = useMemo(() => 
-            clients.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())), 
-            [clients, searchTerm]
-        );
-
-        return (
-            <div className="p-8 flex flex-col items-center justify-center h-full">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">Start a New Session</h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-8 text-center max-w-md">
-                    Select a client to associate with this styling session.
-                </p>
-
-                <div className="w-full max-w-lg">
-                    { !showNewClientForm ? (
-                        <>
-                            <input 
-                                type="search" 
-                                placeholder="Search for a client..." 
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                                className="w-full p-3 mb-4 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
-                            />
-                            <div className="space-y-3 max-h-64 overflow-y-auto">
-                                {filteredClients.map(client => (
-                                    <button key={client.id} onClick={() => handleClientSelected(client.id)} className="w-full flex items-center gap-4 p-4 text-left bg-gray-100/50 dark:bg-gray-700/50 hover:bg-accent/10 rounded-lg transition-colors">
-                                        <UserIcon className="w-6 h-6 text-gray-500 dark:text-gray-400"/>
-                                        <span className="font-semibold">{client.name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="mt-4 text-center">
-                                <button onClick={() => setShowNewClientForm(true)} className="flex items-center gap-2 mx-auto px-4 py-2 bg-accent/20 text-accent rounded-lg font-semibold hover:bg-accent/30 transition-colors">
-                                    <PlusIcon className="w-5 h-5"/> Add New Client
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <form onSubmit={handleAddNewClient} className="space-y-4">
-                            <h3 className="font-bold text-lg text-center">New Client Details</h3>
-                            <input type="text" name="name" placeholder="Full Name" required className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"/>
-                            <input type="email" name="email" placeholder="Email Address" required className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"/>
-                            <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setShowNewClientForm(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg font-semibold">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-accent text-white rounded-lg font-semibold">Save & Continue</button>
-                            </div>
-                        </form>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    const renderContent = () => {
-        switch (studioState) {
-        case StudioState.Step1_SelectClient:
-            return <ClientSelector />;
-
-        case StudioState.Step1_Upload:
-            return <ImageUploader onImageReady={handleImageReady} onEnterMagicTryOn={() => changeStudioState(StudioState.Step1_MagicTryOn)} />;
-        
-        case StudioState.Step1_MagicTryOn:
-            return <MagicTryOn 
-                hairstyles={[...FEMALE_HAIRSTYLES, ...MALE_HAIRSTYLES]}
-                onComplete={handleMagicTryOnComplete}
-                onExit={() => changeStudioState(StudioState.Step1_Upload)}
-            />;
-        
-        case StudioState.Step2_GeneratingInitial:
-            return (
-                <div className="flex flex-col items-center justify-center text-gray-900 dark:text-white text-center p-8 h-full">
-                    <LoadingSpinner />
-                    <h2 className="text-2xl font-semibold mt-6">Generating Style Ideas...</h2>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-sm mx-auto">
-                        Our AI is creating a personalized lookbook for you. This might take a moment.
-                    </p>
-                </div>
-            );
-        
-        case StudioState.Step2_ShowInitial:
-            return (
-                <StyleGallery 
-                    styles={initialStyles} 
-                    onSelect={handleStyleSelectedToRefine}
-                    onStartOver={resetStudioState}
-                />
-            );
-
-        case StudioState.Step3_Refining:
-            return null; // Handled by modal
-
-        case StudioState.Step4_GeneratingFinal:
-            return (
-            <div className="flex flex-col items-center justify-center text-gray-900 dark:text-white text-center p-8 h-full">
-                <LoadingSpinner />
-                <h2 className="text-2xl font-semibold mt-6">Finalizing Your Lookbook...</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-2">
-                Generating the refined style from multiple angles.
-                </p>
-            </div>
-            );
-
-        case StudioState.Step4_ShowFinal:
-            if (finalLook) {
-                return <FinalLook 
-                    mainImage={finalLook.mainImage}
-                    angleViews={finalLook.angleViews}
-                    onStartOver={resetStudioState}
-                />
+    try {
+      const generationPromises = INITIAL_STYLE_PROMPTS.map(styleInfo =>
+        generateHairstyle(
+          lookbookPieces.userImage!.base64,
+          lookbookPieces.userImage!.mimeType,
+          styleInfo.prompt
+        )
+          .then(resultBase64 => {
+            if (resultBase64) {
+              const newImage: GeneratedImage = {
+                src: `data:image/png;base64,${resultBase64}`,
+                prompt: styleInfo.prompt,
+                hairstyleId: styleInfo.name.toLowerCase().replace(/\s/g, '-'),
+                hairstyleName: styleInfo.name,
+              };
+              incrementImageCount();
+              return newImage;
             }
             return null;
-        
-        case StudioState.ERROR:
-            return (
-            <div className="text-center text-gray-900 dark:text-white p-8 flex flex-col items-center justify-center h-full">
-                <h2 className="text-2xl font-bold text-red-500 mb-4">An Error Occurred</h2>
-                <p className="text-gray-700 dark:text-gray-300 mb-6">{error}</p>
-                <button
-                onClick={resetStudioState}
-                className="px-6 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white transition-all"
-                >
-                Start Over
-                </button>
-            </div>
-            );
-        default:
+          })
+          .catch(error => {
+            console.error(`Failed to generate initial style "${styleInfo.name}":`, error);
             return null;
-        }
+          })
+      );
+
+      const results = await Promise.all(generationPromises);
+      const successfulCreations = results.filter((r): r is GeneratedImage => r !== null);
+
+      if (successfulCreations.length === 0) {
+        throw new Error(
+          "We couldn't generate any styles for this photo. Please try a different one."
+        );
+      }
+
+      changeStudioState(StudioState.Step2_ShowInitial, () => {
+        setInitialStyles(successfulCreations);
+        setSessionHistory(successfulCreations);
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unknown error occurred during preview generation.';
+      changeStudioState(StudioState.ERROR, () => {
+        setError(errorMessage);
+      });
+    }
+  }, [lookbookPieces.userImage, changeStudioState, incrementImageCount]);
+
+  const handleStyleSelectedToRefine = (selectedStyle: GeneratedImage) => {
+    changeStudioState(StudioState.Step3_Refining, () => {
+      setLookbookPieces(prev => ({ ...prev, baseStyle: selectedStyle }));
+      setStyleToRefine(selectedStyle);
+    });
+  };
+
+  const handleFinalize = (finalPrompt: string) => {
+    if (!lookbookPieces.userImage || !styleToRefine) return;
+
+    const finalMainImage: GeneratedImage = {
+      ...styleToRefine,
+      prompt: finalPrompt,
     };
 
-    const currentStep = getCurrentStep();
-    const showHistoryPanel = sessionHistory.length > 0 && studioState !== StudioState.Step1_Upload && studioState !== StudioState.Step1_MagicTryOn && studioState !== StudioState.Step1_SelectClient;
+    changeStudioState(StudioState.Step4_GeneratingFinal, () => {
+      setStyleToRefine(finalMainImage);
+    });
+  };
+
+  const handleGenerateFinalViews = useCallback(async () => {
+    if (!lookbookPieces.userImage || !styleToRefine || !lookbookPieces.clientId) return;
+
+    const finalPrompt = styleToRefine.prompt;
+
+    try {
+      const mainImageBase64 = await generateHairstyle(
+        lookbookPieces.userImage.base64,
+        lookbookPieces.userImage.mimeType,
+        finalPrompt
+      );
+      if (!mainImageBase64) throw new Error('Could not generate the main refined hairstyle.');
+
+      const mainFinalImage: GeneratedImage = {
+        ...styleToRefine,
+        src: `data:image/png;base64,${mainImageBase64}`,
+      };
+      incrementImageCount();
+
+      const viewPrompts = [
+        { view: 'Side', promptModifier: ', side view, from the left' },
+        { view: 'Angled', promptModifier: ', 45-degree angle view' },
+        { view: 'Back', promptModifier: ', from the back' },
+      ];
+
+      const anglePromises = viewPrompts.map(async view => {
+        const resultBase64 = await generateHairstyle(
+          lookbookPieces.userImage!.base64,
+          lookbookPieces.userImage!.mimeType,
+          finalPrompt + view.promptModifier
+        );
+        if (resultBase64) {
+          incrementImageCount();
+          return { view: view.view, src: `data:image/png;base64,${resultBase64}` };
+        }
+        return null;
+      });
+
+      const angleResults = await Promise.all(anglePromises);
+      const successfulAngles = angleResults.filter((r): r is AngleView => r !== null);
+
+      if (lookbookPieces.userImage && lookbookPieces.baseStyle && lookbookPieces.clientId) {
+        const lookbookToSave: Omit<Lookbook, 'id' | 'createdAt'> = {
+          clientId: lookbookPieces.clientId,
+          userImage: lookbookPieces.userImage,
+          baseStyle: lookbookPieces.baseStyle,
+          finalImage: mainFinalImage,
+          angleViews: successfulAngles,
+        };
+        saveLookbook(lookbookToSave);
+      }
+
+      changeStudioState(StudioState.Step4_ShowFinal, () => {
+        setFinalLook({
+          mainImage: mainFinalImage,
+          angleViews: successfulAngles,
+        });
+        setSessionHistory(prev => [...prev, mainFinalImage, ...successfulAngles]);
+        setShowConfetti(true);
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred while generating final views.';
+      changeStudioState(StudioState.ERROR, () => {
+        setError(errorMessage);
+      });
+    }
+  }, [lookbookPieces, styleToRefine, changeStudioState, incrementImageCount, saveLookbook]);
+
+  useEffect(() => {
+    if (studioState === StudioState.Step2_GeneratingInitial && lookbookPieces.userImage) {
+      handleGenerateInitialStyles();
+    }
+  }, [studioState, lookbookPieces.userImage, handleGenerateInitialStyles]);
+
+  useEffect(() => {
+    if (studioState === StudioState.Step4_GeneratingFinal && styleToRefine) {
+      handleGenerateFinalViews();
+    }
+  }, [studioState, styleToRefine, handleGenerateFinalViews]);
+
+  const getCurrentStep = () => {
+    switch (studioState) {
+      case StudioState.Step1_SelectClient:
+        return 1;
+      case StudioState.Step1_Upload:
+      case StudioState.Step1_MagicTryOn:
+        return 2;
+      case StudioState.Step2_GeneratingInitial:
+      case StudioState.Step2_ShowInitial:
+        return 3;
+      case StudioState.Step3_Refining:
+        return 4;
+      case StudioState.Step4_GeneratingFinal:
+      case StudioState.Step4_ShowFinal:
+        return 5;
+      default:
+        return 0;
+    }
+  };
+
+  const ClientSelector = () => {
+    const [showNewClientForm, setShowNewClientForm] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const handleAddNewClient = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const formData = new FormData(e.currentTarget);
+      const name = formData.get('name') as string;
+      const email = formData.get('email') as string;
+      if (name && email) {
+        const newClient = await addClient({ name, email });
+        handleClientSelected(newClient.id);
+      }
+    };
+
+    const filteredClients = useMemo(
+      () => clients.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase())),
+      [clients, searchTerm]
+    );
 
     return (
-        <div className="w-full h-full flex flex-col">
-            {showConfetti && <Confetti />}
+      <div className="p-8 flex flex-col items-center justify-center h-full">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+          Start a New Session
+        </h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-8 text-center max-w-md">
+          Select a client to associate with this styling session.
+        </p>
 
-            {currentStep > 0 && (
-                <div className="pb-8 px-4 flex-shrink-0">
-                    <Stepper steps={STEPS} currentStep={currentStep} />
-                </div>
-            )}
-            
-            <div className={`w-full flex ${showHistoryPanel ? 'gap-6' : ''} flex-grow min-h-0`}>
-                <div className="flex-grow flex flex-col bg-white/50 dark:bg-gray-800/50 rounded-2xl shadow-2xl backdrop-blur-lg border border-gray-200 dark:border-gray-700/50 overflow-hidden">
-                    <div className={`flex-grow transition-opacity duration-300 ease-in-out ${contentVisible ? 'opacity-100' : 'opacity-0'}`}>
-                        {renderContent()}
-                    </div>
-                </div>
-
-                {showHistoryPanel && (
-                    <div className="transition-all duration-300 ease-in-out">
-                         <HistoryPanel images={sessionHistory} />
-                    </div>
-                )}
-            </div>
-
-            {studioState === StudioState.Step3_Refining && styleToRefine && (
-                <ImageEditor 
-                    imageToEdit={styleToRefine.src}
-                    initialPrompt={styleToRefine.prompt}
-                    onFinalize={handleFinalize}
-                    onBack={() => changeStudioState(StudioState.Step2_ShowInitial)}
-                />
-            )}
+        <div className="w-full max-w-lg">
+          {!showNewClientForm ? (
+            <>
+              <input
+                type="search"
+                placeholder="Search for a client..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full p-3 mb-4 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+              />
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {filteredClients.map(client => (
+                  <button
+                    key={client.id}
+                    onClick={() => handleClientSelected(client.id)}
+                    className="w-full flex items-center gap-4 p-4 text-left bg-gray-100/50 dark:bg-gray-700/50 hover:bg-accent/10 rounded-lg transition-colors"
+                  >
+                    <UserIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                    <span className="font-semibold">{client.name}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowNewClientForm(true)}
+                  className="flex items-center gap-2 mx-auto px-4 py-2 bg-accent/20 text-accent rounded-lg font-semibold hover:bg-accent/30 transition-colors"
+                >
+                  <PlusIcon className="w-5 h-5" /> Add New Client
+                </button>
+              </div>
+            </>
+          ) : (
+            <form onSubmit={handleAddNewClient} className="space-y-4">
+              <h3 className="font-bold text-lg text-center">New Client Details</h3>
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                required
+                className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                required
+                className="w-full p-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNewClientForm(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-accent text-white rounded-lg font-semibold"
+                >
+                  Save & Continue
+                </button>
+              </div>
+            </form>
+          )}
         </div>
-    )
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    switch (studioState) {
+      case StudioState.Step1_SelectClient:
+        return <ClientSelector />;
+
+      case StudioState.Step1_Upload:
+        return (
+          <ImageUploader
+            onImageReady={handleImageReady}
+            onEnterMagicTryOn={() => changeStudioState(StudioState.Step1_MagicTryOn)}
+          />
+        );
+
+      case StudioState.Step1_MagicTryOn:
+        return (
+          <MagicTryOn
+            hairstyles={[...FEMALE_HAIRSTYLES, ...MALE_HAIRSTYLES]}
+            onComplete={handleMagicTryOnComplete}
+            onExit={() => changeStudioState(StudioState.Step1_Upload)}
+          />
+        );
+
+      case StudioState.Step2_GeneratingInitial:
+        return (
+          <div className="flex flex-col items-center justify-center text-gray-900 dark:text-white text-center p-8 h-full">
+            <LoadingSpinner />
+            <h2 className="text-2xl font-semibold mt-6">Generating Style Ideas...</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-sm mx-auto">
+              Our AI is creating a personalized lookbook for you. This might take a moment.
+            </p>
+          </div>
+        );
+
+      case StudioState.Step2_ShowInitial:
+        return (
+          <StyleGallery
+            styles={initialStyles}
+            onSelect={handleStyleSelectedToRefine}
+            onStartOver={resetStudioState}
+          />
+        );
+
+      case StudioState.Step3_Refining:
+        return null; // Handled by modal
+
+      case StudioState.Step4_GeneratingFinal:
+        return (
+          <div className="flex flex-col items-center justify-center text-gray-900 dark:text-white text-center p-8 h-full">
+            <LoadingSpinner />
+            <h2 className="text-2xl font-semibold mt-6">Finalizing Your Lookbook...</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              Generating the refined style from multiple angles.
+            </p>
+          </div>
+        );
+
+      case StudioState.Step4_ShowFinal:
+        if (finalLook) {
+          return (
+            <FinalLook
+              mainImage={finalLook.mainImage}
+              angleViews={finalLook.angleViews}
+              onStartOver={resetStudioState}
+            />
+          );
+        }
+        return null;
+
+      case StudioState.ERROR:
+        return (
+          <div className="text-center text-gray-900 dark:text-white p-8 flex flex-col items-center justify-center h-full">
+            <h2 className="text-2xl font-bold text-red-500 mb-4">An Error Occurred</h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">{error}</p>
+            <button
+              onClick={resetStudioState}
+              className="px-6 py-2 bg-accent hover:opacity-90 rounded-lg font-semibold text-white transition-all"
+            >
+              Start Over
+            </button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const currentStep = getCurrentStep();
+  const showHistoryPanel =
+    sessionHistory.length > 0 &&
+    studioState !== StudioState.Step1_Upload &&
+    studioState !== StudioState.Step1_MagicTryOn &&
+    studioState !== StudioState.Step1_SelectClient;
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      {showConfetti && <Confetti />}
+
+      {currentStep > 0 && (
+        <div className="pb-8 px-4 flex-shrink-0">
+          <Stepper steps={STEPS} currentStep={currentStep} />
+        </div>
+      )}
+
+      <div className={`w-full flex ${showHistoryPanel ? 'gap-6' : ''} flex-grow min-h-0`}>
+        <div className="flex-grow flex flex-col bg-white/50 dark:bg-gray-800/50 rounded-2xl shadow-2xl backdrop-blur-lg border border-gray-200 dark:border-gray-700/50 overflow-hidden">
+          <div
+            className={`flex-grow transition-opacity duration-300 ease-in-out ${contentVisible ? 'opacity-100' : 'opacity-0'}`}
+          >
+            {renderContent()}
+          </div>
+        </div>
+
+        {showHistoryPanel && (
+          <div className="transition-all duration-300 ease-in-out">
+            <HistoryPanel images={sessionHistory} />
+          </div>
+        )}
+      </div>
+
+      {studioState === StudioState.Step3_Refining && styleToRefine && (
+        <ImageEditor
+          imageToEdit={styleToRefine.src}
+          initialPrompt={styleToRefine.prompt}
+          onFinalize={handleFinalize}
+          onBack={() => changeStudioState(StudioState.Step2_ShowInitial)}
+        />
+      )}
+    </div>
+  );
 };
 
 export default DesignStudio;

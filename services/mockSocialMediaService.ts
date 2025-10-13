@@ -46,31 +46,28 @@ class MockSocialMediaService {
       expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
       isActive: true,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.mockConnections.set(platform, mockConnection);
 
     return {
       success: true,
-      connection: mockConnection
+      connection: mockConnection,
     };
   }
 
   /**
    * Refresh expired access token
    */
-  async refreshAccessToken(
-    platform: string,
-    refreshToken: string
-  ): Promise<OAuthResult> {
+  async refreshAccessToken(platform: string, refreshToken: string): Promise<OAuthResult> {
     await this.delay(800);
 
     const existingConnection = this.mockConnections.get(platform);
     if (!existingConnection) {
       return {
         success: false,
-        error: 'Connection not found'
+        error: 'Connection not found',
       };
     }
 
@@ -78,14 +75,14 @@ class MockSocialMediaService {
       ...existingConnection,
       accessToken: `refreshed_token_${platform}_${Date.now()}`,
       expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.mockConnections.set(platform, refreshedConnection);
 
     return {
       success: true,
-      connection: refreshedConnection
+      connection: refreshedConnection,
     };
   }
 
@@ -94,7 +91,7 @@ class MockSocialMediaService {
    */
   async disconnectPlatform(platform: string): Promise<{ success: boolean }> {
     await this.delay(500);
-    
+
     this.mockConnections.delete(platform);
     return { success: true };
   }
@@ -121,12 +118,12 @@ class MockSocialMediaService {
 
     for (const platform of post.platforms) {
       const connection = this.mockConnections.get(platform.platform);
-      
+
       if (!connection || !connection.isActive) {
         platformResults.push({
           platform: platform.platform,
           success: false,
-          error: 'Platform not connected or inactive'
+          error: 'Platform not connected or inactive',
         });
         continue;
       }
@@ -141,7 +138,7 @@ class MockSocialMediaService {
       );
 
       platformResults.push(result);
-      
+
       if (result.success && result.postId) {
         externalIds[platform.platform] = result.postId;
       }
@@ -154,7 +151,7 @@ class MockSocialMediaService {
       status: platformResults.every(r => r.success) ? 'published' : 'failed',
       publishedAt: new Date(),
       externalIds,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // Store post for history
@@ -167,7 +164,7 @@ class MockSocialMediaService {
 
     return {
       success: platformResults.some(r => r.success),
-      platformResults
+      platformResults,
     };
   }
 
@@ -196,7 +193,7 @@ class MockSocialMediaService {
       return {
         platform,
         success: false,
-        error: 'Simulated platform error'
+        error: 'Simulated platform error',
       };
     }
 
@@ -207,7 +204,7 @@ class MockSocialMediaService {
       platform,
       success: true,
       postId,
-      url
+      url,
     };
   }
 
@@ -239,12 +236,12 @@ class MockSocialMediaService {
       comments: Math.floor(Math.random() * 50) + 2,
       shares: Math.floor(Math.random() * 20) + 1,
       views: Math.floor(Math.random() * 1000) + 100,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
 
     const updatedPost: SocialPost = {
       ...post,
-      engagementMetrics: baseEngagement
+      engagementMetrics: baseEngagement,
     };
 
     this.mockPosts.set(postId, updatedPost);
@@ -266,7 +263,7 @@ class MockSocialMediaService {
       likes: Math.floor(Math.random() * 50),
       comments: Math.floor(Math.random() * 10),
       shares: Math.floor(Math.random() * 5),
-      views: Math.floor(Math.random() * 200)
+      views: Math.floor(Math.random() * 200),
     };
 
     const updatedMetrics: EngagementMetrics = {
@@ -274,12 +271,12 @@ class MockSocialMediaService {
       comments: post.engagementMetrics.comments + growth.comments,
       shares: post.engagementMetrics.shares + growth.shares,
       views: (post.engagementMetrics.views || 0) + growth.views,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
 
     const updatedPost: SocialPost = {
       ...post,
-      engagementMetrics: updatedMetrics
+      engagementMetrics: updatedMetrics,
     };
 
     this.mockPosts.set(postId, updatedPost);
@@ -289,8 +286,9 @@ class MockSocialMediaService {
    * Get post history
    */
   getPostHistory(): SocialPost[] {
-    return Array.from(this.mockPosts.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return Array.from(this.mockPosts.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   /**
@@ -314,7 +312,7 @@ class MockSocialMediaService {
     return {
       canPost: true,
       remaining: 100,
-      resetTime: new Date(Date.now() + 3600000) // 1 hour from now
+      resetTime: new Date(Date.now() + 3600000), // 1 hour from now
     };
   }
 
@@ -333,28 +331,28 @@ class MockSocialMediaService {
           maxCaptionLength: 2200,
           maxHashtags: 30,
           supportedImageFormats: ['jpg', 'jpeg', 'png'],
-          supportedVideoFormats: ['mp4', 'mov']
+          supportedVideoFormats: ['mp4', 'mov'],
         };
       case 'facebook':
         return {
           maxCaptionLength: 63206,
           maxHashtags: 20,
           supportedImageFormats: ['jpg', 'jpeg', 'png', 'gif'],
-          supportedVideoFormats: ['mp4', 'mov', 'avi']
+          supportedVideoFormats: ['mp4', 'mov', 'avi'],
         };
       case 'tiktok':
         return {
           maxCaptionLength: 300,
           maxHashtags: 100,
           supportedImageFormats: ['jpg', 'jpeg', 'png'],
-          supportedVideoFormats: ['mp4', 'mov', 'webm']
+          supportedVideoFormats: ['mp4', 'mov', 'webm'],
         };
       default:
         return {
           maxCaptionLength: 1000,
           maxHashtags: 10,
           supportedImageFormats: ['jpg', 'jpeg', 'png'],
-          supportedVideoFormats: ['mp4']
+          supportedVideoFormats: ['mp4'],
         };
     }
   }

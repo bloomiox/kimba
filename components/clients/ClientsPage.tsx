@@ -1,7 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { mapToAccentColor } from '../../utils/colorUtils';
-import { UserIcon, PlusIcon, ChevronRightIcon, MagnifyingGlassIcon, FilterIcon } from '../common/Icons';
+import {
+  UserIcon,
+  PlusIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  FilterIcon,
+} from '../common/Icons';
 import type { Client, Appointment } from '../../types';
 import ClientDetailPage from './ClientDetailPage';
 import ClientModal from './ClientModal';
@@ -14,25 +20,24 @@ const ClientsPage: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [sortField, setSortField] = useState<'name' | 'email' | 'createdAt'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [filterType, setFilterType] = useState<'all' | 'withAppointments' | 'withoutAppointments'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'withAppointments' | 'withoutAppointments'>(
+    'all'
+  );
 
   const filteredClients = useMemo(() => {
-    let result = clients.filter(client => 
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase())
+    let result = clients.filter(
+      client =>
+        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     // Apply filter
     if (filterType === 'withAppointments') {
-      result = result.filter(client => 
-        appointments.some(app => app.clientId === client.id)
-      );
+      result = result.filter(client => appointments.some(app => app.clientId === client.id));
     } else if (filterType === 'withoutAppointments') {
-      result = result.filter(client => 
-        !appointments.some(app => app.clientId === client.id)
-      );
+      result = result.filter(client => !appointments.some(app => app.clientId === client.id));
     }
-    
+
     // Apply sorting
     result.sort((a, b) => {
       let comparison = 0;
@@ -43,10 +48,10 @@ const ClientsPage: React.FC = () => {
       } else if (sortField === 'createdAt') {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
-      
+
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-    
+
     return result;
   }, [clients, appointments, searchTerm, sortField, sortDirection, filterType]);
 
@@ -56,13 +61,13 @@ const ClientsPage: React.FC = () => {
   };
 
   const handleDeleteClient = (clientId: string) => {
-      const clientName = clients.find(c => c.id === clientId)?.name || 'this client';
-      if (window.confirm(t('clients.deleteConfirm', { clientName }))) {
-          deleteClient(clientId);
-          setSelectedClient(null);
-      }
+    const clientName = clients.find(c => c.id === clientId)?.name || 'this client';
+    if (window.confirm(t('clients.deleteConfirm', { clientName }))) {
+      deleteClient(clientId);
+      setSelectedClient(null);
+    }
   };
-  
+
   const handleSort = (field: 'name' | 'email' | 'createdAt') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -71,18 +76,20 @@ const ClientsPage: React.FC = () => {
       setSortDirection('asc');
     }
   };
-  
+
   if (selectedClient) {
-    return <ClientDetailPage 
-      client={selectedClient} 
-      onBack={() => setSelectedClient(null)} 
-      onEdit={(clientToEdit) => {
-        // Go back to the list view and then open the edit modal
-        setSelectedClient(null);
-        setTimeout(() => handleOpenModal(clientToEdit), 50);
-      }}
-      onDelete={handleDeleteClient}
-    />;
+    return (
+      <ClientDetailPage
+        client={selectedClient}
+        onBack={() => setSelectedClient(null)}
+        onEdit={clientToEdit => {
+          // Go back to the list view and then open the edit modal
+          setSelectedClient(null);
+          setTimeout(() => handleOpenModal(clientToEdit), 50);
+        }}
+        onDelete={handleDeleteClient}
+      />
+    );
   }
 
   return (
@@ -103,7 +110,7 @@ const ClientsPage: React.FC = () => {
           <div className="relative">
             <select
               value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
+              onChange={e => setFilterType(e.target.value as any)}
               className={`px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('focus:ring-2 focus:ring-accent-500 focus:border-accent-500')} transition-all appearance-none pr-8`}
             >
               <option value="all">{t('clients.filter.all')}</option>
@@ -126,27 +133,66 @@ const ClientsPage: React.FC = () => {
         {filteredClients.length > 0 ? (
           <div className="space-y-3">
             <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-gray-700 dark:text-gray-300">
-              <div className="col-span-5 flex items-center cursor-pointer" onClick={() => handleSort('name')}>
+              <div
+                className="col-span-5 flex items-center cursor-pointer"
+                onClick={() => handleSort('name')}
+              >
                 <span>{t('clients.table.name')}</span>
                 {sortField === 'name' && (
-                  <svg className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  <svg
+                    className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 )}
               </div>
-              <div className="col-span-4 flex items-center cursor-pointer" onClick={() => handleSort('email')}>
+              <div
+                className="col-span-4 flex items-center cursor-pointer"
+                onClick={() => handleSort('email')}
+              >
                 <span>{t('clients.table.email')}</span>
                 {sortField === 'email' && (
-                  <svg className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  <svg
+                    className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 )}
               </div>
-              <div className="col-span-2 flex items-center cursor-pointer" onClick={() => handleSort('createdAt')}>
+              <div
+                className="col-span-2 flex items-center cursor-pointer"
+                onClick={() => handleSort('createdAt')}
+              >
                 <span>{t('clients.table.created')}</span>
                 {sortField === 'createdAt' && (
-                  <svg className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  <svg
+                    className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 )}
               </div>
@@ -161,13 +207,19 @@ const ClientsPage: React.FC = () => {
                 <div className="col-span-5 flex items-center gap-4">
                   <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {client.photoUrl ? (
-                        <img src={client.photoUrl} alt={client.name} className="w-full h-full object-cover" />
+                      <img
+                        src={client.photoUrl}
+                        alt={client.name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                        <UserIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                      <UserIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                     )}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 dark:text-white truncate">{client.name}</p>
+                    <p className="font-bold text-gray-900 dark:text-white truncate">
+                      {client.name}
+                    </p>
                   </div>
                 </div>
                 <div className="col-span-4">
@@ -179,14 +231,18 @@ const ClientsPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="col-span-1 flex justify-end">
-                  <ChevronRightIcon className={`w-5 h-5 text-gray-400 dark:text-gray-500 ${mapToAccentColor('group-hover:text-accent-500')} transition-colors`}/>
+                  <ChevronRightIcon
+                    className={`w-5 h-5 text-gray-400 dark:text-gray-500 ${mapToAccentColor('group-hover:text-accent-500')} transition-colors`}
+                  />
                 </div>
               </button>
             ))}
           </div>
         ) : (
           <div className="text-center py-16">
-            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">{t('clients.empty.title')}</p>
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              {t('clients.empty.title')}
+            </p>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
               {searchTerm ? t('clients.empty.searchSubtitle') : t('clients.empty.subtitle')}
             </p>

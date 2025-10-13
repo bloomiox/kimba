@@ -12,16 +12,13 @@ export class TikTokApiService {
    */
   async validateConnection(connection: SocialMediaConnection): Promise<boolean> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/user/info/`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${connection.accessToken}`
-          }
-        }
-      );
-      
+      const response = await fetch(`${this.baseUrl}/user/info/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${connection.accessToken}`,
+        },
+      });
+
       return response.ok;
     } catch (error) {
       console.error('TikTok connection validation failed:', error);
@@ -34,15 +31,12 @@ export class TikTokApiService {
    */
   async getUserInfo(connection: SocialMediaConnection): Promise<any> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/user/info/`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${connection.accessToken}`
-          }
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/user/info/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${connection.accessToken}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -65,53 +59,52 @@ export class TikTokApiService {
     videoUrl: string,
     title: string,
     description?: string,
-    privacyLevel: 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY' = 'PUBLIC_TO_EVERYONE'
+    privacyLevel:
+      | 'PUBLIC_TO_EVERYONE'
+      | 'MUTUAL_FOLLOW_FRIENDS'
+      | 'SELF_ONLY' = 'PUBLIC_TO_EVERYONE'
   ): Promise<{ success: boolean; videoId?: string; error?: string }> {
     try {
       // First, initiate the upload
-      const initResponse = await fetch(
-        `${this.baseUrl}/share/video/upload/`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${connection.accessToken}`,
-            'Content-Type': 'application/json'
+      const initResponse = await fetch(`${this.baseUrl}/share/video/upload/`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${connection.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          post_info: {
+            title: this.formatTitle(title, description),
+            privacy_level: privacyLevel,
+            disable_duet: false,
+            disable_comment: false,
+            disable_stitch: false,
+            video_cover_timestamp_ms: 1000,
           },
-          body: JSON.stringify({
-            post_info: {
-              title: this.formatTitle(title, description),
-              privacy_level: privacyLevel,
-              disable_duet: false,
-              disable_comment: false,
-              disable_stitch: false,
-              video_cover_timestamp_ms: 1000
-            },
-            source_info: {
-              source: 'FILE_UPLOAD',
-              video_url: videoUrl
-            }
-          })
-        }
-      );
+          source_info: {
+            source: 'FILE_UPLOAD',
+            video_url: videoUrl,
+          },
+        }),
+      });
 
       const data = await response.json();
 
       if (!initResponse.ok || data.error) {
         return {
           success: false,
-          error: data.error?.message || data.message || 'Failed to upload TikTok video'
+          error: data.error?.message || data.message || 'Failed to upload TikTok video',
         };
       }
 
       return {
         success: true,
-        videoId: data.data?.video_id
+        videoId: data.data?.video_id,
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'TikTok upload failed'
+        error: error instanceof Error ? error.message : 'TikTok upload failed',
       };
     }
   }
@@ -130,30 +123,25 @@ export class TikTokApiService {
       }
 
       const title = this.formatCaption(content.caption, content.hashtags);
-      
-      const uploadResult = await this.uploadVideo(
-        connection,
-        content.videoUrl,
-        title
-      );
+
+      const uploadResult = await this.uploadVideo(connection, content.videoUrl, title);
 
       if (!uploadResult.success || !uploadResult.videoId) {
         return {
           success: false,
-          error: uploadResult.error || 'Failed to upload video'
+          error: uploadResult.error || 'Failed to upload video',
         };
       }
 
       return {
         success: true,
         postId: uploadResult.videoId,
-        url: `https://www.tiktok.com/@${connection.username}/video/${uploadResult.videoId}`
+        url: `https://www.tiktok.com/@${connection.username}/video/${uploadResult.videoId}`,
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'TikTok publish failed'
+        error: error instanceof Error ? error.message : 'TikTok publish failed',
       };
     }
   }
@@ -162,7 +150,7 @@ export class TikTokApiService {
    * Get video upload status
    */
   async getUploadStatus(
-    connection: SocialMediaConnection, 
+    connection: SocialMediaConnection,
     videoId: string
   ): Promise<{
     status: 'processing' | 'success' | 'failed';
@@ -173,8 +161,8 @@ export class TikTokApiService {
         `${this.baseUrl}/video/query/?fields=status&video_ids=${videoId}`,
         {
           headers: {
-            'Authorization': `Bearer ${connection.accessToken}`
-          }
+            Authorization: `Bearer ${connection.accessToken}`,
+          },
         }
       );
 
@@ -187,9 +175,8 @@ export class TikTokApiService {
       const video = data.data?.videos?.[0];
       return {
         status: video?.status || 'processing',
-        details: video
+        details: video,
       };
-
     } catch (error) {
       console.error('Failed to get TikTok upload status:', error);
       return { status: 'failed', details: error };
@@ -208,8 +195,8 @@ export class TikTokApiService {
         `${this.baseUrl}/video/query/?fields=like_count,comment_count,share_count,view_count&video_ids=${videoId}`,
         {
           headers: {
-            'Authorization': `Bearer ${connection.accessToken}`
-          }
+            Authorization: `Bearer ${connection.accessToken}`,
+          },
         }
       );
 
@@ -230,7 +217,7 @@ export class TikTokApiService {
         comments: video.comment_count || 0,
         shares: video.share_count || 0,
         views: video.view_count || 0,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
     } catch (error) {
       console.error('Failed to get TikTok metrics:', error);
@@ -248,15 +235,15 @@ export class TikTokApiService {
   ): Promise<{ videos: any[]; nextCursor?: string }> {
     try {
       let url = `${this.baseUrl}/video/list/?fields=id,title,create_time,cover_image_url,view_count,like_count,comment_count,share_count&max_count=${limit}`;
-      
+
       if (cursor) {
         url += `&cursor=${cursor}`;
       }
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${connection.accessToken}`
-        }
+          Authorization: `Bearer ${connection.accessToken}`,
+        },
       });
 
       const data = await response.json();
@@ -267,7 +254,7 @@ export class TikTokApiService {
 
       return {
         videos: data.data?.videos || [],
-        nextCursor: data.data?.cursor
+        nextCursor: data.data?.cursor,
       };
     } catch (error) {
       console.error('Failed to get TikTok user videos:', error);
@@ -278,17 +265,14 @@ export class TikTokApiService {
   /**
    * Get video analytics for business accounts
    */
-  async getVideoAnalytics(
-    connection: SocialMediaConnection,
-    videoIds: string[]
-  ): Promise<any[]> {
+  async getVideoAnalytics(connection: SocialMediaConnection, videoIds: string[]): Promise<any[]> {
     try {
       const response = await fetch(
         `${this.baseUrl}/video/query/?fields=id,view_count,like_count,comment_count,share_count,reach,profile_view,video_duration&video_ids=${videoIds.join(',')}`,
         {
           headers: {
-            'Authorization': `Bearer ${connection.accessToken}`
-          }
+            Authorization: `Bearer ${connection.accessToken}`,
+          },
         }
       );
 
@@ -317,12 +301,12 @@ export class TikTokApiService {
       // This would need to be done manually through the TikTok app
       return {
         success: false,
-        error: 'Video deletion must be done manually through the TikTok app'
+        error: 'Video deletion must be done manually through the TikTok app',
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Delete operation failed'
+        error: error instanceof Error ? error.message : 'Delete operation failed',
       };
     }
   }
@@ -338,16 +322,13 @@ export class TikTokApiService {
     try {
       // TikTok has different rate limits for different endpoints
       // For video upload: 10 uploads per day for most users
-      
+
       // Make a simple API call to check if we're rate limited
-      const response = await fetch(
-        `${this.baseUrl}/user/info/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${connection.accessToken}`
-          }
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/user/info/`, {
+        headers: {
+          Authorization: `Bearer ${connection.accessToken}`,
+        },
+      });
 
       // Check rate limit headers if available
       const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
@@ -357,7 +338,7 @@ export class TikTokApiService {
         return {
           canPost: parseInt(rateLimitRemaining) > 0,
           remaining: parseInt(rateLimitRemaining),
-          resetTime: new Date(parseInt(rateLimitReset) * 1000)
+          resetTime: new Date(parseInt(rateLimitReset) * 1000),
         };
       }
 
@@ -374,7 +355,7 @@ export class TikTokApiService {
    */
   private formatTitle(title: string, description?: string): string {
     let formatted = title;
-    
+
     if (description) {
       formatted += `\n\n${description}`;
     }
@@ -392,12 +373,14 @@ export class TikTokApiService {
    */
   private formatCaption(caption: string, hashtags: string[]): string {
     let formatted = caption;
-    
+
     if (hashtags.length > 0) {
-      const hashtagString = '\n\n' + hashtags
-        .slice(0, 100) // TikTok supports up to 100 hashtags
-        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-        .join(' ');
+      const hashtagString =
+        '\n\n' +
+        hashtags
+          .slice(0, 100) // TikTok supports up to 100 hashtags
+          .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
+          .join(' ');
       formatted += hashtagString;
     }
 
@@ -422,14 +405,12 @@ export class TikTokApiService {
 
     // Check file extension
     const validExtensions = ['.mp4', '.mov', '.webm'];
-    const hasValidExtension = validExtensions.some(ext => 
-      videoUrl.toLowerCase().includes(ext)
-    );
+    const hasValidExtension = validExtensions.some(ext => videoUrl.toLowerCase().includes(ext));
 
     if (!hasValidExtension) {
-      return { 
-        valid: false, 
-        error: 'TikTok supports MP4, MOV, and WebM videos' 
+      return {
+        valid: false,
+        error: 'TikTok supports MP4, MOV, and WebM videos',
       };
     }
 
@@ -453,20 +434,20 @@ export class TikTokApiService {
         minSize: { width: 540, height: 960 },
         maxSize: { width: 1080, height: 1920 },
         aspectRatio: '9:16', // Vertical only
-        maxFileSize: '500MB'
+        maxFileSize: '500MB',
       },
       captionLimits: {
         maxLength: 300,
-        recommendedLength: 100
+        recommendedLength: 100,
       },
       hashtagLimits: {
         maxHashtags: 100,
-        recommendedHashtags: 10
+        recommendedHashtags: 10,
       },
       uploadLimits: {
         dailyLimit: 10,
-        resetTime: '24 hours'
-      }
+        resetTime: '24 hours',
+      },
     };
   }
 
@@ -481,7 +462,7 @@ export class TikTokApiService {
       // Note: TikTok API doesn't provide trending hashtags endpoint
       // This would typically be implemented with third-party services
       // or scraped from TikTok's discover page (not recommended)
-      
+
       // Return some popular general hashtags as fallback
       return [
         'fyp',
@@ -493,7 +474,7 @@ export class TikTokApiService {
         'haircut',
         'style',
         'fashion',
-        'makeover'
+        'makeover',
       ].slice(0, limit);
     } catch (error) {
       console.error('Failed to get trending hashtags:', error);
@@ -512,21 +493,19 @@ export class TikTokApiService {
     return {
       weekday: ['6:00 AM', '10:00 AM', '7:00 PM', '9:00 PM'],
       weekend: ['9:00 AM', '11:00 AM', '5:00 PM', '8:00 PM'],
-      timezone: 'Local time based on audience location'
+      timezone: 'Local time based on audience location',
     };
   }
 
   /**
    * Estimate video performance
    */
-  estimatePerformance(
-    videoData: {
-      duration: number;
-      hashtags: string[];
-      description: string;
-      postTime: Date;
-    }
-  ): {
+  estimatePerformance(videoData: {
+    duration: number;
+    hashtags: string[];
+    description: string;
+    postTime: Date;
+  }): {
     score: number;
     factors: string[];
     suggestions: string[];
@@ -570,7 +549,7 @@ export class TikTokApiService {
     return {
       score: Math.min(100, Math.max(0, score)),
       factors,
-      suggestions
+      suggestions,
     };
   }
 }

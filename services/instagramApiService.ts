@@ -30,13 +30,13 @@ export class InstagramApiService {
       const response = await fetch(
         `${this.baseUrl}/${connection.userId}?fields=username,account_type,media_count,followers_count&access_token=${connection.accessToken}`
       );
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get account info');
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to get Instagram account info:', error);
@@ -53,20 +53,17 @@ export class InstagramApiService {
     caption: string
   ): Promise<string> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${connection.userId}/media`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            image_url: imageUrl,
-            caption,
-            access_token: connection.accessToken
-          })
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/${connection.userId}/media`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_url: imageUrl,
+          caption,
+          access_token: connection.accessToken,
+        }),
+      });
 
       const data = await response.json();
 
@@ -92,50 +89,45 @@ export class InstagramApiService {
     try {
       // First create individual image containers
       const childContainers = [];
-      
-      for (const imageUrl of imageUrls.slice(0, 10)) { // Instagram supports max 10 images
-        const response = await fetch(
-          `${this.baseUrl}/${connection.userId}/media`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              image_url: imageUrl,
-              is_carousel_item: true,
-              access_token: connection.accessToken
-            })
-          }
-        );
+
+      for (const imageUrl of imageUrls.slice(0, 10)) {
+        // Instagram supports max 10 images
+        const response = await fetch(`${this.baseUrl}/${connection.userId}/media`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image_url: imageUrl,
+            is_carousel_item: true,
+            access_token: connection.accessToken,
+          }),
+        });
 
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data.error?.message || 'Failed to create carousel item');
         }
-        
+
         childContainers.push(data.id);
       }
 
       // Create carousel container
-      const carouselResponse = await fetch(
-        `${this.baseUrl}/${connection.userId}/media`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            media_type: 'CAROUSEL',
-            children: childContainers.join(','),
-            caption,
-            access_token: connection.accessToken
-          })
-        }
-      );
+      const carouselResponse = await fetch(`${this.baseUrl}/${connection.userId}/media`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          media_type: 'CAROUSEL',
+          children: childContainers.join(','),
+          caption,
+          access_token: connection.accessToken,
+        }),
+      });
 
       const carouselData = await carouselResponse.json();
-      
+
       if (!carouselResponse.ok) {
         throw new Error(carouselData.error?.message || 'Failed to create carousel container');
       }
@@ -155,38 +147,35 @@ export class InstagramApiService {
     containerId: string
   ): Promise<{ success: boolean; postId?: string; url?: string; error?: string }> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${connection.userId}/media_publish`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            creation_id: containerId,
-            access_token: connection.accessToken
-          })
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/${connection.userId}/media_publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creation_id: containerId,
+          access_token: connection.accessToken,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.error?.message || 'Failed to publish Instagram post'
+          error: data.error?.message || 'Failed to publish Instagram post',
         };
       }
 
       return {
         success: true,
         postId: data.id,
-        url: `https://www.instagram.com/p/${data.id}`
+        url: `https://www.instagram.com/p/${data.id}`,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -208,27 +197,18 @@ export class InstagramApiService {
 
       if (content.imageUrls.length === 1) {
         // Single image post
-        containerId = await this.createImageContainer(
-          connection,
-          content.imageUrls[0],
-          caption
-        );
+        containerId = await this.createImageContainer(connection, content.imageUrls[0], caption);
       } else {
         // Carousel post
-        containerId = await this.createCarouselContainer(
-          connection,
-          content.imageUrls,
-          caption
-        );
+        containerId = await this.createCarouselContainer(connection, content.imageUrls, caption);
       }
 
       // Publish the container
       return await this.publishContainer(connection, containerId);
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Instagram publish failed'
+        error: error instanceof Error ? error.message : 'Instagram publish failed',
       };
     }
   }
@@ -246,7 +226,7 @@ export class InstagramApiService {
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get Instagram metrics');
       }
@@ -261,7 +241,7 @@ export class InstagramApiService {
         comments: metrics.comments || 0,
         shares: metrics.shares || 0,
         views: metrics.impressions || 0,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
     } catch (error) {
       console.error('Failed to get Instagram metrics:', error);
@@ -272,17 +252,14 @@ export class InstagramApiService {
   /**
    * Get recent Instagram posts
    */
-  async getRecentPosts(
-    connection: SocialMediaConnection,
-    limit: number = 10
-  ): Promise<any[]> {
+  async getRecentPosts(connection: SocialMediaConnection, limit: number = 10): Promise<any[]> {
     try {
       const response = await fetch(
         `${this.baseUrl}/${connection.userId}/media?fields=id,caption,media_url,thumbnail_url,permalink,timestamp,media_type,like_count,comments_count&limit=${limit}&access_token=${connection.accessToken}`
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to get Instagram posts');
       }
@@ -309,18 +286,18 @@ export class InstagramApiService {
       );
 
       const rateLimitUsage = response.headers.get('X-Business-Use-Case-Usage');
-      
+
       if (rateLimitUsage) {
         const usage = JSON.parse(rateLimitUsage);
         const businessUsage = usage[Object.keys(usage)[0]];
-        
+
         // If usage is above 75%, suggest waiting
         const canPost = businessUsage.call_count < 75;
-        
+
         return {
           canPost,
           remaining: 100 - businessUsage.call_count,
-          resetTime: new Date(Date.now() + 3600000) // Reset hourly
+          resetTime: new Date(Date.now() + 3600000), // Reset hourly
         };
       }
 
@@ -336,12 +313,14 @@ export class InstagramApiService {
    */
   private formatCaption(caption: string, hashtags: string[]): string {
     let formatted = caption;
-    
+
     if (hashtags.length > 0) {
-      const hashtagString = '\n\n' + hashtags
-        .slice(0, 30) // Instagram limit
-        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-        .join(' ');
+      const hashtagString =
+        '\n\n' +
+        hashtags
+          .slice(0, 30) // Instagram limit
+          .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
+          .join(' ');
       formatted += hashtagString;
     }
 
@@ -366,14 +345,12 @@ export class InstagramApiService {
 
     // Check file extension
     const validExtensions = ['.jpg', '.jpeg', '.png'];
-    const hasValidExtension = validExtensions.some(ext => 
-      imageUrl.toLowerCase().includes(ext)
-    );
+    const hasValidExtension = validExtensions.some(ext => imageUrl.toLowerCase().includes(ext));
 
     if (!hasValidExtension) {
-      return { 
-        valid: false, 
-        error: 'Instagram only supports JPG and PNG images' 
+      return {
+        valid: false,
+        error: 'Instagram only supports JPG and PNG images',
       };
     }
 
@@ -394,16 +371,16 @@ export class InstagramApiService {
         minSize: { width: 320, height: 320 },
         maxSize: { width: 1080, height: 1080 },
         aspectRatios: ['1:1', '4:5', '16:9'],
-        maxFileSize: '30MB'
+        maxFileSize: '30MB',
       },
       captionLimits: {
         maxLength: 2200,
-        recommendedLength: 125
+        recommendedLength: 125,
       },
       hashtagLimits: {
         maxHashtags: 30,
-        recommendedHashtags: 11
-      }
+        recommendedHashtags: 11,
+      },
     };
   }
 }

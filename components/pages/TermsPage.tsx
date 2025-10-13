@@ -3,7 +3,9 @@ import { useSettings } from '../../contexts/SettingsContext';
 import Card from '../common/Card';
 
 interface TermsPageProps {
-  onNavigate: (page: 'signin' | 'signup' | 'landing' | 'about' | 'contact' | 'blog' | 'privacy') => void;
+  onNavigate: (
+    page: 'signin' | 'signup' | 'landing' | 'about' | 'contact' | 'blog' | 'privacy'
+  ) => void;
 }
 
 const TermsPage: React.FC<TermsPageProps> = ({ onNavigate }) => {
@@ -26,7 +28,6 @@ const TermsPage: React.FC<TermsPageProps> = ({ onNavigate }) => {
       {/* Terms Content */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto space-y-8">
-          
           <Card className="p-8 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-0 shadow-lg">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
               {t('terms.agreement.title')}
@@ -152,7 +153,6 @@ const TermsPage: React.FC<TermsPageProps> = ({ onNavigate }) => {
               {t('terms.changes.content')}
             </p>
           </Card>
-
         </div>
       </section>
     </div>

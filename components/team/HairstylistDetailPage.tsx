@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { supabase } from '../../services/supabaseClient';
-import { 
-  ChevronRightIcon, UserIcon, ClockIcon, ClipboardListIcon, EditIcon, TrashIcon, 
-  StarIcon, DollarSignIcon, BarChartIcon, CheckIcon, PlusIcon, CloseIcon 
+import {
+  ChevronRightIcon,
+  UserIcon,
+  ClockIcon,
+  ClipboardListIcon,
+  EditIcon,
+  TrashIcon,
+  StarIcon,
+  DollarSignIcon,
+  BarChartIcon,
+  CheckIcon,
+  PlusIcon,
+  CloseIcon,
 } from '../common/Icons';
-import type { Hairstylist, Service, HairstylistSkill, HairstylistAvailability, HairstylistCommission, HairstylistBreak, HairstylistTimeOff } from '../../types';
+import type {
+  Hairstylist,
+  Service,
+  HairstylistSkill,
+  HairstylistAvailability,
+  HairstylistCommission,
+  HairstylistBreak,
+  HairstylistTimeOff,
+} from '../../types';
 
 interface HairstylistDetailPageProps {
   hairstylist: Hairstylist;
@@ -14,61 +32,70 @@ interface HairstylistDetailPageProps {
   onDelete: () => void;
 }
 
-const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({ 
-  hairstylist, 
-  onBack, 
-  onEdit, 
-  onDelete 
+const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
+  hairstylist,
+  onBack,
+  onEdit,
+  onDelete,
 }) => {
-  const { 
-    services, 
-    updateHairstylistServices, 
-    updateHairstylistAvailability, 
+  const {
+    services,
+    updateHairstylistServices,
+    updateHairstylistAvailability,
     updateHairstylistCommissions,
     addHairstylistSkill,
     updateHairstylistSkill,
     deleteHairstylistSkill,
     getHairstylistPerformance,
-    t 
+    t,
   } = useSettings();
-  
-  const [activeTab, setActiveTab] = useState<'services' | 'schedule' | 'skills' | 'commissions' | 'performance'>('services');
+
+  const [activeTab, setActiveTab] = useState<
+    'services' | 'schedule' | 'skills' | 'commissions' | 'performance'
+  >('services');
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<HairstylistSkill | null>(null);
   const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
-  const [editingBreak, setEditingBreak] = useState<{ dayIndex: number; break: HairstylistBreak } | null>(null);
+  const [editingBreak, setEditingBreak] = useState<{
+    dayIndex: number;
+    break: HairstylistBreak;
+  } | null>(null);
   const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState(false);
   const [editingTimeOff, setEditingTimeOff] = useState<HairstylistTimeOff | null>(null);
   const [isEditingSchedule, setIsEditingSchedule] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [localAvailability, setLocalAvailability] = useState<HairstylistAvailability[]>(hairstylist.availability || []);
+  const [localAvailability, setLocalAvailability] = useState<HairstylistAvailability[]>(
+    hairstylist.availability || []
+  );
 
   // Sync local availability when hairstylist prop changes
   useEffect(() => {
     setLocalAvailability(hairstylist.availability || []);
   }, [hairstylist.availability]);
 
-  const assignedServices = services.filter(service => 
-    hairstylist.serviceIds?.includes(service.id)
-  );
+  const assignedServices = services.filter(service => hairstylist.serviceIds?.includes(service.id));
 
-  const availableServices = services.filter(service => 
-    !hairstylist.serviceIds?.includes(service.id)
+  const availableServices = services.filter(
+    service => !hairstylist.serviceIds?.includes(service.id)
   );
 
   const performance = getHairstylistPerformance(hairstylist.id);
 
   const handleServiceToggle = (serviceId: string, isAssigned: boolean) => {
     const currentServices = hairstylist.serviceIds || [];
-    const newServices = isAssigned 
+    const newServices = isAssigned
       ? currentServices.filter(id => id !== serviceId)
       : [...currentServices, serviceId];
     updateHairstylistServices(hairstylist.id, newServices);
   };
 
-  const handleAvailabilityChange = (dayIndex: number, field: keyof HairstylistAvailability, value: any) => {
+  const handleAvailabilityChange = (
+    dayIndex: number,
+    field: keyof HairstylistAvailability,
+    value: any
+  ) => {
     const newAvailability = [...localAvailability];
-    
+
     // Initialize availability for this day if it doesn't exist
     if (!newAvailability[dayIndex]) {
       newAvailability[dayIndex] = {
@@ -76,12 +103,12 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
         startTime: '09:00',
         endTime: '17:00',
         isAvailable: false,
-        breaks: []
+        breaks: [],
       };
     }
-    
+
     newAvailability[dayIndex] = { ...newAvailability[dayIndex], [field]: value };
-    
+
     // Update local state without saving to context yet
     setLocalAvailability(newAvailability);
     setHasUnsavedChanges(true);
@@ -90,31 +117,28 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
   const handleSaveScheduleChanges = async () => {
     try {
       // Delete existing availability records for this hairstylist
-      await supabase
-        .from('hairstylist_availability')
-        .delete()
-        .eq('hairstylist_id', hairstylist.id);
-      
+      await supabase.from('hairstylist_availability').delete().eq('hairstylist_id', hairstylist.id);
+
       // Insert new availability records
       const availabilityToInsert = localAvailability.map(avail => ({
         hairstylist_id: hairstylist.id,
         day_of_week: avail.dayOfWeek,
         start_time: avail.startTime,
         end_time: avail.endTime,
-        is_available: avail.isAvailable
+        is_available: avail.isAvailable,
       }));
-      
+
       if (availabilityToInsert.length > 0) {
         const { error } = await supabase
           .from('hairstylist_availability')
           .insert(availabilityToInsert);
-        
+
         if (error) throw error;
       }
-      
+
       // Update local context state
       updateHairstylistAvailability(hairstylist.id, localAvailability);
-      
+
       setHasUnsavedChanges(false);
       setIsEditingSchedule(false);
       alert('Schedule changes saved successfully to database!');
@@ -130,7 +154,7 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
     if (newAvailability[dayIndex]) {
       newAvailability[dayIndex] = {
         ...newAvailability[dayIndex],
-        breaks: [...(newAvailability[dayIndex].breaks || []), newBreak]
+        breaks: [...(newAvailability[dayIndex].breaks || []), newBreak],
       };
       setLocalAvailability(newAvailability);
       setHasUnsavedChanges(true);
@@ -142,7 +166,9 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
     if (newAvailability[dayIndex]) {
       newAvailability[dayIndex] = {
         ...newAvailability[dayIndex],
-        breaks: (newAvailability[dayIndex].breaks || []).map(b => b.id === breakItem.id ? breakItem : b)
+        breaks: (newAvailability[dayIndex].breaks || []).map(b =>
+          b.id === breakItem.id ? breakItem : b
+        ),
       };
       setLocalAvailability(newAvailability);
       setHasUnsavedChanges(true);
@@ -154,7 +180,7 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
     if (newAvailability[dayIndex]) {
       newAvailability[dayIndex] = {
         ...newAvailability[dayIndex],
-        breaks: (newAvailability[dayIndex].breaks || []).filter(b => b.id !== breakId)
+        breaks: (newAvailability[dayIndex].breaks || []).filter(b => b.id !== breakId),
       };
       setLocalAvailability(newAvailability);
       setHasUnsavedChanges(true);
@@ -179,19 +205,23 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
     alert('Time off functionality requires database integration. Coming soon!');
   };
 
-  const handleCommissionChange = (serviceId: string, type: 'percentage' | 'fixed', value: number) => {
+  const handleCommissionChange = (
+    serviceId: string,
+    type: 'percentage' | 'fixed',
+    value: number
+  ) => {
     const currentCommissions = hairstylist.commissions || [];
     const existingIndex = currentCommissions.findIndex(c => c.serviceId === serviceId);
-    
+
     const newCommissions = [...currentCommissions];
     const commission = { serviceId, type, value };
-    
+
     if (existingIndex >= 0) {
       newCommissions[existingIndex] = commission;
     } else {
       newCommissions.push(commission);
     }
-    
+
     updateHairstylistCommissions(hairstylist.id, newCommissions);
   };
 
@@ -200,7 +230,12 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const level = formData.get('level') as 'beginner' | 'intermediate' | 'advanced' | 'expert';
-    const category = formData.get('category') as 'cutting' | 'coloring' | 'styling' | 'treatment' | 'other';
+    const category = formData.get('category') as
+      | 'cutting'
+      | 'coloring'
+      | 'styling'
+      | 'treatment'
+      | 'other';
 
     if (name && level && category) {
       if (editingSkill) {
@@ -228,7 +263,11 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
               {hairstylist.photoUrl ? (
-                <img src={hairstylist.photoUrl} alt={hairstylist.name} className="w-full h-full object-cover" />
+                <img
+                  src={hairstylist.photoUrl}
+                  alt={hairstylist.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <UserIcon className="w-8 h-8 text-gray-500 dark:text-gray-400" />
               )}
@@ -295,7 +334,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
               {assignedServices.length > 0 ? (
                 <div className="space-y-3">
                   {assignedServices.map(service => (
-                    <div key={service.id} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div
+                      key={service.id}
+                      className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                    >
                       <div>
                         <p className="font-medium">{service.name}</p>
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -325,7 +367,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
               {availableServices.length > 0 ? (
                 <div className="space-y-3">
                   {availableServices.map(service => (
-                    <div key={service.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                    <div
+                      key={service.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/40 rounded-lg"
+                    >
                       <div>
                         <p className="font-medium">{service.name}</p>
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -376,8 +421,8 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                         onClick={handleSaveScheduleChanges}
                         disabled={!hasUnsavedChanges}
                         className={`px-4 py-2 rounded-lg font-semibold text-white transition-colors ${
-                          hasUnsavedChanges 
-                            ? 'bg-accent hover:opacity-90' 
+                          hasUnsavedChanges
+                            ? 'bg-accent hover:opacity-90'
                             : 'bg-gray-400 cursor-not-allowed'
                         }`}
                       >
@@ -402,15 +447,22 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                 {dayNames.map((dayName, index) => {
                   const availability = localAvailability?.find(a => a.dayOfWeek === index);
                   return (
-                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div
+                      key={index}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-4">
-                          <div className="w-24 font-medium">{t(`team.days.${dayName.toLowerCase()}`)}</div>
+                          <div className="w-24 font-medium">
+                            {t(`team.days.${dayName.toLowerCase()}`)}
+                          </div>
                           <label className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               checked={availability?.isAvailable || false}
-                              onChange={(e) => handleAvailabilityChange(index, 'isAvailable', e.target.checked)}
+                              onChange={e =>
+                                handleAvailabilityChange(index, 'isAvailable', e.target.checked)
+                              }
                               disabled={!isEditingSchedule}
                               className="rounded"
                             />
@@ -420,7 +472,16 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                         {availability?.isAvailable && isEditingSchedule && (
                           <button
                             onClick={() => {
-                              setEditingBreak({ dayIndex: index, break: { id: '', startTime: '12:00', endTime: '13:00', name: 'Lunch Break', isRecurring: true } });
+                              setEditingBreak({
+                                dayIndex: index,
+                                break: {
+                                  id: '',
+                                  startTime: '12:00',
+                                  endTime: '13:00',
+                                  name: 'Lunch Break',
+                                  isRecurring: true,
+                                },
+                              });
                               setIsBreakModalOpen(true);
                             }}
                             className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -429,7 +490,7 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                           </button>
                         )}
                       </div>
-                      
+
                       {availability?.isAvailable && (
                         <>
                           {/* Working Hours */}
@@ -438,7 +499,9 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                             <input
                               type="time"
                               value={availability.startTime}
-                              onChange={(e) => handleAvailabilityChange(index, 'startTime', e.target.value)}
+                              onChange={e =>
+                                handleAvailabilityChange(index, 'startTime', e.target.value)
+                              }
                               disabled={!isEditingSchedule}
                               className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             />
@@ -446,24 +509,33 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                             <input
                               type="time"
                               value={availability.endTime}
-                              onChange={(e) => handleAvailabilityChange(index, 'endTime', e.target.value)}
+                              onChange={e =>
+                                handleAvailabilityChange(index, 'endTime', e.target.value)
+                              }
                               disabled={!isEditingSchedule}
                               className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                           </div>
-                          
+
                           {/* Breaks */}
                           {availability.breaks && availability.breaks.length > 0 && (
                             <div className="mt-3">
                               <h5 className="text-sm font-medium mb-2">Breaks:</h5>
                               <div className="space-y-2">
-                                {availability.breaks.map((breakItem) => (
-                                  <div key={breakItem.id} className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                                {availability.breaks.map(breakItem => (
+                                  <div
+                                    key={breakItem.id}
+                                    className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800"
+                                  >
                                     <div className="flex items-center gap-3">
                                       <span className="text-sm font-medium">{breakItem.name}</span>
-                                      <span className="text-xs text-gray-500">{breakItem.startTime} - {breakItem.endTime}</span>
+                                      <span className="text-xs text-gray-500">
+                                        {breakItem.startTime} - {breakItem.endTime}
+                                      </span>
                                       {breakItem.isRecurring && (
-                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Daily</span>
+                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                          Daily
+                                        </span>
                                       )}
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -471,7 +543,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                                         <>
                                           <button
                                             onClick={() => {
-                                              setEditingBreak({ dayIndex: index, break: breakItem });
+                                              setEditingBreak({
+                                                dayIndex: index,
+                                                break: breakItem,
+                                              });
                                               setIsBreakModalOpen(true);
                                             }}
                                             className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
@@ -515,27 +590,35 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                   Add Time Off
                 </button>
               </div>
-              
+
               {hairstylist.timeOff && hairstylist.timeOff.length > 0 ? (
                 <div className="space-y-3">
-                  {hairstylist.timeOff.map((timeOff) => (
-                    <div key={timeOff.id} className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  {hairstylist.timeOff.map(timeOff => (
+                    <div
+                      key={timeOff.id}
+                      className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+                    >
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                           <h4 className="font-medium">{timeOff.reason}</h4>
                           {timeOff.isFullDay ? (
-                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Full Day</span>
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                              Full Day
+                            </span>
                           ) : (
-                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Partial Day</span>
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                              Partial Day
+                            </span>
                           )}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {timeOff.startDate === timeOff.endDate 
+                          {timeOff.startDate === timeOff.endDate
                             ? new Date(timeOff.startDate).toLocaleDateString()
-                            : `${new Date(timeOff.startDate).toLocaleDateString()} - ${new Date(timeOff.endDate).toLocaleDateString()}`
-                          }
+                            : `${new Date(timeOff.startDate).toLocaleDateString()} - ${new Date(timeOff.endDate).toLocaleDateString()}`}
                           {!timeOff.isFullDay && timeOff.startTime && timeOff.endTime && (
-                            <span className="ml-2">({timeOff.startTime} - {timeOff.endTime})</span>
+                            <span className="ml-2">
+                              ({timeOff.startTime} - {timeOff.endTime})
+                            </span>
                           )}
                         </div>
                       </div>
@@ -584,16 +667,24 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
             {hairstylist.skills && hairstylist.skills.length > 0 ? (
               <div className="grid gap-3">
                 {hairstylist.skills.map(skill => (
-                  <div key={skill.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                  <div
+                    key={skill.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg"
+                  >
                     <div>
                       <div className="flex items-center gap-3">
                         <h4 className="font-medium">{skill.name}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          skill.level === 'expert' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-                          skill.level === 'advanced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                          skill.level === 'intermediate' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            skill.level === 'expert'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                              : skill.level === 'advanced'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                : skill.level === 'intermediate'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                          }`}
+                        >
                           {t(`team.skillLevels.${skill.level}`)}
                         </span>
                       </div>
@@ -635,7 +726,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
               {assignedServices.map(service => {
                 const commission = hairstylist.commissions?.find(c => c.serviceId === service.id);
                 return (
-                  <div key={service.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                  <div
+                    key={service.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg"
+                  >
                     <div>
                       <p className="font-medium">{service.name}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">${service.price}</p>
@@ -643,7 +737,13 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                     <div className="flex items-center gap-3">
                       <select
                         value={commission?.type || 'percentage'}
-                        onChange={(e) => handleCommissionChange(service.id, e.target.value as 'percentage' | 'fixed', commission?.value || 0)}
+                        onChange={e =>
+                          handleCommissionChange(
+                            service.id,
+                            e.target.value as 'percentage' | 'fixed',
+                            commission?.value || 0
+                          )
+                        }
                         className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded"
                       >
                         <option value="percentage">{t('team.percentage')}</option>
@@ -655,7 +755,13 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                         max={commission?.type === 'percentage' ? 100 : undefined}
                         step={commission?.type === 'percentage' ? 1 : 0.01}
                         value={commission?.value || 0}
-                        onChange={(e) => handleCommissionChange(service.id, commission?.type || 'percentage', parseFloat(e.target.value) || 0)}
+                        onChange={e =>
+                          handleCommissionChange(
+                            service.id,
+                            commission?.type || 'percentage',
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
                         className="w-20 px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded"
                       />
                       <span className="text-sm text-gray-500">
@@ -679,7 +785,9 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                     <div className="flex items-center gap-3">
                       <DollarSignIcon className="w-8 h-8 text-green-500" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('team.totalRevenue')}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {t('team.totalRevenue')}
+                        </p>
                         <p className="text-xl font-bold">${performance.totalRevenue.toFixed(2)}</p>
                       </div>
                     </div>
@@ -688,7 +796,9 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                     <div className="flex items-center gap-3">
                       <ClipboardListIcon className="w-8 h-8 text-blue-500" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('team.totalAppointments')}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {t('team.totalAppointments')}
+                        </p>
                         <p className="text-xl font-bold">{performance.totalAppointments}</p>
                       </div>
                     </div>
@@ -697,7 +807,9 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                     <div className="flex items-center gap-3">
                       <StarIcon className="w-8 h-8 text-yellow-500" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('team.averageRating')}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {t('team.averageRating')}
+                        </p>
                         <p className="text-xl font-bold">{performance.averageRating.toFixed(1)}</p>
                       </div>
                     </div>
@@ -706,8 +818,12 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                     <div className="flex items-center gap-3">
                       <DollarSignIcon className="w-8 h-8 text-purple-500" />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('team.totalCommission')}</p>
-                        <p className="text-xl font-bold">${performance.totalCommission.toFixed(2)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {t('team.totalCommission')}
+                        </p>
+                        <p className="text-xl font-bold">
+                          ${performance.totalCommission.toFixed(2)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -718,7 +834,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                   {performance.topServices.length > 0 ? (
                     <div className="space-y-3">
                       {performance.topServices.map((serviceData, index) => (
-                        <div key={serviceData.serviceId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                        <div
+                          key={serviceData.serviceId}
+                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/40 rounded-lg"
+                        >
                           <div className="flex items-center gap-3">
                             <span className="w-6 h-6 bg-accent text-white rounded-full flex items-center justify-center text-sm font-bold">
                               {index + 1}
@@ -735,15 +854,21 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 dark:text-gray-400">{t('team.noPerformanceData')}</p>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {t('team.noPerformanceData')}
+                    </p>
                   )}
                 </div>
               </>
             ) : (
               <div className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50 text-center">
                 <BarChartIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">{t('team.noPerformanceData')}</p>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">{t('team.performanceWillAppear')}</p>
+                <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  {t('team.noPerformanceData')}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  {t('team.performanceWillAppear')}
+                </p>
               </div>
             )}
           </div>
@@ -754,11 +879,11 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
       {isSkillModalOpen && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
-            <button 
+            <button
               onClick={() => {
                 setIsSkillModalOpen(false);
                 setEditingSkill(null);
-              }} 
+              }}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
             >
               <CloseIcon className="w-6 h-6" />
@@ -768,7 +893,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
             </h2>
             <form onSubmit={handleAddSkill} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   {t('team.skillName')}
                 </label>
                 <input
@@ -781,7 +909,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                 />
               </div>
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="category"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   {t('team.category')}
                 </label>
                 <select
@@ -799,7 +930,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                 </select>
               </div>
               <div>
-                <label htmlFor="level" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="level"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   {t('team.skillLevel')}
                 </label>
                 <select
@@ -842,11 +976,11 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
       {isBreakModalOpen && editingBreak && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
-            <button 
+            <button
               onClick={() => {
                 setIsBreakModalOpen(false);
                 setEditingBreak(null);
-              }} 
+              }}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
             >
               <CloseIcon className="w-6 h-6" />
@@ -854,35 +988,41 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
               {editingBreak.break.id ? 'Edit Break' : 'Add Break'}
             </h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const name = formData.get('name') as string;
-              const startTime = formData.get('startTime') as string;
-              const endTime = formData.get('endTime') as string;
-              const isRecurring = formData.get('isRecurring') === 'on';
-              
-              if (editingBreak.break.id) {
-                handleEditBreak(editingBreak.dayIndex, {
-                  ...editingBreak.break,
-                  name,
-                  startTime,
-                  endTime,
-                  isRecurring
-                });
-              } else {
-                handleAddBreak(editingBreak.dayIndex, {
-                  name,
-                  startTime,
-                  endTime,
-                  isRecurring
-                });
-              }
-              setIsBreakModalOpen(false);
-              setEditingBreak(null);
-            }} className="space-y-4">
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const name = formData.get('name') as string;
+                const startTime = formData.get('startTime') as string;
+                const endTime = formData.get('endTime') as string;
+                const isRecurring = formData.get('isRecurring') === 'on';
+
+                if (editingBreak.break.id) {
+                  handleEditBreak(editingBreak.dayIndex, {
+                    ...editingBreak.break,
+                    name,
+                    startTime,
+                    endTime,
+                    isRecurring,
+                  });
+                } else {
+                  handleAddBreak(editingBreak.dayIndex, {
+                    name,
+                    startTime,
+                    endTime,
+                    isRecurring,
+                  });
+                }
+                setIsBreakModalOpen(false);
+                setEditingBreak(null);
+              }}
+              className="space-y-4"
+            >
               <div>
-                <label htmlFor="breakName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="breakName"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Break Name
                 </label>
                 <input
@@ -897,7 +1037,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="startTime"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Start Time
                   </label>
                   <input
@@ -910,7 +1053,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                   />
                 </div>
                 <div>
-                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="endTime"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     End Time
                   </label>
                   <input
@@ -963,11 +1109,11 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
       {isTimeOffModalOpen && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative animate-fade-in">
-            <button 
+            <button
               onClick={() => {
                 setIsTimeOffModalOpen(false);
                 setEditingTimeOff(null);
-              }} 
+              }}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
             >
               <CloseIcon className="w-6 h-6" />
@@ -975,35 +1121,41 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
               {editingTimeOff ? 'Edit Time Off' : 'Add Time Off'}
             </h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const reason = formData.get('reason') as string;
-              const startDate = formData.get('startDate') as string;
-              const endDate = formData.get('endDate') as string;
-              const isFullDay = formData.get('isFullDay') === 'on';
-              const startTime = formData.get('startTime') as string;
-              const endTime = formData.get('endTime') as string;
-              
-              const timeOffData = {
-                reason,
-                startDate,
-                endDate,
-                isFullDay,
-                startTime: !isFullDay ? startTime : undefined,
-                endTime: !isFullDay ? endTime : undefined
-              };
-              
-              if (editingTimeOff) {
-                handleEditTimeOff({ ...editingTimeOff, ...timeOffData });
-              } else {
-                handleAddTimeOff(timeOffData);
-              }
-              setIsTimeOffModalOpen(false);
-              setEditingTimeOff(null);
-            }} className="space-y-4">
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const reason = formData.get('reason') as string;
+                const startDate = formData.get('startDate') as string;
+                const endDate = formData.get('endDate') as string;
+                const isFullDay = formData.get('isFullDay') === 'on';
+                const startTime = formData.get('startTime') as string;
+                const endTime = formData.get('endTime') as string;
+
+                const timeOffData = {
+                  reason,
+                  startDate,
+                  endDate,
+                  isFullDay,
+                  startTime: !isFullDay ? startTime : undefined,
+                  endTime: !isFullDay ? endTime : undefined,
+                };
+
+                if (editingTimeOff) {
+                  handleEditTimeOff({ ...editingTimeOff, ...timeOffData });
+                } else {
+                  handleAddTimeOff(timeOffData);
+                }
+                setIsTimeOffModalOpen(false);
+                setEditingTimeOff(null);
+              }}
+              className="space-y-4"
+            >
               <div>
-                <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="reason"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Reason
                 </label>
                 <input
@@ -1018,7 +1170,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="startDate"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Start Date
                   </label>
                   <input
@@ -1031,7 +1186,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                   />
                 </div>
                 <div>
-                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="endDate"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     End Date
                   </label>
                   <input
@@ -1051,8 +1209,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                     name="isFullDay"
                     defaultChecked={editingTimeOff?.isFullDay !== false}
                     className="rounded"
-                    onChange={(e) => {
-                      const timeInputs = document.querySelectorAll('[name="startTime"], [name="endTime"]') as NodeListOf<HTMLInputElement>;
+                    onChange={e => {
+                      const timeInputs = document.querySelectorAll(
+                        '[name="startTime"], [name="endTime"]'
+                      ) as NodeListOf<HTMLInputElement>;
                       timeInputs.forEach(input => {
                         input.disabled = e.target.checked;
                         if (e.target.checked) input.value = '';
@@ -1066,7 +1226,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="startTime"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Start Time (if partial day)
                   </label>
                   <input
@@ -1079,7 +1242,10 @@ const HairstylistDetailPage: React.FC<HairstylistDetailPageProps> = ({
                   />
                 </div>
                 <div>
-                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="endTime"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     End Time (if partial day)
                   </label>
                   <input

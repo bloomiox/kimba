@@ -39,7 +39,7 @@ const SidebarDragTest: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Current view: <span className="font-semibold text-accent">{activeView}</span>
             </p>
-            
+
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -91,11 +91,12 @@ const SidebarDragTest: React.FC = () => {
                 </ol>
                 <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-800 rounded">
                   <p className="text-xs text-blue-800 dark:text-blue-200">
-                    <strong>Not working?</strong> Try the SimpleDragTest component to isolate the issue.
+                    <strong>Not working?</strong> Try the SimpleDragTest component to isolate the
+                    issue.
                   </p>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
                   🔍 Debug Information
@@ -107,7 +108,7 @@ const SidebarDragTest: React.FC = () => {
                   <p>• Dragged items should become semi-transparent</p>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
                   ⚠️ Troubleshooting
@@ -118,12 +119,12 @@ const SidebarDragTest: React.FC = () => {
                   <p>• If no drag handles: Refresh the page and try again</p>
                   <p>• Try different browsers if issues persist</p>
                 </div>
-                
+
                 <div className="mt-3 p-3 bg-yellow-100 dark:bg-yellow-800 rounded">
                   <p className="text-xs font-semibold mb-2">Quick Inline Test:</p>
-                  <div 
+                  <div
                     draggable={true}
-                    onDragStart={(e) => {
+                    onDragStart={e => {
                       console.log('✅ Inline drag test works!');
                       e.dataTransfer.setData('text/plain', 'test');
                     }}
@@ -135,7 +136,7 @@ const SidebarDragTest: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                 <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
                   ✅ Expected Behavior

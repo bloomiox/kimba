@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
 import React, { useState } from 'react';
-import { DollarSignIcon, ClockIcon, UploadIcon, UserPlusIcon, ChartIcon, UsersIcon, CalendarIcon, DesignStudioIcon, PlusIcon } from '../common/Icons';
+import {
+  DollarSignIcon,
+  ClockIcon,
+  UploadIcon,
+  UserPlusIcon,
+  ChartIcon,
+  UsersIcon,
+  CalendarIcon,
+  DesignStudioIcon,
+  PlusIcon,
+} from '../common/Icons';
 import type { WidgetLibraryItem, WidgetType } from '../../types';
 
 const WIDGET_LIBRARY: WidgetLibraryItem[] = [
   {
     type: 'today-revenue',
-    name: 'Today\'s Revenue',
+    name: "Today's Revenue",
     description: 'Revenue generated from completed sales today',
     icon: DollarSignIcon,
     category: 'revenue',
     defaultSize: { width: 3, height: 1 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'monthly-revenue',
@@ -20,7 +30,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: DollarSignIcon,
     category: 'revenue',
     defaultSize: { width: 3, height: 1 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'weekly-revenue',
@@ -29,7 +39,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: ChartIcon,
     category: 'revenue',
     defaultSize: { width: 3, height: 1 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'average-sale',
@@ -38,7 +48,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: DollarSignIcon,
     category: 'revenue',
     defaultSize: { width: 3, height: 1 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'average-price-trend',
@@ -47,16 +57,16 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: ChartIcon,
     category: 'analytics',
     defaultSize: { width: 6, height: 2 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'today-appointments',
-    name: 'Today\'s Appointments',
+    name: "Today's Appointments",
     description: 'Number of appointments scheduled for today',
     icon: CalendarIcon,
     category: 'appointments',
     defaultSize: { width: 3, height: 1 },
-    configurable: false
+    configurable: false,
   },
   {
     type: 'pending-appointments',
@@ -65,7 +75,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: ClockIcon,
     category: 'appointments',
     defaultSize: { width: 3, height: 1 },
-    configurable: false
+    configurable: false,
   },
   {
     type: 'total-clients',
@@ -74,7 +84,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: UsersIcon,
     category: 'clients',
     defaultSize: { width: 3, height: 1 },
-    configurable: false
+    configurable: false,
   },
   {
     type: 'active-hairstylists',
@@ -83,7 +93,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: UserPlusIcon,
     category: 'clients',
     defaultSize: { width: 3, height: 1 },
-    configurable: false
+    configurable: false,
   },
   {
     type: 'ai-generations',
@@ -92,7 +102,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: UploadIcon,
     category: 'analytics',
     defaultSize: { width: 3, height: 1 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'revenue-chart',
@@ -101,7 +111,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: ChartIcon,
     category: 'analytics',
     defaultSize: { width: 8, height: 3 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'recent-bookings',
@@ -110,7 +120,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: CalendarIcon,
     category: 'appointments',
     defaultSize: { width: 4, height: 3 },
-    configurable: true
+    configurable: true,
   },
   {
     type: 'sticky-notes',
@@ -119,7 +129,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: ClockIcon,
     category: 'tools',
     defaultSize: { width: 4, height: 3 },
-    configurable: false
+    configurable: false,
   },
   {
     type: 'quick-actions',
@@ -128,7 +138,7 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: DesignStudioIcon,
     category: 'tools',
     defaultSize: { width: 4, height: 2 },
-    configurable: false
+    configurable: false,
   },
   {
     type: 'recent-lookbooks',
@@ -137,8 +147,8 @@ const WIDGET_LIBRARY: WidgetLibraryItem[] = [
     icon: DesignStudioIcon,
     category: 'analytics',
     defaultSize: { width: 8, height: 3 },
-    configurable: true
-  }
+    configurable: true,
+  },
 ];
 
 interface WidgetLibraryProps {
@@ -148,18 +158,24 @@ interface WidgetLibraryProps {
   usedWidgets: WidgetType[];
 }
 
-const WidgetLibrary: React.FC<WidgetLibraryProps> = ({ isOpen, onClose, onAddWidget, usedWidgets }) => {
+const WidgetLibrary: React.FC<WidgetLibraryProps> = ({
+  isOpen,
+  onClose,
+  onAddWidget,
+  usedWidgets,
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   if (!isOpen) return null;
 
   const categories = ['all', 'revenue', 'appointments', 'clients', 'analytics', 'tools'];
-  
+
   const filteredWidgets = WIDGET_LIBRARY.filter(widget => {
     const matchesCategory = selectedCategory === 'all' || widget.category === selectedCategory;
-    const matchesSearch = widget.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         widget.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      widget.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      widget.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -175,14 +191,26 @@ const WidgetLibrary: React.FC<WidgetLibraryProps> = ({ isOpen, onClose, onAddWid
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Widget Library</h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Choose widgets to add to your dashboard</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Choose widgets to add to your dashboard
+            </p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
           >
-            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -195,7 +223,7 @@ const WidgetLibrary: React.FC<WidgetLibraryProps> = ({ isOpen, onClose, onAddWid
                 type="text"
                 placeholder="Search widgets..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500"
               />
             </div>
@@ -223,38 +251,44 @@ const WidgetLibrary: React.FC<WidgetLibraryProps> = ({ isOpen, onClose, onAddWid
             {filteredWidgets.map(widget => {
               const Icon = widget.icon;
               const isUsed = usedWidgets.includes(widget.type);
-              
+
               return (
                 <div
                   key={widget.type}
                   className={`p-4 border rounded-xl transition-all ${
-                    isUsed 
+                    isUsed
                       ? 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 opacity-60'
                       : 'border-gray-200 dark:border-gray-600 hover:border-accent hover:shadow-md cursor-pointer'
                   }`}
                   onClick={() => !isUsed && handleAddWidget(widget.type)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isUsed 
-                        ? 'bg-gray-200 dark:bg-gray-600'
-                        : 'bg-accent/10 dark:bg-accent/20'
-                    }`}>
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isUsed ? 'bg-gray-200 dark:bg-gray-600' : 'bg-accent/10 dark:bg-accent/20'
+                      }`}
+                    >
                       <Icon className={`w-5 h-5 ${isUsed ? 'text-gray-400' : 'text-accent'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className={`font-semibold ${isUsed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                      <h4
+                        className={`font-semibold ${isUsed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}
+                      >
                         {widget.name}
                       </h4>
-                      <p className={`text-sm mt-1 ${isUsed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <p
+                        className={`text-sm mt-1 ${isUsed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
+                      >
                         {widget.description}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          isUsed 
-                            ? 'bg-gray-200 dark:bg-gray-600 text-gray-500'
-                            : 'bg-accent/10 text-accent'
-                        }`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isUsed
+                              ? 'bg-gray-200 dark:bg-gray-600 text-gray-500'
+                              : 'bg-accent/10 text-accent'
+                          }`}
+                        >
                           {widget.category}
                         </span>
                         <span className={`text-xs ${isUsed ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -265,18 +299,18 @@ const WidgetLibrary: React.FC<WidgetLibraryProps> = ({ isOpen, onClose, onAddWid
                     {!isUsed && (
                       <PlusIcon className="w-5 h-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                     )}
-                    {isUsed && (
-                      <span className="text-xs text-gray-400 font-medium">Added</span>
-                    )}
+                    {isUsed && <span className="text-xs text-gray-400 font-medium">Added</span>}
                   </div>
                 </div>
               );
             })}
           </div>
-          
+
           {filteredWidgets.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-gray-400">No widgets found matching your criteria</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                No widgets found matching your criteria
+              </p>
             </div>
           )}
         </div>

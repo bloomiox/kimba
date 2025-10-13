@@ -8,9 +8,17 @@ interface KPICardProps {
   colorClass?: string;
 }
 
-const KPICard: React.FC<KPICardProps> = ({ icon: Icon, title, value, subtitle, colorClass = 'accent' }) => (
+const KPICard: React.FC<KPICardProps> = ({
+  icon: Icon,
+  title,
+  value,
+  subtitle,
+  colorClass = 'accent',
+}) => (
   <div className="bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50 flex items-start gap-4">
-    <div className={`w-12 h-12 bg-${colorClass}/10 dark:bg-${colorClass}/20 rounded-xl flex items-center justify-center flex-shrink-0`}>
+    <div
+      className={`w-12 h-12 bg-${colorClass}/10 dark:bg-${colorClass}/20 rounded-xl flex items-center justify-center flex-shrink-0`}
+    >
       <Icon className={`w-6 h-6 text-${colorClass}`} />
     </div>
     <div>

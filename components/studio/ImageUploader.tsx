@@ -20,7 +20,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const base64 = e.target?.result as string;
         onImageReady(base64, file.type);
       };
@@ -56,12 +56,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
       }
     }
   };
-  
+
   // Effect to handle the alignment timer
   useEffect(() => {
     if (isCameraOn) {
-        const timer = setTimeout(() => setIsAligned(true), 1500);
-        return () => clearTimeout(timer);
+      const timer = setTimeout(() => setIsAligned(true), 1500);
+      return () => clearTimeout(timer);
     }
   }, [isCameraOn]);
 
@@ -73,7 +73,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
     let stream: MediaStream | null = null;
     const enableStream = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: 'user' } });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720, facingMode: 'user' },
+        });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -96,18 +98,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
     };
   }, [isCameraOn, t]);
 
-
   return (
     <div className="p-8 flex flex-col items-center justify-center">
       {salonLogo ? (
-        <img src={salonLogo} alt={`${salonName} Logo`} className="w-20 h-20 rounded-2xl object-cover mb-4 shadow-md"/>
+        <img
+          src={salonLogo}
+          alt={`${salonName} Logo`}
+          className="w-20 h-20 rounded-2xl object-cover mb-4 shadow-md"
+        />
       ) : (
         <LogoIcon className="w-20 h-20 text-accent mb-4" />
       )}
-      <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">{salonName}</h2>
-      <p className="text-gray-500 dark:text-gray-400 mb-8 text-center max-w-md">
-        {welcomeMessage}
-      </p>
+      <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+        {salonName}
+      </h2>
+      <p className="text-gray-500 dark:text-gray-400 mb-8 text-center max-w-md">{welcomeMessage}</p>
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -119,8 +124,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
               className="group flex flex-col items-center justify-center p-8 bg-gray-100/50 dark:bg-gray-700/50 hover:bg-accent/10 dark:hover:bg-accent/30 border-2 border-dashed border-gray-400 dark:border-gray-600 hover:border-accent rounded-xl transition-all duration-300"
             >
               <UploadIcon className="w-12 h-12 text-gray-400 dark:text-gray-400 group-hover:text-accent dark:group-hover:text-accent mb-4 transition-colors" />
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">{t('studio.imageUploader.uploadTitle')}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">{t('studio.imageUploader.uploadSubtitle')}</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t('studio.imageUploader.uploadTitle')}
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {t('studio.imageUploader.uploadSubtitle')}
+              </span>
             </button>
             <input
               type="file"
@@ -134,35 +143,54 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
               className="group flex flex-col items-center justify-center p-8 bg-gray-100/50 dark:bg-gray-700/50 hover:bg-accent/10 dark:hover:bg-accent/30 border-2 border-dashed border-gray-400 dark:border-gray-600 hover:border-accent rounded-xl transition-all duration-300"
             >
               <CameraIcon className="w-12 h-12 text-gray-400 dark:text-gray-400 group-hover:text-accent dark:group-hover:text-accent mb-4 transition-colors" />
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">{t('studio.imageUploader.cameraTitle')}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">{t('studio.imageUploader.cameraSubtitle')}</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t('studio.imageUploader.cameraTitle')}
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {t('studio.imageUploader.cameraSubtitle')}
+              </span>
             </button>
           </div>
           <div className="mt-6 text-center">
             <div className="inline-flex items-center justify-center w-full">
               <hr className="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
-              <span className="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white/0 left-1/2 dark:text-white dark:bg-gray-800/0 backdrop-blur-sm">{t('common.or')}</span>
+              <span className="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white/0 left-1/2 dark:text-white dark:bg-gray-800/0 backdrop-blur-sm">
+                {t('common.or')}
+              </span>
             </div>
             <button
-                onClick={onEnterMagicTryOn}
-                className="group flex w-full items-center justify-center gap-4 p-6 bg-accent/10 dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/30 border-2 border-accent rounded-xl transition-all duration-300 shadow-lg hover:shadow-accent/40"
+              onClick={onEnterMagicTryOn}
+              className="group flex w-full items-center justify-center gap-4 p-6 bg-accent/10 dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/30 border-2 border-accent rounded-xl transition-all duration-300 shadow-lg hover:shadow-accent/40"
             >
-                <CameraIcon className="w-12 h-12 text-accent"/>
-                <div className="text-left">
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white">{t('studio.imageUploader.magicTryOnTitle')}</span>
-                    <span className="block text-sm text-gray-500 dark:text-gray-400">{t('studio.imageUploader.magicTryOnSubtitle')}</span>
-                </div>
+              <CameraIcon className="w-12 h-12 text-accent" />
+              <div className="text-left">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {t('studio.imageUploader.magicTryOnTitle')}
+                </span>
+                <span className="block text-sm text-gray-500 dark:text-gray-400">
+                  {t('studio.imageUploader.magicTryOnSubtitle')}
+                </span>
+              </div>
             </button>
           </div>
         </div>
       ) : (
         <div className="w-full max-w-2xl flex flex-col items-center">
           <div className="w-full aspect-video bg-gray-200 dark:bg-gray-900 rounded-lg overflow-hidden mb-4 border border-gray-300 dark:border-gray-700 relative">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover -scale-x-100"></video>
-            
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover -scale-x-100"
+            ></video>
+
             {/* Face Outline Overlay */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <svg className="w-full h-full" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet">
+              <svg
+                className="w-full h-full"
+                viewBox="0 0 160 90"
+                preserveAspectRatio="xMidYMid meet"
+              >
                 <path
                   d="M 80,18 C 68,18 58,28 58,42 C 58,56 68,66 80,66 C 92,66 102,56 102,42 C 102,28 92,18 80,18 Z M 52,80 C 52,68 108,68 108,80 L 108,85 L 52,85 Z"
                   fill="none"
@@ -173,8 +201,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEnterMagi
                 />
               </svg>
             </div>
-            
-            <p className={`absolute bottom-3 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-md transition-opacity duration-500 ${isAligned ? 'opacity-0' : 'opacity-100'}`}>
+
+            <p
+              className={`absolute bottom-3 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-md transition-opacity duration-500 ${isAligned ? 'opacity-0' : 'opacity-100'}`}
+            >
               {t('studio.imageUploader.alignFace')}
             </p>
           </div>

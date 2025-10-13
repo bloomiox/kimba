@@ -29,13 +29,23 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
 
               <div className="relative flex flex-col items-center">
                 {/* Step circle */}
-                <span className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300 ${isCompleted ? 'bg-accent' : isCurrent ? 'border-2 border-accent bg-white dark:bg-gray-800' : 'border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                  }`}>
+                <span
+                  className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300 ${
+                    isCompleted
+                      ? 'bg-accent'
+                      : isCurrent
+                        ? 'border-2 border-accent bg-white dark:bg-gray-800'
+                        : 'border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                  }`}
+                >
                   {isCompleted ? (
                     <CheckCircleIcon className="h-5 w-5 text-white" />
                   ) : (
-                    <span className={`text-sm font-semibold ${isCurrent ? 'text-accent' : 'text-gray-500 dark:text-gray-400'
-                      }`}>
+                    <span
+                      className={`text-sm font-semibold ${
+                        isCurrent ? 'text-accent' : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
                       {stepNumber}
                     </span>
                   )}
@@ -43,7 +53,9 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
 
                 {/* Step text below circle */}
                 <span className="mt-2 text-center">
-                  <span className={`text-xs font-medium tracking-wide ${isCurrent || isCompleted ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <span
+                    className={`text-xs font-medium tracking-wide ${isCurrent || isCompleted ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}
+                  >
                     {step}
                   </span>
                 </span>

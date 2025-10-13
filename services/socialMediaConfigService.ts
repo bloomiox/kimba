@@ -19,19 +19,19 @@ class SocialMediaConfigService {
       instagram: {
         clientId: import.meta.env.VITE_FACEBOOK_APP_ID || '',
         clientSecret: import.meta.env.VITE_FACEBOOK_APP_SECRET || '',
-        redirectUri: `${window.location.origin}/auth/instagram/callback`
+        redirectUri: `${window.location.origin}/auth/instagram/callback`,
       },
       facebook: {
         clientId: import.meta.env.VITE_FACEBOOK_APP_ID || '',
         clientSecret: import.meta.env.VITE_FACEBOOK_APP_SECRET || '',
-        redirectUri: `${window.location.origin}/auth/facebook/callback`
+        redirectUri: `${window.location.origin}/auth/facebook/callback`,
       },
       tiktok: {
         clientId: import.meta.env.VITE_TIKTOK_CLIENT_KEY || '',
         clientSecret: import.meta.env.VITE_TIKTOK_CLIENT_SECRET || '',
-        redirectUri: `${window.location.origin}/auth/tiktok/callback`
+        redirectUri: `${window.location.origin}/auth/tiktok/callback`,
       },
-      webhookSecret: import.meta.env.VITE_SOCIAL_WEBHOOK_SECRET
+      webhookSecret: import.meta.env.VITE_SOCIAL_WEBHOOK_SECRET,
     };
   }
 
@@ -54,8 +54,9 @@ class SocialMediaConfigService {
    * Get all configured platforms
    */
   getConfiguredPlatforms(): string[] {
-    return (['instagram', 'facebook', 'tiktok'] as const)
-      .filter(platform => this.isPlatformConfigured(platform));
+    return (['instagram', 'facebook', 'tiktok'] as const).filter(platform =>
+      this.isPlatformConfigured(platform)
+    );
   }
 
   /**
@@ -68,21 +69,21 @@ class SocialMediaConfigService {
           auth: 'https://www.facebook.com/v18.0/dialog/oauth',
           token: 'https://graph.facebook.com/v18.0/oauth/access_token',
           api: 'https://graph.facebook.com/v18.0',
-          revoke: 'https://graph.facebook.com/v18.0/me/permissions'
+          revoke: 'https://graph.facebook.com/v18.0/me/permissions',
         };
       case 'facebook':
         return {
           auth: 'https://www.facebook.com/v18.0/dialog/oauth',
           token: 'https://graph.facebook.com/v18.0/oauth/access_token',
           api: 'https://graph.facebook.com/v18.0',
-          revoke: 'https://graph.facebook.com/v18.0/me/permissions'
+          revoke: 'https://graph.facebook.com/v18.0/me/permissions',
         };
       case 'tiktok':
         return {
           auth: 'https://www.tiktok.com/v2/auth/authorize/',
           token: 'https://open-api.tiktok.com/oauth/access_token/',
           api: 'https://open-api.tiktok.com',
-          revoke: null // TikTok doesn't have a revoke endpoint
+          revoke: null, // TikTok doesn't have a revoke endpoint
         };
       default:
         throw new Error(`Unsupported platform: ${platform}`);
@@ -99,21 +100,17 @@ class SocialMediaConfigService {
           'instagram_basic',
           'instagram_content_publish',
           'pages_show_list',
-          'pages_read_engagement'
+          'pages_read_engagement',
         ];
       case 'facebook':
         return [
           'pages_manage_posts',
           'pages_read_engagement',
           'pages_show_list',
-          'publish_to_groups'
+          'publish_to_groups',
         ];
       case 'tiktok':
-        return [
-          'video.list',
-          'video.upload',
-          'user.info.basic'
-        ];
+        return ['video.list', 'video.upload', 'user.info.basic'];
       default:
         return [];
     }
@@ -128,58 +125,58 @@ class SocialMediaConfigService {
         return {
           supportedFormats: {
             images: ['jpg', 'jpeg', 'png'],
-            videos: ['mp4', 'mov']
+            videos: ['mp4', 'mov'],
           },
           limits: {
             captionLength: 2200,
             hashtags: 30,
             imagesPerPost: 10,
             videoLength: 60, // seconds
-            fileSize: 100 // MB
+            fileSize: 100, // MB
           },
           requirements: {
             minImageSize: { width: 320, height: 320 },
             maxImageSize: { width: 1080, height: 1080 },
-            aspectRatios: ['1:1', '4:5', '16:9']
-          }
+            aspectRatios: ['1:1', '4:5', '16:9'],
+          },
         };
       case 'facebook':
         return {
           supportedFormats: {
             images: ['jpg', 'jpeg', 'png', 'gif'],
-            videos: ['mp4', 'mov', 'avi']
+            videos: ['mp4', 'mov', 'avi'],
           },
           limits: {
             captionLength: 63206,
             hashtags: 20,
             imagesPerPost: 10,
             videoLength: 240, // seconds
-            fileSize: 4000 // MB
+            fileSize: 4000, // MB
           },
           requirements: {
             minImageSize: { width: 600, height: 315 },
             maxImageSize: { width: 1200, height: 630 },
-            aspectRatios: ['16:9', '1:1', '4:5']
-          }
+            aspectRatios: ['16:9', '1:1', '4:5'],
+          },
         };
       case 'tiktok':
         return {
           supportedFormats: {
             images: [], // TikTok is video-only
-            videos: ['mp4', 'mov', 'webm']
+            videos: ['mp4', 'mov', 'webm'],
           },
           limits: {
             captionLength: 300,
             hashtags: 100,
             imagesPerPost: 0,
             videoLength: 60, // seconds
-            fileSize: 500 // MB
+            fileSize: 500, // MB
           },
           requirements: {
             minVideoSize: { width: 540, height: 960 },
             maxVideoSize: { width: 1080, height: 1920 },
-            aspectRatios: ['9:16'] // Vertical only
-          }
+            aspectRatios: ['9:16'], // Vertical only
+          },
         };
       default:
         throw new Error(`Unsupported platform: ${platform}`);
@@ -200,32 +197,42 @@ class SocialMediaConfigService {
     // Check if at least one platform is configured
     const configuredPlatforms = this.getConfiguredPlatforms();
     if (configuredPlatforms.length === 0) {
-      errors.push('No social media platforms are configured. Please add API credentials to your environment variables.');
+      errors.push(
+        'No social media platforms are configured. Please add API credentials to your environment variables.'
+      );
     }
 
     // Check individual platform configurations
     if (!this.isPlatformConfigured('instagram')) {
-      warnings.push('Instagram not configured: Missing VITE_FACEBOOK_APP_ID or VITE_FACEBOOK_APP_SECRET');
+      warnings.push(
+        'Instagram not configured: Missing VITE_FACEBOOK_APP_ID or VITE_FACEBOOK_APP_SECRET'
+      );
     }
 
     if (!this.isPlatformConfigured('facebook')) {
-      warnings.push('Facebook not configured: Missing VITE_FACEBOOK_APP_ID or VITE_FACEBOOK_APP_SECRET');
+      warnings.push(
+        'Facebook not configured: Missing VITE_FACEBOOK_APP_ID or VITE_FACEBOOK_APP_SECRET'
+      );
     }
 
     if (!this.isPlatformConfigured('tiktok')) {
-      warnings.push('TikTok not configured: Missing VITE_TIKTOK_CLIENT_KEY or VITE_TIKTOK_CLIENT_SECRET');
+      warnings.push(
+        'TikTok not configured: Missing VITE_TIKTOK_CLIENT_KEY or VITE_TIKTOK_CLIENT_SECRET'
+      );
     }
 
     // Check redirect URIs
     const currentOrigin = window.location.origin;
     if (currentOrigin.includes('localhost') && import.meta.env.PROD) {
-      warnings.push('Production build detected but using localhost URLs. Update redirect URIs for production.');
+      warnings.push(
+        'Production build detected but using localhost URLs. Update redirect URIs for production.'
+      );
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -250,10 +257,10 @@ class SocialMediaConfigService {
             '3. Add Instagram Basic Display and Instagram API products',
             '4. Configure redirect URI in app settings',
             '5. Get App ID and App Secret from app dashboard',
-            '6. Add credentials to your .env file'
+            '6. Add credentials to your .env file',
           ],
           documentsUrl: 'https://developers.facebook.com/docs/instagram-api',
-          redirectUri: credentials.redirectUri
+          redirectUri: credentials.redirectUri,
         };
       case 'facebook':
         return {
@@ -264,10 +271,10 @@ class SocialMediaConfigService {
             '3. Add Facebook Login and Pages API products',
             '4. Configure redirect URI in app settings',
             '5. Get App ID and App Secret from app dashboard',
-            '6. Add credentials to your .env file'
+            '6. Add credentials to your .env file',
           ],
           documentsUrl: 'https://developers.facebook.com/docs/pages-api',
-          redirectUri: credentials.redirectUri
+          redirectUri: credentials.redirectUri,
         };
       case 'tiktok':
         return {
@@ -278,10 +285,10 @@ class SocialMediaConfigService {
             '3. Apply for Content Posting API access',
             '4. Configure redirect URI in app settings',
             '5. Get Client Key and Client Secret from app dashboard',
-            '6. Add credentials to your .env file'
+            '6. Add credentials to your .env file',
           ],
           documentsUrl: 'https://developers.tiktok.com/doc/content-posting-api-get-started',
-          redirectUri: credentials.redirectUri
+          redirectUri: credentials.redirectUri,
         };
       default:
         throw new Error(`Unsupported platform: ${platform}`);
@@ -297,8 +304,8 @@ class SocialMediaConfigService {
       endpoints: {
         instagram: `${window.location.origin}/api/webhooks/instagram`,
         facebook: `${window.location.origin}/api/webhooks/facebook`,
-        tiktok: `${window.location.origin}/api/webhooks/tiktok`
-      }
+        tiktok: `${window.location.origin}/api/webhooks/tiktok`,
+      },
     };
   }
 

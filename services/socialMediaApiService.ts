@@ -59,10 +59,12 @@ class SocialMediaApiService {
   /**
    * Check if access token is valid and refresh if needed
    */
-  private async ensureValidToken(connection: SocialMediaConnection): Promise<SocialMediaConnection> {
+  private async ensureValidToken(
+    connection: SocialMediaConnection
+  ): Promise<SocialMediaConnection> {
     const now = new Date();
     const expiresIn = connection.expiresAt.getTime() - now.getTime();
-    
+
     // Refresh if expiring within 10 minutes
     if (expiresIn < 600000 && connection.refreshToken) {
       const refreshResult = await socialMediaOAuthService.refreshAccessToken(
@@ -75,9 +77,9 @@ class SocialMediaApiService {
           ...connection,
           accessToken: refreshResult.accessToken!,
           expiresAt: refreshResult.expiresAt!,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
-        
+
         this.connections.set(connection.platform, updatedConnection);
         return updatedConnection;
       }
@@ -98,12 +100,12 @@ class SocialMediaApiService {
 
     for (const platform of post.platforms) {
       const connection = this.getConnection(platform.platform);
-      
+
       if (!connection || !connection.isActive) {
         platformResults.push({
           platform: platform.platform,
           success: false,
-          error: 'Platform not connected or inactive'
+          error: 'Platform not connected or inactive',
         });
         continue;
       }
@@ -111,40 +113,35 @@ class SocialMediaApiService {
       try {
         // Ensure token is valid
         const validConnection = await this.ensureValidToken(connection);
-        
+
         // Validate content for platform
         const validationError = this.validateContent(platform.platform, content);
         if (validationError) {
           platformResults.push({
             platform: platform.platform,
             success: false,
-            error: validationError
+            error: validationError,
           });
           continue;
         }
 
         // Publish to platform
-        const result = await this.publishToPlatform(
-          platform.platform,
-          validConnection,
-          content
-        );
+        const result = await this.publishToPlatform(platform.platform, validConnection, content);
 
         platformResults.push(result);
-
       } catch (error) {
         console.error(`Error publishing to ${platform.platform}:`, error);
         platformResults.push({
           platform: platform.platform,
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
 
     return {
       success: platformResults.some(r => r.success),
-      platformResults
+      platformResults,
     };
   }
 
@@ -173,7 +170,7 @@ class SocialMediaApiService {
         return {
           platform,
           success: false,
-          error: `Unsupported platform: ${platform}`
+          error: `Unsupported platform: ${platform}`,
         };
     }
   }
@@ -187,7 +184,7 @@ class SocialMediaApiService {
   ): Promise<any> {
     try {
       const caption = this.formatCaption(content.caption, content.hashtags);
-      
+
       // For Instagram, we need to create media objects first, then publish
       let containerId: string;
 
@@ -215,12 +212,12 @@ class SocialMediaApiService {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             creation_id: containerId,
-            access_token: connection.accessToken
-          })
+            access_token: connection.accessToken,
+          }),
         }
       );
 
@@ -234,14 +231,13 @@ class SocialMediaApiService {
         platform: 'instagram',
         success: true,
         postId: publishData.id,
-        url: `https://www.instagram.com/p/${publishData.id}`
+        url: `https://www.instagram.com/p/${publishData.id}`,
       };
-
     } catch (error) {
       return {
         platform: 'instagram',
         success: false,
-        error: error instanceof Error ? error.message : 'Instagram publish failed'
+        error: error instanceof Error ? error.message : 'Instagram publish failed',
       };
     }
   }
@@ -254,20 +250,17 @@ class SocialMediaApiService {
     imageUrl: string,
     caption: string
   ): Promise<string> {
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${connection.userId}/media`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          image_url: imageUrl,
-          caption,
-          access_token: connection.accessToken
-        })
-      }
-    );
+    const response = await fetch(`https://graph.facebook.com/v18.0/${connection.userId}/media`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image_url: imageUrl,
+        caption,
+        access_token: connection.accessToken,
+      }),
+    });
 
     const data = await response.json();
 
@@ -288,28 +281,26 @@ class SocialMediaApiService {
   ): Promise<string> {
     // First create individual image containers
     const childContainers = [];
-    
-    for (const imageUrl of imageUrls.slice(0, 10)) { // Instagram supports max 10 images
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${connection.userId}/media`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            image_url: imageUrl,
-            is_carousel_item: true,
-            access_token: connection.accessToken
-          })
-        }
-      );
+
+    for (const imageUrl of imageUrls.slice(0, 10)) {
+      // Instagram supports max 10 images
+      const response = await fetch(`https://graph.facebook.com/v18.0/${connection.userId}/media`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_url: imageUrl,
+          is_carousel_item: true,
+          access_token: connection.accessToken,
+        }),
+      });
 
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to create carousel item');
       }
-      
+
       childContainers.push(data.id);
     }
 
@@ -319,19 +310,19 @@ class SocialMediaApiService {
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           media_type: 'CAROUSEL',
           children: childContainers.join(','),
           caption,
-          access_token: connection.accessToken
-        })
+          access_token: connection.accessToken,
+        }),
       }
     );
 
     const carouselData = await carouselResponse.json();
-    
+
     if (!carouselResponse.ok) {
       throw new Error(carouselData.error?.message || 'Failed to create carousel container');
     }
@@ -348,10 +339,10 @@ class SocialMediaApiService {
   ): Promise<any> {
     try {
       const message = this.formatCaption(content.caption, content.hashtags);
-      
+
       let postData: any = {
         message,
-        access_token: connection.accessToken
+        access_token: connection.accessToken,
       };
 
       // Add media if provided
@@ -364,16 +355,13 @@ class SocialMediaApiService {
         }
       }
 
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${connection.userId}/feed`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(postData)
-        }
-      );
+      const response = await fetch(`https://graph.facebook.com/v18.0/${connection.userId}/feed`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
 
       const data = await response.json();
 
@@ -385,14 +373,13 @@ class SocialMediaApiService {
         platform: 'facebook',
         success: true,
         postId: data.id,
-        url: `https://www.facebook.com/${data.id}`
+        url: `https://www.facebook.com/${data.id}`,
       };
-
     } catch (error) {
       return {
         platform: 'facebook',
         success: false,
-        error: error instanceof Error ? error.message : 'Facebook publish failed'
+        error: error instanceof Error ? error.message : 'Facebook publish failed',
       };
     }
   }
@@ -407,23 +394,20 @@ class SocialMediaApiService {
     const attachedMedia = [];
 
     for (const imageUrl of imageUrls) {
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${connection.userId}/photos`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            url: imageUrl,
-            published: false,
-            access_token: connection.accessToken
-          })
-        }
-      );
+      const response = await fetch(`https://graph.facebook.com/v18.0/${connection.userId}/photos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: imageUrl,
+          published: false,
+          access_token: connection.accessToken,
+        }),
+      });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         attachedMedia.push({ media_fbid: data.id });
       }
@@ -452,25 +436,22 @@ class SocialMediaApiService {
           disable_duet: false,
           disable_comment: false,
           disable_stitch: false,
-          video_cover_timestamp_ms: 1000
+          video_cover_timestamp_ms: 1000,
         },
         source_info: {
           source: 'FILE_UPLOAD',
-          video_url: content.videoUrl
-        }
+          video_url: content.videoUrl,
+        },
       };
 
-      const response = await fetch(
-        'https://open-api.tiktok.com/share/video/upload/',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${connection.accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(postData)
-        }
-      );
+      const response = await fetch('https://open-api.tiktok.com/share/video/upload/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${connection.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
 
       const data = await response.json();
 
@@ -482,14 +463,13 @@ class SocialMediaApiService {
         platform: 'tiktok',
         success: true,
         postId: data.data.video_id,
-        url: `https://www.tiktok.com/@${connection.username}/video/${data.data.video_id}`
+        url: `https://www.tiktok.com/@${connection.username}/video/${data.data.video_id}`,
       };
-
     } catch (error) {
       return {
         platform: 'tiktok',
         success: false,
-        error: error instanceof Error ? error.message : 'TikTok publish failed'  
+        error: error instanceof Error ? error.message : 'TikTok publish failed',
       };
     }
   }
@@ -497,10 +477,7 @@ class SocialMediaApiService {
   /**
    * Get engagement metrics for a post
    */
-  async getEngagementMetrics(
-    platform: string,
-    postId: string
-  ): Promise<EngagementMetrics | null> {
+  async getEngagementMetrics(platform: string, postId: string): Promise<EngagementMetrics | null> {
     const connection = this.getConnection(platform);
     if (!connection) return null;
 
@@ -535,7 +512,7 @@ class SocialMediaApiService {
     );
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to get Instagram metrics');
     }
@@ -550,7 +527,7 @@ class SocialMediaApiService {
       comments: metrics.comments || 0,
       shares: metrics.shares || 0,
       views: metrics.impressions || 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -566,7 +543,7 @@ class SocialMediaApiService {
     );
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to get Facebook metrics');
     }
@@ -576,7 +553,7 @@ class SocialMediaApiService {
       comments: data.comments?.summary?.total_count || 0,
       shares: data.shares?.count || 0,
       views: 0, // Facebook doesn't provide view counts for regular posts
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -591,25 +568,25 @@ class SocialMediaApiService {
       `https://open-api.tiktok.com/video/query/?fields=like_count,comment_count,share_count,view_count&video_ids=${postId}`,
       {
         headers: {
-          'Authorization': `Bearer ${connection.accessToken}`
-        }
+          Authorization: `Bearer ${connection.accessToken}`,
+        },
       }
     );
 
     const data = await response.json();
-    
+
     if (!response.ok || data.error) {
       throw new Error(data.error?.message || 'Failed to get TikTok metrics');
     }
 
     const video = data.data.videos[0];
-    
+
     return {
       likes: video.like_count || 0,
       comments: video.comment_count || 0,
       shares: video.share_count || 0,
       views: video.view_count || 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -618,7 +595,7 @@ class SocialMediaApiService {
    */
   private validateContent(platform: string, content: PostContent): string | null {
     const limits = this.getPlatformLimits(platform);
-    
+
     // Check caption length
     const fullCaption = this.formatCaption(content.caption, content.hashtags);
     if (fullCaption.length > limits.maxCaptionLength) {
@@ -654,7 +631,7 @@ class SocialMediaApiService {
           supportedImageFormats: ['jpg', 'jpeg', 'png'],
           supportedVideoFormats: ['mp4', 'mov'],
           maxImagesPerPost: 10,
-          maxVideoSizeMB: 100
+          maxVideoSizeMB: 100,
         };
       case 'facebook':
         return {
@@ -663,7 +640,7 @@ class SocialMediaApiService {
           supportedImageFormats: ['jpg', 'jpeg', 'png', 'gif'],
           supportedVideoFormats: ['mp4', 'mov', 'avi'],
           maxImagesPerPost: 10,
-          maxVideoSizeMB: 4000
+          maxVideoSizeMB: 4000,
         };
       case 'tiktok':
         return {
@@ -672,7 +649,7 @@ class SocialMediaApiService {
           supportedImageFormats: [],
           supportedVideoFormats: ['mp4', 'mov', 'webm'],
           maxImagesPerPost: 0,
-          maxVideoSizeMB: 500
+          maxVideoSizeMB: 500,
         };
       default:
         return {
@@ -681,7 +658,7 @@ class SocialMediaApiService {
           supportedImageFormats: ['jpg', 'jpeg', 'png'],
           supportedVideoFormats: ['mp4'],
           maxImagesPerPost: 1,
-          maxVideoSizeMB: 50
+          maxVideoSizeMB: 50,
         };
     }
   }
@@ -691,9 +668,10 @@ class SocialMediaApiService {
    */
   private formatCaption(caption: string, hashtags: string[], maxLength?: number): string {
     let formatted = caption;
-    
+
     if (hashtags.length > 0) {
-      const hashtagString = '\n\n' + hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ');
+      const hashtagString =
+        '\n\n' + hashtags.map(tag => (tag.startsWith('#') ? tag : `#${tag}`)).join(' ');
       formatted += hashtagString;
     }
 
@@ -723,7 +701,7 @@ class SocialMediaApiService {
       return {
         canPost: true,
         remaining: 100,
-        resetTime: new Date(Date.now() + 3600000) // 1 hour from now
+        resetTime: new Date(Date.now() + 3600000), // 1 hour from now
       };
     } catch (error) {
       console.error(`Rate limit check failed for ${platform}:`, error);

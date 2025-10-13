@@ -9,12 +9,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onQuickAction, savedLookbooks }) => {
-  return (
-    <CustomizableDashboard 
-      onQuickAction={onQuickAction} 
-      savedLookbooks={savedLookbooks} 
-    />
-  );
+  return <CustomizableDashboard onQuickAction={onQuickAction} savedLookbooks={savedLookbooks} />;
 };
 
 export default Dashboard;

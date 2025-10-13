@@ -38,7 +38,7 @@ const SidebarFixTest: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Current view: <span className="font-semibold text-accent">{activeView}</span>
             </p>
-            
+
             <div className="space-y-4">
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
@@ -54,7 +54,7 @@ const SidebarFixTest: React.FC = () => {
                   <p>✅ Data attributes added for element identification</p>
                 </div>
               </div>
-              
+
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
                   🧪 Test the Manual Drag System
@@ -66,16 +66,20 @@ const SidebarFixTest: React.FC = () => {
                   <li>4. Watch console for manual drag events</li>
                 </ol>
               </div>
-              
+
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                 <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
                   🔍 Expected Console Output
                 </h3>
                 <div className="text-purple-700 dark:text-purple-300 text-xs font-mono bg-purple-100 dark:bg-purple-800 p-2 rounded">
-                  🖱️ Mouse down on: Dashboard<br/>
-                  🚀 Manual drag started: Dashboard<br/>
-                  🎯 Manual drag over: Booking position: above<br/>
-                  ✅ Manual drop: Dashboard on Booking position: above<br/>
+                  🖱️ Mouse down on: Dashboard
+                  <br />
+                  🚀 Manual drag started: Dashboard
+                  <br />
+                  🎯 Manual drag over: Booking position: above
+                  <br />
+                  ✅ Manual drop: Dashboard on Booking position: above
+                  <br />
                   🏁 Manual drag ended
                 </div>
               </div>

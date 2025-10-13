@@ -3,13 +3,13 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { Client, Lookbook, SocialPost, SocialPlatform } from '../../types';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { 
-  HashtagIcon, 
+import {
+  HashtagIcon,
   SparklesIcon,
   ShareIcon,
   PhotoIcon,
   CheckCircleIcon,
-  ClockIcon
+  ClockIcon,
 } from '../common/Icons';
 
 interface PostComposerProps {
@@ -29,17 +29,24 @@ interface PlatformOption {
 }
 
 const SUGGESTED_HASHTAGS = [
-  '#hairtransformation', '#newlook', '#hairgoals', '#salon', '#hairstyle',
-  '#beforeandafter', '#hairmakeover', '#beauty', '#confidence', '#style',
-  '#haircut', '#haircolor', '#professional', '#glamour', '#selfcare'
+  '#hairtransformation',
+  '#newlook',
+  '#hairgoals',
+  '#salon',
+  '#hairstyle',
+  '#beforeandafter',
+  '#hairmakeover',
+  '#beauty',
+  '#confidence',
+  '#style',
+  '#haircut',
+  '#haircolor',
+  '#professional',
+  '#glamour',
+  '#selfcare',
 ];
 
-const PostComposer: React.FC<PostComposerProps> = ({ 
-  selectedPhotos, 
-  client, 
-  onBack, 
-  onPost 
-}) => {
+const PostComposer: React.FC<PostComposerProps> = ({ selectedPhotos, client, onBack, onPost }) => {
   const { settings, t } = useSettings();
   const [caption, setCaption] = useState('');
   const [hashtags, setHashtags] = useState<string[]>([]);
@@ -54,7 +61,7 @@ const PostComposer: React.FC<PostComposerProps> = ({
       icon: '📷',
       maxLength: 2200,
       supportsHashtags: true,
-      isConnected: Boolean(settings.socialMedia?.instagram)
+      isConnected: Boolean(settings.socialMedia?.instagram),
     },
     {
       id: 'facebook',
@@ -62,7 +69,7 @@ const PostComposer: React.FC<PostComposerProps> = ({
       icon: '👥',
       maxLength: 63206,
       supportsHashtags: true,
-      isConnected: Boolean(settings.socialMedia?.facebook)
+      isConnected: Boolean(settings.socialMedia?.facebook),
     },
     {
       id: 'tiktok',
@@ -70,8 +77,8 @@ const PostComposer: React.FC<PostComposerProps> = ({
       icon: '🎵',
       maxLength: 300,
       supportsHashtags: true,
-      isConnected: Boolean(settings.socialMedia?.tiktok)
-    }
+      isConnected: Boolean(settings.socialMedia?.tiktok),
+    },
   ];
 
   const connectedPlatforms = platforms.filter(p => p.isConnected);
@@ -83,27 +90,24 @@ const PostComposer: React.FC<PostComposerProps> = ({
 
   const handleGenerateCaption = async () => {
     setIsGeneratingCaption(true);
-    
+
     try {
       // Simulate AI caption generation
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       const generatedCaptions = [
         `✨ Amazing transformation for ${client.name}! From vision to reality - love how this ${selectedPhotos[0]?.finalImage.hairstyleName.toLowerCase()} turned out! 💫`,
         `${client.name} is absolutely glowing with her new ${selectedPhotos[0]?.finalImage.hairstyleName.toLowerCase()}! ✨ Sometimes a fresh cut is all you need to feel amazing! 💕`,
         `The joy on ${client.name}'s face says it all! 😍 This ${selectedPhotos[0]?.finalImage.hairstyleName.toLowerCase()} is pure perfection! ✂️✨`,
-        `Another stunning transformation! ${client.name} rocks this ${selectedPhotos[0]?.finalImage.hairstyleName.toLowerCase()} so beautifully! 🌟`
+        `Another stunning transformation! ${client.name} rocks this ${selectedPhotos[0]?.finalImage.hairstyleName.toLowerCase()} so beautifully! 🌟`,
       ];
-      
+
       const randomCaption = generatedCaptions[Math.floor(Math.random() * generatedCaptions.length)];
       setCaption(randomCaption);
-      
+
       // Auto-suggest relevant hashtags
-      const suggestedHashtags = SUGGESTED_HASHTAGS
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 8);
+      const suggestedHashtags = SUGGESTED_HASHTAGS.sort(() => 0.5 - Math.random()).slice(0, 8);
       setHashtags(suggestedHashtags);
-      
     } catch (error) {
       console.error('Failed to generate caption:', error);
     } finally {
@@ -144,11 +148,11 @@ const PostComposer: React.FC<PostComposerProps> = ({
     if (!selectedPlatforms.length || !caption.trim()) return;
 
     setIsPublishing(true);
-    
+
     try {
       const socialPlatforms: SocialPlatform[] = selectedPlatforms.map(platformId => ({
         platform: platformId as 'instagram' | 'facebook' | 'tiktok',
-        status: 'pending'
+        status: 'pending',
       }));
 
       const newPost: SocialPost = {
@@ -161,22 +165,21 @@ const PostComposer: React.FC<PostComposerProps> = ({
         status: 'published',
         publishedAt: new Date(),
         externalIds: {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       // Simulate publishing delay
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       // Mark platforms as published with mock external IDs
       newPost.platforms = newPost.platforms.map(platform => ({
         ...platform,
         status: 'published',
         postId: `${platform.platform}_${Date.now()}`,
-        url: `https://${platform.platform}.com/p/${Date.now()}`
+        url: `https://${platform.platform}.com/p/${Date.now()}`,
       }));
 
       onPost(newPost);
-      
     } catch (error) {
       console.error('Failed to publish post:', error);
     } finally {
@@ -206,9 +209,9 @@ const PostComposer: React.FC<PostComposerProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {t('social.selectedPhotos')}
           </h3>
-          
+
           <div className="flex space-x-4 overflow-x-auto pb-2">
-            {selectedPhotos.map((lookbook) => (
+            {selectedPhotos.map(lookbook => (
               <div key={lookbook.id} className="flex-shrink-0">
                 <img
                   src={lookbook.finalImage.src}
@@ -221,7 +224,7 @@ const PostComposer: React.FC<PostComposerProps> = ({
               </div>
             ))}
           </div>
-          
+
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
             {t('social.clientName')}: <span className="font-medium">{client.name}</span>
           </p>
@@ -234,9 +237,9 @@ const PostComposer: React.FC<PostComposerProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {t('social.selectPlatforms')}
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {connectedPlatforms.map((platform) => (
+            {connectedPlatforms.map(platform => (
               <div
                 key={platform.id}
                 onClick={() => handlePlatformToggle(platform.id)}
@@ -250,9 +253,7 @@ const PostComposer: React.FC<PostComposerProps> = ({
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl">{platform.icon}</span>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {platform.name}
-                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">{platform.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {t('social.maxCharacters', { count: platform.maxLength })}
                       </p>
@@ -295,19 +296,19 @@ const PostComposer: React.FC<PostComposerProps> = ({
               )}
             </Button>
           </div>
-          
+
           <textarea
             value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            onChange={e => setCaption(e.target.value)}
             placeholder={t('social.captionPlaceholder')}
             className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-accent-500 dark:bg-gray-800 dark:text-white"
           />
-          
+
           <div className="flex items-center justify-between mt-2">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t('social.captionTip')}
-            </p>
-            <p className={`text-sm ${isOverLimit() ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('social.captionTip')}</p>
+            <p
+              className={`text-sm ${isOverLimit() ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}
+            >
               {getCharacterCount()} / {getMaxCharacters()}
             </p>
           </div>
@@ -323,7 +324,7 @@ const PostComposer: React.FC<PostComposerProps> = ({
               {t('social.hashtags')}
             </h3>
           </div>
-          
+
           <div className="space-y-4">
             {/* Selected Hashtags */}
             {hashtags.length > 0 && (
@@ -332,39 +333,35 @@ const PostComposer: React.FC<PostComposerProps> = ({
                   {t('social.selectedHashtags')}:
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {hashtags.map((hashtag) => (
+                  {hashtags.map(hashtag => (
                     <span
                       key={hashtag}
                       onClick={() => handleHashtagToggle(hashtag)}
                       className="inline-flex items-center px-3 py-1 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full text-sm cursor-pointer hover:bg-accent-200 dark:hover:bg-accent-900/50"
                     >
                       {hashtag}
-                      <button className="ml-2 text-accent-500 hover:text-accent-700">
-                        ×
-                      </button>
+                      <button className="ml-2 text-accent-500 hover:text-accent-700">×</button>
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            
+
             {/* Suggested Hashtags */}
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('social.suggestedHashtags')}:
               </p>
               <div className="flex flex-wrap gap-2">
-                {SUGGESTED_HASHTAGS
-                  .filter(hashtag => !hashtags.includes(hashtag))
-                  .map((hashtag) => (
-                    <span
-                      key={hashtag}
-                      onClick={() => handleHashtagToggle(hashtag)}
-                      className="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
-                    >
-                      {hashtag}
-                    </span>
-                  ))}
+                {SUGGESTED_HASHTAGS.filter(hashtag => !hashtags.includes(hashtag)).map(hashtag => (
+                  <span
+                    key={hashtag}
+                    onClick={() => handleHashtagToggle(hashtag)}
+                    className="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
+                  >
+                    {hashtag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -375,26 +372,21 @@ const PostComposer: React.FC<PostComposerProps> = ({
       <Card>
         <div className="p-6">
           <div className="flex items-center justify-between">
-            <Button
-              onClick={onBack}
-              variant="outline"
-            >
+            <Button onClick={onBack} variant="outline">
               {t('common.back')}
             </Button>
-            
+
             <div className="flex items-center space-x-3">
-              <Button
-                disabled
-                variant="outline"
-                className="flex items-center space-x-2 opacity-50"
-              >
+              <Button disabled variant="outline" className="flex items-center space-x-2 opacity-50">
                 <ClockIcon className="h-4 w-4" />
                 <span>{t('social.schedule')}</span>
               </Button>
-              
+
               <Button
                 onClick={handlePublish}
-                disabled={!selectedPlatforms.length || !caption.trim() || isOverLimit() || isPublishing}
+                disabled={
+                  !selectedPlatforms.length || !caption.trim() || isOverLimit() || isPublishing
+                }
                 className="flex items-center space-x-2 bg-accent-600 hover:bg-accent-700 disabled:opacity-50"
               >
                 {isPublishing ? (

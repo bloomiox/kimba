@@ -14,7 +14,10 @@ export interface ClientPhotoPairRecord {
 /**
  * Get all photo pairs for a client
  */
-export const getClientPhotoPairs = async (clientId: string, userId: string): Promise<ClientPhotoPair[]> => {
+export const getClientPhotoPairs = async (
+  clientId: string,
+  userId: string
+): Promise<ClientPhotoPair[]> => {
   try {
     const { data, error } = await supabase
       .from('client_photo_pairs')
@@ -34,7 +37,7 @@ export const getClientPhotoPairs = async (clientId: string, userId: string): Pro
       beforePhotoUrl: record.before_photo_url,
       afterPhotoUrl: record.after_photo_url,
       createdAt: record.created_at,
-      appointmentId: record.appointment_id
+      appointmentId: record.appointment_id,
     }));
   } catch (error) {
     console.error('Error in getClientPhotoPairs:', error);
@@ -46,9 +49,9 @@ export const getClientPhotoPairs = async (clientId: string, userId: string): Pro
  * Add a new photo pair for a client
  */
 export const addClientPhotoPair = async (
-  clientId: string, 
-  userId: string, 
-  beforePhotoUrl?: string, 
+  clientId: string,
+  userId: string,
+  beforePhotoUrl?: string,
   afterPhotoUrl?: string,
   appointmentId?: string
 ): Promise<ClientPhotoPair | null> => {
@@ -60,7 +63,7 @@ export const addClientPhotoPair = async (
         user_id: userId,
         before_photo_url: beforePhotoUrl,
         after_photo_url: afterPhotoUrl,
-        appointment_id: appointmentId
+        appointment_id: appointmentId,
       })
       .select()
       .single();
@@ -76,7 +79,7 @@ export const addClientPhotoPair = async (
       beforePhotoUrl: data.before_photo_url,
       afterPhotoUrl: data.after_photo_url,
       createdAt: data.created_at,
-      appointmentId: data.appointment_id
+      appointmentId: data.appointment_id,
     };
   } catch (error) {
     console.error('Error in addClientPhotoPair:', error);
@@ -87,7 +90,10 @@ export const addClientPhotoPair = async (
 /**
  * Delete a photo pair
  */
-export const deleteClientPhotoPair = async (photoPairId: string, userId: string): Promise<boolean> => {
+export const deleteClientPhotoPair = async (
+  photoPairId: string,
+  userId: string
+): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('client_photo_pairs')

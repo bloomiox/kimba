@@ -17,18 +17,20 @@ export class PerformanceTracker {
     // Filter sales for this hairstylist and month
     const hairstylistSales = sales.filter(sale => {
       const saleDate = new Date(sale.createdAt);
-      return sale.hairstylistId === hairstylist.id &&
-             saleDate >= monthStart &&
-             saleDate <= monthEnd;
+      return (
+        sale.hairstylistId === hairstylist.id && saleDate >= monthStart && saleDate <= monthEnd
+      );
     });
 
     // Filter appointments for this hairstylist and month
     const hairstylistAppointments = appointments.filter(appointment => {
       const appointmentDate = new Date(appointment.date);
-      return appointment.hairstylistId === hairstylist.id &&
-             appointmentDate >= monthStart &&
-             appointmentDate <= monthEnd &&
-             appointment.status === 'confirmed';
+      return (
+        appointment.hairstylistId === hairstylist.id &&
+        appointmentDate >= monthStart &&
+        appointmentDate <= monthEnd &&
+        appointment.status === 'confirmed'
+      );
     });
 
     // Calculate total revenue
@@ -45,7 +47,7 @@ export class PerformanceTracker {
 
     // Calculate top services
     const serviceStats = new Map<string, { count: number; revenue: number; name: string }>();
-    
+
     hairstylistSales.forEach(sale => {
       sale.items.forEach(item => {
         if (item.type === 'service') {
@@ -53,7 +55,7 @@ export class PerformanceTracker {
           serviceStats.set(item.id, {
             count: current.count + 1,
             revenue: current.revenue + item.price,
-            name: item.name
+            name: item.name,
           });
         }
       });
@@ -64,7 +66,7 @@ export class PerformanceTracker {
         serviceId,
         serviceName: stats.name,
         count: stats.count,
-        revenue: stats.revenue
+        revenue: stats.revenue,
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
@@ -75,7 +77,7 @@ export class PerformanceTracker {
       totalAppointments,
       averageRating,
       totalCommission,
-      topServices
+      topServices,
     };
   }
 
@@ -139,7 +141,7 @@ export class PerformanceTracker {
 
       return {
         ...hairstylist,
-        performance: last12Months
+        performance: last12Months,
       };
     });
   }
@@ -147,7 +149,10 @@ export class PerformanceTracker {
   /**
    * Get performance summary for a hairstylist across multiple months
    */
-  static getPerformanceSummary(hairstylist: Hairstylist, months: number = 3): {
+  static getPerformanceSummary(
+    hairstylist: Hairstylist,
+    months: number = 3
+  ): {
     totalRevenue: number;
     totalAppointments: number;
     averageRating: number;
@@ -161,36 +166,41 @@ export class PerformanceTracker {
     const totalRevenue = recentPerformance.reduce((sum, p) => sum + p.totalRevenue, 0);
     const totalAppointments = recentPerformance.reduce((sum, p) => sum + p.totalAppointments, 0);
     const totalCommission = recentPerformance.reduce((sum, p) => sum + p.totalCommission, 0);
-    
-    const averageRating = recentPerformance.length > 0
-      ? recentPerformance.reduce((sum, p) => sum + p.averageRating, 0) / recentPerformance.length
-      : 0;
 
-    const monthlyAverage = recentPerformance.length > 0 ? totalRevenue / recentPerformance.length : 0;
+    const averageRating =
+      recentPerformance.length > 0
+        ? recentPerformance.reduce((sum, p) => sum + p.averageRating, 0) / recentPerformance.length
+        : 0;
+
+    const monthlyAverage =
+      recentPerformance.length > 0 ? totalRevenue / recentPerformance.length : 0;
 
     return {
       totalRevenue,
       totalAppointments,
       averageRating,
       totalCommission,
-      monthlyAverage
+      monthlyAverage,
     };
   }
 
   /**
    * Compare hairstylist performance
    */
-  static comparePerformance(hairstylists: Hairstylist[], metric: 'revenue' | 'appointments' | 'commission' = 'revenue'): Array<{
+  static comparePerformance(
+    hairstylists: Hairstylist[],
+    metric: 'revenue' | 'appointments' | 'commission' = 'revenue'
+  ): Array<{
     hairstylist: Hairstylist;
     value: number;
     rank: number;
   }> {
     const currentMonth = new Date().toISOString().slice(0, 7);
-    
+
     const performance = hairstylists.map(hairstylist => {
       const monthPerformance = hairstylist.performance?.find(p => p.month === currentMonth);
       let value = 0;
-      
+
       switch (metric) {
         case 'revenue':
           value = monthPerformance?.totalRevenue || 0;
@@ -202,16 +212,16 @@ export class PerformanceTracker {
           value = monthPerformance?.totalCommission || 0;
           break;
       }
-      
+
       return { hairstylist, value };
     });
 
     // Sort by value descending and add rank
     performance.sort((a, b) => b.value - a.value);
-    
+
     return performance.map((item, index) => ({
       ...item,
-      rank: index + 1
+      rank: index + 1,
     }));
   }
 }

@@ -46,7 +46,9 @@ const Auth: React.FC<AuthProps> = ({ onAuthComplete }) => {
     case 'signup':
       return <SignUpPage onNavigate={setPage} onSignUp={handleSignUp} />;
     case 'onboarding':
-      return <OnboardingFlow onComplete={handleOnboardingComplete} initialSalonName={initialSalonName} />;
+      return (
+        <OnboardingFlow onComplete={handleOnboardingComplete} initialSalonName={initialSalonName} />
+      );
     case 'landing':
     default:
       return <LandingPage onNavigate={setPage} />;

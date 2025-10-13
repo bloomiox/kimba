@@ -14,7 +14,7 @@ const PaymentDemo: React.FC = () => {
     time: '14:30',
     serviceId: 'demo-service',
     hairstylistId: 'demo-hairstylist',
-    status: 'confirmed'
+    status: 'confirmed',
   };
 
   const mockClient: Client = {
@@ -22,7 +22,7 @@ const PaymentDemo: React.FC = () => {
     name: 'Stephanie Collins',
     email: 'stephanie@example.com',
     phone: '+1 224-484-9544',
-    createdAt: '2024-01-01T00:00:00Z'
+    createdAt: '2024-01-01T00:00:00Z',
   };
 
   const mockService: Service = {
@@ -30,7 +30,7 @@ const PaymentDemo: React.FC = () => {
     name: 'Cut & Finish',
     duration: 45,
     price: 35,
-    parentId: null
+    parentId: null,
   };
 
   const mockHairstylist: Hairstylist = {
@@ -42,7 +42,7 @@ const PaymentDemo: React.FC = () => {
     availability: [],
     commissions: [],
     performance: [],
-    isActive: true
+    isActive: true,
   };
 
   return (

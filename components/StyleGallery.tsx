@@ -22,9 +22,12 @@ const StyleGallery: React.FC<StyleGalleryProps> = ({ styles, onSelect, onStartOv
   return (
     <div className="p-4 sm:p-8 h-full flex flex-col">
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Step 2: Choose Your Favorite</h2>
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Step 2: Choose Your Favorite
+        </h2>
         <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-xl mx-auto">
-          Our AI has generated a few starting points for you. Click an image to see it larger, then select one to refine.
+          Our AI has generated a few starting points for you. Click an image to see it larger, then
+          select one to refine.
         </p>
       </div>
       <div className="flex-grow overflow-y-auto">
@@ -49,7 +52,7 @@ const StyleGallery: React.FC<StyleGalleryProps> = ({ styles, onSelect, onStartOv
         </div>
       </div>
       <div className="text-center mt-6">
-         <button
+        <button
           onClick={onStartOver}
           className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
         >
@@ -61,7 +64,11 @@ const StyleGallery: React.FC<StyleGalleryProps> = ({ styles, onSelect, onStartOv
       {fullscreenImage && (
         <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-lg z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="relative w-full max-w-2xl">
-            <img src={fullscreenImage.src} alt={fullscreenImage.hairstyleName} className="w-full h-auto object-contain rounded-xl shadow-2xl" />
+            <img
+              src={fullscreenImage.src}
+              alt={fullscreenImage.hairstyleName}
+              className="w-full h-auto object-contain rounded-xl shadow-2xl"
+            />
             <button
               onClick={() => setFullscreenImage(null)}
               className="absolute -top-2 -right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:scale-110 transition-all shadow-lg"
@@ -70,22 +77,22 @@ const StyleGallery: React.FC<StyleGalleryProps> = ({ styles, onSelect, onStartOv
               <CloseIcon className="w-6 h-6" />
             </button>
             <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/10 p-4 rounded-b-xl">
-                <div>
-                    <h3 className="text-xl font-bold text-white">{fullscreenImage.hairstyleName}</h3>
-                    <p className="text-gray-300 text-sm max-w-md">{fullscreenImage.prompt}</p>
-                </div>
-                <button
-                    onClick={handleSelectAndClose}
-                    className="flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:opacity-90 rounded-lg text-lg font-bold text-white transition-colors shadow-lg"
-                >
-                    Select &amp; Refine
-                    <ArrowRightIcon className="w-6 h-6" />
-                </button>
+              <div>
+                <h3 className="text-xl font-bold text-white">{fullscreenImage.hairstyleName}</h3>
+                <p className="text-gray-300 text-sm max-w-md">{fullscreenImage.prompt}</p>
+              </div>
+              <button
+                onClick={handleSelectAndClose}
+                className="flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:opacity-90 rounded-lg text-lg font-bold text-white transition-colors shadow-lg"
+              >
+                Select &amp; Refine
+                <ArrowRightIcon className="w-6 h-6" />
+              </button>
             </div>
           </div>
         </div>
       )}
-       <style>{`
+      <style>{`
           @keyframes fade-in {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }

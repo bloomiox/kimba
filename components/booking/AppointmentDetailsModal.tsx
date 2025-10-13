@@ -1,18 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
-import { 
-  XMarkIcon, 
-  UserIcon, 
-  ClockIcon, 
+import {
+  XMarkIcon,
+  UserIcon,
+  ClockIcon,
   CalendarIcon,
   PlusIcon,
   EllipsisHorizontalIcon,
   CreditCardIcon,
   ChevronLeftIcon,
-  PhoneIcon
+  PhoneIcon,
 } from '../common/Icons';
 import AppointmentPaymentModal from './AppointmentPaymentModal';
-import type { Appointment, Client, Service, Hairstylist, AppointmentStatus, Product } from '../../types';
+import type {
+  Appointment,
+  Client,
+  Service,
+  Hairstylist,
+  AppointmentStatus,
+  Product,
+} from '../../types';
 import { mapToAccentColor } from '../../utils/colorUtils';
 import { uploadImage, deleteImage } from '../../services/imageStorageService';
 
@@ -30,7 +37,10 @@ interface AppointmentDetailsModalProps {
   onCheckout: () => void;
   onStatusChange: (status: AppointmentStatus | 'cancelled') => void;
   onAppointmentUpdate?: (updatedServices: Service[], updatedTotal: number) => void;
-  updateAppointmentDetails?: (appointmentId: string, updates: Partial<Omit<Appointment, 'id'>>) => void;
+  updateAppointmentDetails?: (
+    appointmentId: string,
+    updates: Partial<Omit<Appointment, 'id'>>
+  ) => void;
 }
 
 const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
@@ -45,34 +55,34 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   onCheckout,
   onStatusChange,
   onAppointmentUpdate,
-  updateAppointmentDetails
+  updateAppointmentDetails,
 }) => {
   const { t, currency, services: allServices, products } = useSettings();
-  
+
   // Helper function to parse additional services from notes
   const parseServicesFromNotes = (notes: string | undefined, allServices: Service[]): Service[] => {
     if (!notes || !notes.includes('Additional Services:')) {
       return [];
     }
-    
+
     const match = notes.match(/Additional Services:\s*([^|\n]+)/);
     if (!match) return [];
-    
+
     const serviceNames = match[1].split(',').map(name => name.trim());
     return serviceNames
       .map(name => allServices.find(s => s.name === name))
       .filter((service): service is Service => service !== undefined);
   };
-  
+
   // Helper function to parse additional products from notes
   const parseProductsFromNotes = (notes: string | undefined, allProducts: Product[]): Service[] => {
     if (!notes || !notes.includes('Additional Products:')) {
       return [];
     }
-    
+
     const match = notes.match(/Additional Products:\s*([^|\n]+)/);
     if (!match) return [];
-    
+
     const productNames = match[1].split(',').map(name => name.trim());
     return productNames
       .map(name => allProducts.find(p => p.name === name))
@@ -83,10 +93,10 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         description: product.description,
         duration: 0,
         price: product.price,
-        parentId: null
+        parentId: null,
       }));
   };
-  
+
   // Initialize appointment services with main service + additional services and products from notes
   const initializeAppointmentServices = (): Service[] => {
     const mainService = services[0]; // The service passed in props
@@ -96,18 +106,29 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   };
   const [currentView, setCurrentView] = useState<ModalView>('appointment');
   const [currentStatus, setCurrentStatus] = useState<AppointmentStatus | 'cancelled'>(
-    appointment.status === 'unconfirmed' ? 'unconfirmed' : 
-    appointment.status === 'confirmed' ? 'confirmed' : 
-    appointment.status === 'late' ? 'late' : 'confirmed'
+    appointment.status === 'unconfirmed'
+      ? 'unconfirmed'
+      : appointment.status === 'confirmed'
+        ? 'confirmed'
+        : appointment.status === 'late'
+          ? 'late'
+          : 'confirmed'
   );
-  const [appointmentServices, setAppointmentServices] = useState<Service[]>(() => initializeAppointmentServices());
+  const [appointmentServices, setAppointmentServices] = useState<Service[]>(() =>
+    initializeAppointmentServices()
+  );
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-  const [beforeAfterPhotos, setBeforeAfterPhotos] = useState<{before?: string, after?: string}>({});
+  const [beforeAfterPhotos, setBeforeAfterPhotos] = useState<{ before?: string; after?: string }>(
+    {}
+  );
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [cameraActive, setCameraActive] = useState<{before: boolean, after: boolean}>({before: false, after: false});
+  const [cameraActive, setCameraActive] = useState<{ before: boolean; after: boolean }>({
+    before: false,
+    after: false,
+  });
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   const beforeVideoRef = useRef<HTMLVideoElement>(null);
@@ -131,12 +152,12 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     const enableStream = async () => {
       try {
         setCameraError(null);
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            width: { ideal: 1280 }, 
-            height: { ideal: 720 }, 
-            facingMode: 'user' 
-          } 
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: 'user',
+          },
         });
         if (beforeVideoRef.current) {
           beforeVideoRef.current.srcObject = stream;
@@ -170,12 +191,12 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     const enableStream = async () => {
       try {
         setCameraError(null);
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            width: { ideal: 1280 }, 
-            height: { ideal: 720 }, 
-            facingMode: 'user' 
-          } 
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: 'user',
+          },
         });
         if (afterVideoRef.current) {
           afterVideoRef.current.srcObject = stream;
@@ -203,7 +224,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
   const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
   const langCode = t('language.code');
-  
+
   // Calculate totals including selected items
   const currentServices = [...appointmentServices, ...selectedServices];
   const currentProducts = selectedProducts.map(product => ({
@@ -212,13 +233,13 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     description: product.description,
     duration: 0,
     price: product.price,
-    parentId: null
+    parentId: null,
   }));
-  
+
   const allCurrentItems = [...currentServices, ...currentProducts];
   const subtotal = allCurrentItems.reduce((sum, item) => sum + item.price, 0);
   const totalDuration = currentServices.reduce((sum, service) => sum + service.duration, 0);
-  
+
   const handleStatusChange = (newStatus: AppointmentStatus | 'cancelled') => {
     setCurrentStatus(newStatus);
     onStatusChange(newStatus);
@@ -227,21 +248,31 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
   const getStatusColor = (status: AppointmentStatus | 'cancelled') => {
     switch (status) {
-      case 'confirmed': return 'bg-blue-500 text-white';
-      case 'unconfirmed': return 'bg-yellow-500 text-white';
-      case 'late': return 'bg-red-500 text-white';
-      case 'cancelled': return 'bg-gray-500 text-white';
-      default: return 'bg-blue-500 text-white';
+      case 'confirmed':
+        return 'bg-blue-500 text-white';
+      case 'unconfirmed':
+        return 'bg-yellow-500 text-white';
+      case 'late':
+        return 'bg-red-500 text-white';
+      case 'cancelled':
+        return 'bg-gray-500 text-white';
+      default:
+        return 'bg-blue-500 text-white';
     }
   };
 
   const getStatusLabel = (status: AppointmentStatus | 'cancelled') => {
     switch (status) {
-      case 'confirmed': return t('booking.status.confirmed');
-      case 'unconfirmed': return t('booking.status.notConfirmed');
-      case 'late': return t('booking.status.late');
-      case 'cancelled': return t('booking.status.cancelled');
-      default: return t('booking.status.confirmed');
+      case 'confirmed':
+        return t('booking.status.confirmed');
+      case 'unconfirmed':
+        return t('booking.status.notConfirmed');
+      case 'late':
+        return t('booking.status.late');
+      case 'cancelled':
+        return t('booking.status.cancelled');
+      default:
+        return t('booking.status.confirmed');
     }
   };
 
@@ -273,19 +304,19 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
   const handleSaveSelectedItems = () => {
     const newServices = [...appointmentServices, ...selectedServices];
-    
+
     const productsAsServices: Service[] = selectedProducts.map(product => ({
       id: product.id,
       name: product.name,
       description: product.description,
       duration: 0,
       price: product.price,
-      parentId: null
+      parentId: null,
     }));
-    
+
     const finalServices = [...newServices, ...productsAsServices];
     setAppointmentServices(finalServices);
-    
+
     setSelectedServices([]);
     setSelectedProducts([]);
     setHasUnsavedChanges(true);
@@ -308,61 +339,65 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         const finalTotal = appointmentServices.reduce((sum, service) => sum + service.price, 0);
         onAppointmentUpdate(appointmentServices, finalTotal);
       }
-      
+
       // Persist changes to database using updateAppointmentDetails
       if (updateAppointmentDetails) {
         const updates: Partial<Omit<Appointment, 'id'>> = {};
-        
+
         // Update the main service (first service in the list)
         if (appointmentServices.length > 0) {
           updates.serviceId = appointmentServices[0].id;
         }
-        
+
         // Store additional services and products in notes as a temporary solution
         // Format: "Original notes | Additional Services: Service1, Service2 | Additional Products: Product1, Product2"
         const actualServices = appointmentServices.filter(s => !products.find(p => p.id === s.id));
         const addedProducts = appointmentServices.filter(s => products.find(p => p.id === s.id));
-        
+
         const originalNotes = appointment.notes || '';
         let updatedNotes = originalNotes;
-        
+
         // Remove any existing additional services/products notes
         updatedNotes = updatedNotes.replace(/\s*\|\s*Additional Services:.*?(?=\n|$)/, '').trim();
         updatedNotes = updatedNotes.replace(/\s*\|\s*Additional Products:.*?(?=\n|$)/, '').trim();
-        
+
         // Add services note if there are additional services
         if (actualServices.length > 1) {
-          const additionalServices = actualServices.slice(1).map(s => s.name).join(', ');
+          const additionalServices = actualServices
+            .slice(1)
+            .map(s => s.name)
+            .join(', ');
           const serviceNote = `Additional Services: ${additionalServices}`;
           updatedNotes = updatedNotes ? `${updatedNotes} | ${serviceNote}` : serviceNote;
         }
-        
+
         // Add products note if there are added products
         if (addedProducts.length > 0) {
           const additionalProducts = addedProducts.map(s => s.name).join(', ');
           const productNote = `Additional Products: ${additionalProducts}`;
           updatedNotes = updatedNotes ? `${updatedNotes} | ${productNote}` : productNote;
         }
-        
+
         if (updatedNotes !== originalNotes) {
           updates.notes = updatedNotes;
         }
-        
+
         await updateAppointmentDetails(appointment.id, updates);
-        
+
         console.log('Appointment changes saved to database:', {
           appointmentId: appointment.id,
           updates,
           services: appointmentServices,
-          totalPrice: appointmentServices.reduce((sum, service) => sum + service.price, 0)
+          totalPrice: appointmentServices.reduce((sum, service) => sum + service.price, 0),
         });
       }
-      
+
       setHasUnsavedChanges(false);
-      
+
       // Show success message
       const successMessage = document.createElement('div');
-      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      successMessage.className =
+        'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
       successMessage.textContent = 'Appointment changes saved successfully!';
       document.body.appendChild(successMessage);
       setTimeout(() => {
@@ -372,7 +407,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       console.error('Error saving appointment changes:', error);
       // Show error message
       const errorMessage = document.createElement('div');
-      errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      errorMessage.className =
+        'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
       errorMessage.textContent = 'Failed to save appointment changes. Please try again.';
       document.body.appendChild(errorMessage);
       setTimeout(() => {
@@ -385,12 +421,13 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     try {
       // Upload the file to Supabase storage
       const result = await uploadImage(file, 'appointment-photos');
-      
+
       if (result.error) {
         console.error(`Error uploading ${type} photo:`, result.error);
         // Show error message to user
         const errorMessage = document.createElement('div');
-        errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        errorMessage.className =
+          'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
         errorMessage.textContent = `Failed to upload ${type} photo: ${result.error}`;
         document.body.appendChild(errorMessage);
         setTimeout(() => {
@@ -398,19 +435,20 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         }, 3000);
         return;
       }
-      
+
       // Store the URL in state
       setBeforeAfterPhotos(prev => ({
         ...prev,
-        [type]: result.url
+        [type]: result.url,
       }));
-      
+
       console.log(`${type} photo uploaded successfully:`, result.url);
     } catch (error) {
       console.error(`Unexpected error uploading ${type} photo:`, error);
       // Show error message to user
       const errorMessage = document.createElement('div');
-      errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      errorMessage.className =
+        'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
       errorMessage.textContent = `Unexpected error uploading ${type} photo`;
       document.body.appendChild(errorMessage);
       setTimeout(() => {
@@ -424,37 +462,39 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       // Save photos to appointment
       if (updateAppointmentDetails) {
         const updates: Partial<Omit<Appointment, 'id'>> = {};
-        
+
         if (beforeAfterPhotos.before) {
           updates.beforePhotoUrl = beforeAfterPhotos.before;
         }
-        
+
         if (beforeAfterPhotos.after) {
           updates.afterPhotoUrl = beforeAfterPhotos.after;
         }
-        
+
         await updateAppointmentDetails(appointment.id, updates);
-        
+
         // Create a lookbook entry for these photos
         // This would typically call an API to save the lookbook
         console.log('Photos saved to appointment and lookbook created');
       }
-      
+
       // Show success message
       const successMessage = document.createElement('div');
-      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      successMessage.className =
+        'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
       successMessage.textContent = 'Photos saved successfully!';
       document.body.appendChild(successMessage);
       setTimeout(() => {
         document.body.removeChild(successMessage);
       }, 3000);
-      
+
       setCurrentViewWithCleanup('appointment');
     } catch (error) {
       console.error('Error saving photos:', error);
       // Show error message
       const errorMessage = document.createElement('div');
-      errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      errorMessage.className =
+        'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
       errorMessage.textContent = 'Failed to save photos. Please try again.';
       document.body.appendChild(errorMessage);
       setTimeout(() => {
@@ -473,7 +513,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           console.warn(`Failed to delete ${type} photo from storage:`, result.error);
         }
       }
-      
+
       // Remove from state
       setBeforeAfterPhotos(prev => {
         const updated = { ...prev };
@@ -507,7 +547,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
   const stopCamera = (type: 'before' | 'after') => {
     console.log(`Stopping ${type} camera...`);
     setCameraActive(prev => ({ ...prev, [type]: false }));
-    
+
     // Clear video element
     const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
     if (videoRef) {
@@ -520,50 +560,54 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       console.log(`Capturing ${type} photo...`);
       const videoRef = type === 'before' ? beforeVideoRef.current : afterVideoRef.current;
       const canvasRef = type === 'before' ? beforeCanvasRef.current : afterCanvasRef.current;
-      
+
       if (videoRef && canvasRef) {
         const video = videoRef;
         const canvas = canvasRef;
-        
+
         console.log(`${type} video dimensions:`, video.videoWidth, video.videoHeight);
-        
+
         // Check if video is ready
         if (video.videoWidth === 0 || video.videoHeight === 0) {
           console.error(`Video not ready for ${type} capture`);
           setCameraError(`Camera not ready. Please wait a moment and try again.`);
           return;
         }
-        
+
         // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         const context = canvas.getContext('2d');
         if (context) {
           // Flip the image horizontally (mirror effect)
           context.translate(canvas.width, 0);
           context.scale(-1, 1);
-          
+
           // Draw the video frame to the canvas
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
+
           // Convert to blob and create file
-          canvas.toBlob(async (blob) => {
-            if (blob) {
-              const fileName = `${type}-photo-${Date.now()}.jpg`;
-              const file = new File([blob], fileName, { type: 'image/jpeg' });
-              
-              console.log(`Uploading ${type} photo...`);
-              // Upload the captured photo
-              await handlePhotoCapture(type, file);
-              
-              // Stop the camera after capture
-              stopCamera(type);
-            } else {
-              console.error(`Failed to create blob for ${type} photo`);
-              setCameraError(`Failed to capture ${type} photo. Please try again.`);
-            }
-          }, 'image/jpeg', 0.95);
+          canvas.toBlob(
+            async blob => {
+              if (blob) {
+                const fileName = `${type}-photo-${Date.now()}.jpg`;
+                const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+                console.log(`Uploading ${type} photo...`);
+                // Upload the captured photo
+                await handlePhotoCapture(type, file);
+
+                // Stop the camera after capture
+                stopCamera(type);
+              } else {
+                console.error(`Failed to create blob for ${type} photo`);
+                setCameraError(`Failed to capture ${type} photo. Please try again.`);
+              }
+            },
+            'image/jpeg',
+            0.95
+          );
         } else {
           console.error(`Failed to get canvas context for ${type} photo`);
           setCameraError(`Failed to capture ${type} photo. Please try again.`);
@@ -598,16 +642,18 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
   const renderHeader = () => {
     const showBackButton = currentView !== 'appointment';
-    
+
     return (
-      <div className={`bg-gradient-to-r ${mapToAccentColor('from-accent-500 to-accent-600')} text-white p-6 relative`}>
-        <button 
+      <div
+        className={`bg-gradient-to-r ${mapToAccentColor('from-accent-500 to-accent-600')} text-white p-6 relative`}
+      >
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
-      
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {showBackButton && (
@@ -618,41 +664,47 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 <ChevronLeftIcon className="w-5 h-5" />
               </button>
             )}
-          
+
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <CalendarIcon className="w-5 h-5" />
                 <h2 className="text-xl font-bold">
-                  {currentView === 'client' ? client.name :
-                   currentView === 'addService' ? t('booking.addService') :
-                   currentView === 'photoCapture' ? 'Before & After Photos' :
-                   appointmentDateTime.toLocaleDateString(langCode, { 
-                     weekday: 'short',
-                     day: 'numeric',
-                     month: 'short'
-                   })}
+                  {currentView === 'client'
+                    ? client.name
+                    : currentView === 'addService'
+                      ? t('booking.addService')
+                      : currentView === 'photoCapture'
+                        ? 'Before & After Photos'
+                        : appointmentDateTime.toLocaleDateString(langCode, {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })}
                 </h2>
               </div>
               {currentView === 'appointment' && (
                 <div className="flex items-center gap-2 text-white/90">
                   <ClockIcon className="w-4 h-4" />
                   <span>
-                    {appointmentDateTime.toLocaleTimeString(langCode, { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })} • {t('booking.doesntRepeat')}
+                    {appointmentDateTime.toLocaleTimeString(langCode, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}{' '}
+                    • {t('booking.doesntRepeat')}
                   </span>
                 </div>
               )}
             </div>
           </div>
-          
+
           {/* Status Dropdown - only show on appointment view */}
           {currentView === 'appointment' && (
             <div className="relative">
               <select
                 value={currentStatus}
-                onChange={(e) => handleStatusChange(e.target.value as AppointmentStatus | 'cancelled')}
+                onChange={e =>
+                  handleStatusChange(e.target.value as AppointmentStatus | 'cancelled')
+                }
                 className={`px-4 py-2 rounded-full font-medium text-sm cursor-pointer border-0 focus:ring-2 focus:ring-white/30 ${getStatusColor(currentStatus)}`}
               >
                 <option value="unconfirmed">{getStatusLabel('unconfirmed')}</option>
@@ -679,21 +731,19 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               <UserIcon className="w-10 h-10 text-gray-500 dark:text-gray-400" />
             )}
           </div>
-          
+
           <button
             onClick={handleClientDetailsClick}
             className="group text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg p-2 transition-colors"
           >
-            <h3 className={`text-xl font-bold text-gray-900 dark:text-white ${mapToAccentColor('group-hover:text-accent-600 dark:group-hover:text-accent-400')}`}>
+            <h3
+              className={`text-xl font-bold text-gray-900 dark:text-white ${mapToAccentColor('group-hover:text-accent-600 dark:group-hover:text-accent-400')}`}
+            >
               {client.name}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              {client.email}
-            </p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">{client.email}</p>
             {client.phone && (
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                {client.phone}
-              </p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{client.phone}</p>
             )}
           </button>
         </div>
@@ -706,23 +756,24 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             </div>
             <span className="text-gray-700 dark:text-gray-300">{t('client.addPronouns')}</span>
           </button>
-          
+
           <button className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
             <div className="w-8 h-8 bg-gray-100 dark:bg-gray-600 rounded-full flex items-center justify-center">
               <CalendarIcon className="w-4 h-4" />
             </div>
             <span className="text-gray-700 dark:text-gray-300">{t('client.addDateOfBirth')}</span>
           </button>
-          
+
           <div className="flex items-center gap-3 p-3">
             <div className="w-8 h-8 bg-gray-100 dark:bg-gray-600 rounded-full flex items-center justify-center">
               <UserIcon className="w-4 h-4" />
             </div>
             <span className="text-gray-700 dark:text-gray-300">
-              {t('client.created')} {new Date(client.createdAt).toLocaleDateString(langCode, {
+              {t('client.created')}{' '}
+              {new Date(client.createdAt).toLocaleDateString(langCode, {
                 day: 'numeric',
                 month: 'short',
-                year: 'numeric'
+                year: 'numeric',
               })}
             </span>
           </div>
@@ -735,10 +786,13 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
             {t('booking.services')}
           </h3>
-          
+
           <div className="space-y-3">
-            {appointmentServices.map((service) => (
-              <div key={service.id} className={`border-l-4 ${mapToAccentColor('border-accent-500')} pl-4 py-2 relative group`}>
+            {appointmentServices.map(service => (
+              <div
+                key={service.id}
+                className={`border-l-4 ${mapToAccentColor('border-accent-500')} pl-4 py-2 relative group`}
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 dark:text-white pr-8">
@@ -746,10 +800,12 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     </h4>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       <span>
-                        {appointmentDateTime.toLocaleTimeString(langCode, { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })} • {service.duration}{t('common.minutes')} • {hairstylist.name}
+                        {appointmentDateTime.toLocaleTimeString(langCode, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        • {service.duration}
+                        {t('common.minutes')} • {hairstylist.name}
                       </span>
                     </div>
                   </div>
@@ -768,9 +824,9 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 </div>
               </div>
             ))}
-            
+
             {/* Add Service Button */}
-            <button 
+            <button
               onClick={() => setCurrentViewWithCleanup('addService')}
               className={`w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg ${mapToAccentColor('hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20')} transition-colors text-gray-600 dark:text-gray-400 ${mapToAccentColor('hover:text-accent-600 dark:hover:text-accent-400')}`}
             >
@@ -788,7 +844,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 {t('pos.summary.total')}
               </span>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                {totalDuration}{t('common.minutes')}
+                {totalDuration}
+                {t('common.minutes')}
               </div>
             </div>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -799,21 +856,31 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={() => setCurrentViewWithCleanup('photoCapture')}
             className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             title="Take Before/After Photos"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </button>
-          
+
           <button className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
             <EllipsisHorizontalIcon className="w-5 h-5" />
           </button>
-          
+
           <button
             onClick={handlePayNowClick}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -821,13 +888,13 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             <CreditCardIcon className="w-4 h-4" />
             <span>{t('booking.payment.payNow')}</span>
           </button>
-          
+
           <button
             onClick={handleSaveAppointmentChanges}
             disabled={!hasUnsavedChanges}
             className={`flex-1 px-4 py-3 rounded-lg transition-all font-medium shadow-sm ${
-              hasUnsavedChanges 
-                ? 'bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 border-2 border-transparent' 
+              hasUnsavedChanges
+                ? 'bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 text-white shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30 border-2 border-transparent'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed border-2 border-gray-300 dark:border-gray-600'
             }`}
           >
@@ -850,10 +917,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               <UserIcon className="w-16 h-16 text-gray-500 dark:text-gray-400" />
             )}
           </div>
-          
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {client.name}
-          </h2>
+
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{client.name}</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-1">{client.email}</p>
           {client.phone && (
             <p className="text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
@@ -872,15 +937,15 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             {client.notes ? (
               <p className="text-gray-700 dark:text-gray-300">{client.notes}</p>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic">{t('clients.detail.noNotes')}</p>
+              <p className="text-gray-500 dark:text-gray-400 italic">
+                {t('clients.detail.noNotes')}
+              </p>
             )}
           </div>
 
           {client.address && (
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                Address
-              </h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Address</h3>
               <p className="text-gray-700 dark:text-gray-300">{client.address}</p>
             </div>
           )}
@@ -891,15 +956,17 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             </h3>
             <div className="space-y-2">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">Client since:</span> {new Date(client.createdAt).toLocaleDateString(langCode, {
+                <span className="font-medium">Client since:</span>{' '}
+                {new Date(client.createdAt).toLocaleDateString(langCode, {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
+                  day: 'numeric',
                 })}
               </p>
               {client.consentToShare !== undefined && (
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Consent to share:</span> {client.consentToShare ? 'Yes' : 'No'}
+                  <span className="font-medium">Consent to share:</span>{' '}
+                  {client.consentToShare ? 'Yes' : 'No'}
                 </p>
               )}
             </div>
@@ -911,7 +978,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 
   const renderAddServiceView = () => {
     const hasSelections = selectedServices.length > 0 || selectedProducts.length > 0;
-    
+
     return (
       <div className="p-6 max-h-[70vh] overflow-y-auto">
         <div className="max-w-4xl mx-auto">
@@ -934,7 +1001,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                   <button
                     onClick={handleSaveSelectedItems}
                     className={`px-6 py-2 text-white rounded-lg font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${
-                      (selectedServices.length === 0 && selectedProducts.length === 0)
+                      selectedServices.length === 0 && selectedProducts.length === 0
                         ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
                         : 'bg-accent-600 hover:bg-accent-700 focus:bg-accent-700 shadow-lg hover:shadow-xl focus:ring-4 focus:ring-accent-500/30'
                     }`}
@@ -945,99 +1012,109 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 </div>
               )}
             </div>
-            
+
             {/* Services Section */}
             <div className="mb-8">
-              <h4 className="text-md font-medium mb-4 text-gray-900 dark:text-white">
-                Services
-              </h4>
+              <h4 className="text-md font-medium mb-4 text-gray-900 dark:text-white">Services</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2">
-                {allServices.filter(service => !appointmentServices.find(s => s.id === service.id)).map((service) => {
-                  const isSelected = selectedServices.find(s => s.id === service.id);
-                  return (
-                    <button
-                      key={service.id}
-                      onClick={() => handleAddService(service)}
-                      className={`p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${
-                        isSelected 
-                          ? `${mapToAccentColor('border-accent-500 bg-accent-100 dark:bg-accent-900/50 text-accent-900 dark:text-accent-100')} shadow-sm`
-                          : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 ${mapToAccentColor('hover:border-accent-400 dark:hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20 text-gray-900 dark:text-gray-100')}`
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-gray-900 dark:text-white">
-                          {service.name}
-                        </h4>
-                        {isSelected && (
-                          <div className={`w-6 h-6 ${mapToAccentColor('bg-accent-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
-                            ✓
-                          </div>
-                        )}
-                      </div>
-                      {service.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                          {service.description}
-                        </p>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {service.duration} {t('common.minutes')}
-                        </span>
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {service.price.toLocaleString(langCode, { style: 'currency', currency })}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Products Section */}
-            {products && products.length > 0 && (
-              <div>
-                <h4 className="text-md font-medium mb-4 text-gray-900 dark:text-white">
-                  Products
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2">
-                  {products.filter(product => product.isActive && product.inStock > 0).map((product) => {
-                    const isSelected = selectedProducts.find(p => p.id === product.id);
+                {allServices
+                  .filter(service => !appointmentServices.find(s => s.id === service.id))
+                  .map(service => {
+                    const isSelected = selectedServices.find(s => s.id === service.id);
                     return (
                       <button
-                        key={product.id}
-                        onClick={() => handleAddProduct(product)}
+                        key={service.id}
+                        onClick={() => handleAddService(service)}
                         className={`p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${
-                          isSelected 
+                          isSelected
                             ? `${mapToAccentColor('border-accent-500 bg-accent-100 dark:bg-accent-900/50 text-accent-900 dark:text-accent-100')} shadow-sm`
                             : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 ${mapToAccentColor('hover:border-accent-400 dark:hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20 text-gray-900 dark:text-gray-100')}`
                         }`}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-medium text-gray-900 dark:text-white">
-                            {product.name}
+                            {service.name}
                           </h4>
                           {isSelected && (
-                            <div className={`w-6 h-6 ${mapToAccentColor('bg-accent-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
+                            <div
+                              className={`w-6 h-6 ${mapToAccentColor('bg-accent-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}
+                            >
                               ✓
                             </div>
                           )}
                         </div>
-                        {product.description && (
+                        {service.description && (
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            {product.description}
+                            {service.description}
                           </p>
                         )}
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {product.inStock} in stock
+                            {service.duration} {t('common.minutes')}
                           </span>
                           <span className="font-semibold text-gray-900 dark:text-white">
-                            {product.price.toLocaleString(langCode, { style: 'currency', currency })}
+                            {service.price.toLocaleString(langCode, {
+                              style: 'currency',
+                              currency,
+                            })}
                           </span>
                         </div>
                       </button>
                     );
                   })}
+              </div>
+            </div>
+
+            {/* Products Section */}
+            {products && products.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium mb-4 text-gray-900 dark:text-white">Products</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2">
+                  {products
+                    .filter(product => product.isActive && product.inStock > 0)
+                    .map(product => {
+                      const isSelected = selectedProducts.find(p => p.id === product.id);
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => handleAddProduct(product)}
+                          className={`p-4 border-2 rounded-lg transition-all duration-200 text-left hover:shadow-md ${
+                            isSelected
+                              ? `${mapToAccentColor('border-accent-500 bg-accent-100 dark:bg-accent-900/50 text-accent-900 dark:text-accent-100')} shadow-sm`
+                              : `border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 ${mapToAccentColor('hover:border-accent-400 dark:hover:border-accent-500 hover:bg-accent-50 dark:hover:bg-accent-900/20 text-gray-900 dark:text-gray-100')}`
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {product.name}
+                            </h4>
+                            {isSelected && (
+                              <div
+                                className={`w-6 h-6 ${mapToAccentColor('bg-accent-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}
+                              >
+                                ✓
+                              </div>
+                            )}
+                          </div>
+                          {product.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                              {product.description}
+                            </p>
+                          )}
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              {product.inStock} in stock
+                            </span>
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {product.price.toLocaleString(langCode, {
+                                style: 'currency',
+                                currency,
+                              })}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -1053,13 +1130,13 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
         <h3 className="text-lg font-semibold mb-6 text-gray-900 dark:text-white">
           Before & After Photos
         </h3>
-        
+
         {cameraError && (
           <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">
             {cameraError}
           </div>
         )}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Before Photo */}
           <div className="space-y-4">
@@ -1068,7 +1145,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               {cameraActive.before ? (
                 <div className="flex flex-col items-center">
                   <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-3">
-                    <video 
+                    <video
                       ref={beforeVideoRef}
                       autoPlay
                       playsInline
@@ -1097,9 +1174,9 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 </div>
               ) : beforeAfterPhotos.before ? (
                 <div className="relative">
-                  <img 
-                    src={beforeAfterPhotos.before} 
-                    alt="Before" 
+                  <img
+                    src={beforeAfterPhotos.before}
+                    alt="Before"
                     className="w-full h-64 object-cover rounded-lg"
                   />
                   <button
@@ -1113,20 +1190,35 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 <div className="space-y-3">
                   <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                       <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                         <span className="font-semibold">Click to upload</span> before photo
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
                     </div>
-                    <input 
-                      type="file" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      className="hidden"
                       accept="image/*"
-                      onChange={(e) => {
+                      onChange={e => {
                         const file = e.target.files?.[0];
                         if (file) handlePhotoCapture('before', file);
                       }}
@@ -1140,8 +1232,18 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     className="w-full flex items-center justify-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                     <span>Take Photo with Camera</span>
                   </button>
@@ -1149,7 +1251,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               )}
             </div>
           </div>
-          
+
           {/* After Photo */}
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900 dark:text-white">After</h4>
@@ -1157,7 +1259,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               {cameraActive.after ? (
                 <div className="flex flex-col items-center">
                   <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-3">
-                    <video 
+                    <video
                       ref={afterVideoRef}
                       autoPlay
                       playsInline
@@ -1186,9 +1288,9 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 </div>
               ) : beforeAfterPhotos.after ? (
                 <div className="relative">
-                  <img 
-                    src={beforeAfterPhotos.after} 
-                    alt="After" 
+                  <img
+                    src={beforeAfterPhotos.after}
+                    alt="After"
                     className="w-full h-64 object-cover rounded-lg"
                   />
                   <button
@@ -1202,20 +1304,35 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                 <div className="space-y-3">
                   <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                       <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                         <span className="font-semibold">Click to upload</span> after photo
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
                     </div>
-                    <input 
-                      type="file" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      className="hidden"
                       accept="image/*"
-                      onChange={(e) => {
+                      onChange={e => {
                         const file = e.target.files?.[0];
                         if (file) handlePhotoCapture('after', file);
                       }}
@@ -1229,8 +1346,18 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
                     className="w-full flex items-center justify-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                     <span>Take Photo with Camera</span>
                   </button>
@@ -1239,7 +1366,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             </div>
           </div>
         </div>
-        
+
         {/* Save Photos Button */}
         {(beforeAfterPhotos.before || beforeAfterPhotos.after) && (
           <div className="mt-6 flex justify-center">
@@ -1260,7 +1387,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-fade-in">
           {renderHeader()}
-          
+
           {currentView === 'appointment' && renderAppointmentView()}
           {currentView === 'client' && renderClientView()}
           {currentView === 'addService' && renderAddServiceView()}
